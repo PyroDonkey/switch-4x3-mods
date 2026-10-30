@@ -17,7 +17,7 @@ scripts/check_repo.py          Blocks game data, keys and decompiler dumps (pre-
 .github/release-games.json     One entry per game: tag prefix, folders, game version, build ID, layout count
 .github/workflows/release.yml  Publishes a GitHub release when a <prefix>-v<version> tag is pushed
 <game-folder>/                 One per game, kebab-case English title (e.g. super-mario-bros-wonder)
-  README.md                    Player-facing: Download link, install steps, what it changes, known limits
+  README.md                    Player-facing: Download link, the install guide (## Install), what it changes, known limits
   CHANGELOG.md                 "## v<version>" sections; each becomes that release's notes
   AGENTS.md                    Agent-facing: current state (source of truth), build/verify commands, addresses, gotchas
   CLAUDE.md                    Just "@AGENTS.md"
@@ -67,7 +67,7 @@ If `publish` stops waiting (20 min): check the Actions tab.
 - **Transient failure** (runner, network): re-run the job; then `python scripts/release.py links <prefix> <version>`.
 - **Code or content failure**: a re-run uses the tagged commit's code, so it can't pick up a fix. No release exists yet, so delete the tag (`git push origin :refs/tags/<tag>` and `git tag -d <tag>`), fix on `main`, and publish again.
 
-Never link to `releases/latest`. Bump the version for any change to the mod folder; never move or delete a tag that has a published release. The install steps exist in full only in the game README's `#install` section; `README.txt` (in the zip) and the release notes (`render_notes` in `scripts/release.py`) carry a short version and link to it, so update all three together.
+Never link to `releases/latest`. Bump the version for any change to the mod folder; never move or delete a tag that has a published release. **One install guide per game:** the `## Install` section of `<game-folder>/README.md`. Nothing else contains install steps: the root README, `README.txt` in the zip and the release notes (`render_notes` in `scripts/release.py`) only link to `#install`, and `release.py check` fails if the section or the link is missing. Change install steps only there.
 
 ## Testing loop
 
@@ -75,7 +75,7 @@ Only the human tester can play (the emulator is bound to a physical controller).
 
 ## Adding a game
 
-1. Create `<game-folder>/` with the layout above; copy the README (with its `<!-- download:<prefix> -->` marker), CHANGELOG and AGENTS.md structure from Super Mario Bros. Wonder. Use a generic mod folder name (players see it in the emulator's add-on list; renaming after a release leaves them with two copies).
+1. Create `<game-folder>/` with the layout above; copy the README (with its `<!-- download:<prefix> -->` marker and its `## Install` guide), the short `README.txt` that links to it, CHANGELOG and AGENTS.md structure from Super Mario Bros. Wonder. Use a generic mod folder name (players see it in the emulator's add-on list; renaming after a release leaves them with two copies).
 2. Set up its workspace outside the repo and extract the originals for the exact game version (never a third party's cached copies); list both in its AGENTS.md "Local inputs". See the checklist in `docs/game-files-policy.md`.
 3. Follow the guide's Workflow and tools section: build ID, 3D patch, camera, layouts, verification. The build must write only changed archives and the verifier must fail on unchanged output.
 4. Register it in `.github/release-games.json` under a short tag prefix (e.g. `botw`). The workflow needs no change.

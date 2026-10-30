@@ -102,10 +102,14 @@ def check(game, version):
         if first.upper() != f"@NSOBID-{g['build_id']}".upper():
             problems.append(f"{p}: first line is '{first}', expected @nsobid-{g['build_id']}")
     readme = files.get('README.txt', b'').decode('utf-8', errors='replace')
+    guide = f"https://github.com/{REPO}/blob/main/{g['folder']}/README.md#install"
     if not readme:
         problems.append('README.txt missing')
-    elif g['game_version'] not in readme:
-        problems.append(f"README.txt doesn't mention game version {g['game_version']}")
+    elif g['game_version'] not in readme or guide not in readme:
+        problems.append(f"README.txt must name game version {g['game_version']} and link the install guide {guide}")
+    game_readme = git('show', f"HEAD:{g['folder']}/README.md", check=False).decode('utf-8')
+    if not re.search(r'^## Install\s*$', game_readme, re.M):
+        problems.append(f"{g['folder']}/README.md has no '## Install' section (the only install guide; links point to #install)")
     problems += check_repo.problems()
     if problems:
         raise ReleaseError('checks failed:\n  ' + '\n  '.join(problems))
@@ -122,7 +126,7 @@ Download **[{zip_name}]({url})** from the Assets list below. (Not "Source code":
 
 ## Install
 
-Requires game version **{g['game_version']}**. Turn off any other aspect-ratio mod for this game and remove older versions of this one first. Then follow the [install steps]({readme}) for Windows or Android: import the zip (Windows) or install the extracted **{g['mod_folder']}** folder (Android), make sure the add-on is ticked, and set this game's aspect ratio to 4:3.
+Requires **{g['name']} v{g['game_version']}**. Follow the **[install guide]({readme})** (Windows and Android, updating from an older version, troubleshooting).
 
 ## What's new
 

@@ -6,7 +6,7 @@ Read the root [`../AGENTS.md`](../AGENTS.md) first. This file is the **source of
 
 - Title ID `010015100B514000`, **version 1.2.1 only**, build ID `FF773E90972D544EB79406EAA65396D53C43EFB9`.
 - Tested on Eden (yuzu family) with Graphics > Aspect Ratio > **Force 4:3**, on Windows (where agents can probe memory and take screenshots) and on the tester's Retroid Pocket Nova (Android). Other emulators and console are untested.
-- Mod folder: `mod/Native 4x3 Aspect Ratio/` = `exefs/1.2.1.pchtxt` + `romfs/Layout/*.Nin_NX_NVN.blarc.zs` (115 changed archives) + `README.txt` (player-facing, ships with the mod; keep its install steps in step with `README.md#install`). Named "Nova Aspect Ratio 4x3 Native" before v1.0.0; don't rename it again.
+- Mod folder: `mod/Native 4x3 Aspect Ratio/` = `exefs/1.2.1.pchtxt` + `romfs/Layout/*.Nin_NX_NVN.blarc.zs` (115 changed archives) + `README.txt` (ships with the mod; holds no install steps, only the link to `README.md#install`, the one install guide). Named "Nova Aspect Ratio 4x3 Native" before v1.0.0; don't rename it again.
 - Installed for testing at `%APPDATA%\eden\load\010015100B514000\Native 4x3 Aspect Ratio`. Sync with the game closed: `robocopy "mod\Native 4x3 Aspect Ratio" "%APPDATA%\eden\load\010015100B514000\Native 4x3 Aspect Ratio" /MIR` (mirror: deletes archives the build no longer ships).
 - Releases: tag prefix `smbw` (`.github/release-games.json`); procedure in the root AGENTS.md "Releasing". Bump `layout_count` there if the number of layout archives changes.
 

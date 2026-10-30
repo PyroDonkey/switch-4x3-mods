@@ -10,7 +10,7 @@ Requires **game version 1.2.1**. Tested on Switch emulators on Windows and Andro
 
 ## Install
 
-This section is the full install guide; the release notes and the `README.txt` in the zip point here. The menu names below are the ones used by the emulators this was tested on; other emulators may label them differently.
+This is the install guide for this mod; the release page, the `README.txt` in the zip and the main page all link here. The menu names below are the ones used by the emulators this was tested on; other emulators may label them differently.
 
 ### Before you start
 
