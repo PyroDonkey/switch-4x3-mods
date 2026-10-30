@@ -34,6 +34,13 @@ In a fresh clone, run `git config core.hooksPath .githooks` before the first com
 
 Check that history holds only allowed content (`git rev-list --objects --all`). If it doesn't, and the repo has no forks or releases yet, replace history with a single fresh commit of the clean tree and force-push.
 
+A force-push is not enough on its own: GitHub keeps replaced commits reachable by their hash. **This repo's history was replaced on 2026-10-30 and the old commits (holding unchanged game files) are still reachable that way.** So, on the day the repo goes public:
+
+1. Make sure the local clone is up to date and `python scripts/check_repo.py` passes.
+2. Delete the GitHub repo (`gh auth refresh -s delete_repo`, then `gh repo delete PyroDonkey/switch-4x3-mods`).
+3. Create it again with the same name, description and topics, push `main`, and re-add the topics and settings (wiki and Projects off).
+4. Make it public, then publish the first release.
+
 ## If something leaks
 
 - **Not pushed:** amend or reset the commit.

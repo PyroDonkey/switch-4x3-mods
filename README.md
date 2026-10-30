@@ -1,6 +1,6 @@
 # Switch 4:3 Mods
 
-[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q71FY0UR)
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/pyrodonkey)
 
 Native 4:3 aspect-ratio mods for Nintendo Switch games. "Native" means the game renders at 4:3 and its UI is re-laid out for the 4:3 screen, instead of a 16:9 picture stretched or letterboxed by the emulator: the 3D view is patched to 4:3, the camera still frames each room correctly, and HUD, menus and transitions fit the taller screen.
 

@@ -1,6 +1,6 @@
 # Super Mario Bros. Wonder: Native 4:3
 
-[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q71FY0UR)
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/pyrodonkey)
 
 Plays Super Mario Bros. Wonder natively at 4:3 instead of stretching or letterboxing it. The camera, level framing and the whole UI are adjusted so nothing is squashed.
 
