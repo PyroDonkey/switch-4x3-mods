@@ -22,11 +22,13 @@ This repo and its releases must never become a way to get Nintendo's game data. 
 | Layer | What it does | Can it be skipped? |
 | --- | --- | --- |
 | `.gitignore` | Hides common game file types from `git add` | Yes (`git add -f`) |
-| Build | `build.py` writes only archives it changed; `verify.py` fails if an output equals its original | Only by editing the tools |
+| Build | `build.py` writes only archives it changed; `verify.py` exits with an error if an output equals its original | Manual step: nothing runs `verify.py` automatically (it needs the originals, which only the maintainer has). The game's AGENTS.md makes it part of every rebuild |
 | `scripts/check_repo.py` via `.githooks/pre-commit` | Blocks binaries outside mod folders, game file types, key-like lines, files over 50 MB, and decompiler dumps | Per clone: enable with `git config core.hooksPath .githooks` |
-| `.claude/settings.json` | Claude Code sessions in this repo enable the hook automatically and are denied `--no-verify`, `git commit -n`, `git add -f` and hooks-path changes | Only by editing the settings |
-| `release.py check` | Runs the same checker plus the zip allowlist before every release | No |
-| `.github/workflows/validate.yml` | Reports problems within a minute of a push | It only reports; a pushed file is already on GitHub |
+| `.claude/settings.json` | Claude Code sessions in this repo enable the hook automatically and are denied `--no-verify`, `git commit -n`, `git add -f` and hooks-path changes | By editing the settings, the hook script or `check_repo.py`; agents must not |
+| `release.py check` | Runs the same checker plus the zip allowlist and archive count before every release | No, but it can't tell a changed archive from an original one; that's the build's job |
+| `.github/workflows/validate.yml` | Reports problems within a minute of any push or pull request | It only reports; a pushed file is already on GitHub |
+
+What no layer catches: an original game archive copied by hand into `<game>/mod/*/romfs/`. Only build output goes there.
 
 In a fresh clone, run `git config core.hooksPath .githooks` before the first commit (Claude Code sessions do this for you).
 
@@ -38,7 +40,12 @@ A force-push is not enough on its own: GitHub keeps replaced commits reachable b
 
 1. Make sure the local clone is up to date and `python scripts/check_repo.py` passes.
 2. Delete the GitHub repo (`gh auth refresh -s delete_repo`, then `gh repo delete PyroDonkey/switch-4x3-mods`).
-3. Create it again with the same name, description and topics, push `main`, and re-add the topics and settings (wiki and Projects off).
+3. Create it again and push `main`, with the settings deleting the repo loses:
+   - name `switch-4x3-mods`, description "Native 4:3 aspect-ratio mods for Nintendo Switch games"
+   - topics `4-3`, `aspect-ratio`, `emulator-mods`, `nintendo-switch`, `retroid-pocket`, `super-mario-bros-wonder`, `switch-mods`
+   - Issues on, wiki and Projects off
+
+   Actions run history is lost too; nothing depends on it.
 4. Make it public, then publish the first release.
 
 ## If something leaks

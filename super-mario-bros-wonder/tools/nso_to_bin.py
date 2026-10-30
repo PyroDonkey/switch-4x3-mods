@@ -1,8 +1,8 @@
 """Decompress a Switch NSO (e.g. exefs/main) into a flat memory image.
 
-usage: python -I nso_to_bin.py <main> <out.bin>
+usage: python nso_to_bin.py <main> <out.bin>      (needs the lz4 package: pip install lz4)
 The image is laid out at memory offsets (text at 0), so a .pchtxt address with
-`@flag offset_shift 0x100` maps to image offset (address - 0x100).
+`@flag offset_shift 0x100` equals the image offset (no subtraction).
 """
 import sys, struct
 import lz4.block

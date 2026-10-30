@@ -15,7 +15,7 @@ for line in enabled.splitlines():
     if not m:
         continue
     addr, raw = int(m.group(1), 16), bytes.fromhex(m.group(2))
-    if addr >= 0x2AEE000 and addr < 0x2138650:
+    if addr >= 0x2139000:                        # .ro / .data: constants, not code
         print(f"{addr:08X} {m.group(2)}  (data, float {__import__('struct').unpack('<f', raw)[0]:.4f})")
         continue
     ins = list(md.disasm(raw, addr))

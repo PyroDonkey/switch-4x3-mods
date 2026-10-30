@@ -9,7 +9,16 @@
 *.keys
 prod.keys
 title.keys
-main.npdm
+dev.keys
+*.npdm
+*.nso
+*.nro
+*.ncz
+*.sav
+# exefs files without an extension
+main
+rtld
+sdk
 *.bin
 *.gpr
 *.rep/

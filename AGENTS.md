@@ -42,20 +42,36 @@ Games: [`super-mario-bros-wonder/`](super-mario-bros-wonder/) (1.2.1).
 
 - **Player-facing text names no emulators** and never links to emulator downloads: say "Switch emulators on Windows and Android". Developer docs (AGENTS.md, DEVELOPMENT.md, the guide) may name the emulator used for testing.
 
+## Checks
+
+Run before committing a mod change and before every release:
+
+```
+python scripts/check_repo.py                       # game data / keys / dumps (also the pre-commit hook)
+python scripts/release.py check <prefix> <version> # release rules: changelog, build ID, allowlist, archive count
+# plus the game's own verifiers, listed in its AGENTS.md (SMBW: tools/verify.py and tools/verify_pchtxt.py)
+```
+
+`scripts/` needs only Python 3.8+ (CI uses the runner's 3.12). Game tools may need more (SMBW: Python 3.14 plus `capstone` and `lz4`).
+
 ## Releasing
 
-Players get mods only through GitHub Releases: one zip per game version, linked from the READMEs.
+Players get mods only through GitHub Releases: one zip per game version, linked from the READMEs. `gh` must be installed and signed in.
 
-1. Add a `## v<version>` section to `<game-folder>/CHANGELOG.md` and commit everything.
-2. `python scripts/release.py package <prefix> <version>` builds `dist/<zip>` and `dist/notes.md` from HEAD. Have the tester install that zip before releasing a mod change.
-3. `python scripts/release.py publish <prefix> <version>` re-checks, rewrites the `<!-- download:<prefix> -->` links in the root and game READMEs, commits "Release <prefix> v<version>", tags `<prefix>-v<version>` and pushes commit and tag atomically. The workflow then publishes the release (`--latest=false`, since "Latest" is repo-wide).
-4. A suffixed version (`1.1.0-rc.1`) is a pre-release: no link change and no commit.
+1. Make the player docs true for this build: the game README's Known limits ("played and checked" vs "not yet played") and the `## v<version>` section of `<game-folder>/CHANGELOG.md` (it becomes the release notes). Commit everything and push.
+2. `python scripts/release.py package <prefix> <version>` builds `dist/<zip>` and `dist/notes.md` from HEAD. The tester installs that zip, following only the README's Install section, before any mod change is released.
+3. `python scripts/release.py publish <prefix> <version>`: re-checks, tags HEAD `<prefix>-v<version>`, pushes, waits until the workflow has published the release with its zip (`--latest=false`, since "Latest" is repo-wide), then rewrites the `<!-- download:<prefix> -->` links in the root and game READMEs, commits and pushes them. The links never point at a zip that doesn't exist.
+4. A suffixed version (`1.1.0-rc.1`) is a pre-release: the links are left alone.
 
-If the workflow fails, fix it and re-run it from the Actions tab; an existing release just gets its zip replaced. Never link to `releases/latest`. Bump the version for any change to the mod folder; never move a published tag.
+If `publish` stops waiting (20 min): check the Actions tab.
+- **Transient failure** (runner, network): re-run the job; then `python scripts/release.py links <prefix> <version>`.
+- **Code or content failure**: a re-run uses the tagged commit's code, so it can't pick up a fix. No release exists yet, so delete the tag (`git push origin :refs/tags/<tag>` and `git tag -d <tag>`), fix on `main`, and publish again.
+
+Never link to `releases/latest`. Bump the version for any change to the mod folder; never move or delete a tag that has a published release. The install steps exist in full only in the game README's `#install` section; `README.txt` (in the zip) and the release notes (`render_notes` in `scripts/release.py`) carry a short version and link to it, so update all three together.
 
 ## Testing loop
 
-Only the human tester can play (the emulator is bound to a physical controller). Build and verify here, sync the mod folder into the emulator's load directory with the game closed (layout files are locked while it runs; code patches load only at boot), then ask the tester one clear question per round. Take screenshots of their screen only when they ask for one.
+Only the human tester can play (the emulator is bound to a physical controller). Build and verify here, then sync the mod folder into the emulator's load directory with the game closed (layout files are locked while it runs; code patches load only at boot). Use a mirror copy (`robocopy <src> <dst> /MIR`) so archives the build no longer ships are deleted. For the Android handheld, give the tester the `release.py package` zip to install through the Add-ons menu. Ask the tester one clear question per round. Take screenshots of their screen only when they ask for one.
 
 ## Adding a game
 

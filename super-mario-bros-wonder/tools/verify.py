@@ -125,3 +125,4 @@ print(dict(stats))
 print(f'{len(problems)} problem(s)')
 for p in problems:
     print('  ' + p)
+sys.exit(1 if problems else 0)

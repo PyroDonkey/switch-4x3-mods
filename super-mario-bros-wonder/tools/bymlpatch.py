@@ -3,8 +3,8 @@
 Only same-size edits (float / int / bool stored inline in a node slot) are supported, so the file layout never changes.
 
 usage:
-  python bymlpatch.py <in.zs> <out.zs> <Gyaml> <key> <value> [--nth N] [--dynamic]
-      Sets Actors[*] (the Nth with that Gyaml, default 0) -> Dynamic[key] (or the actor's own key with --top) to value.
+  python bymlpatch.py <in.zs> <out.zs> <Gyaml> <key> <value> [--nth N] [--top]
+      Sets Actors[*] (the Nth with that Gyaml, default 0) -> Dynamic[key] (default) or the actor's own key (--top) to value.
   python bymlpatch.py <in.zs> <out.zs> --hash <Hash> <key> <value>
       Same, selecting the actor by its Hash.
   python bymlpatch.py <in.zs> <out.zs> --hash <Hash> --translate <x> <y> <z>

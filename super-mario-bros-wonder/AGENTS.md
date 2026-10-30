@@ -7,16 +7,16 @@ Read the root [`../AGENTS.md`](../AGENTS.md) first. This file is the **source of
 - Title ID `010015100B514000`, **version 1.2.1 only**, build ID `FF773E90972D544EB79406EAA65396D53C43EFB9`.
 - Tested on Eden (yuzu family) with Graphics > Aspect Ratio > **Force 4:3**, on Windows (where agents can probe memory and take screenshots) and on the tester's Retroid Pocket Nova (Android). Other emulators and console are untested.
 - Mod folder: `mod/Native 4x3 Aspect Ratio/` = `exefs/1.2.1.pchtxt` + `romfs/Layout/*.Nin_NX_NVN.blarc.zs` (115 changed archives) + `README.txt` (player-facing, ships with the mod; keep its install steps in step with `README.md#install`). Named "Nova Aspect Ratio 4x3 Native" before v1.0.0; don't rename it again.
-- Installed for testing at `%APPDATA%\eden\load\010015100B514000\Native 4x3 Aspect Ratio`. Sync with the game closed: `robocopy "mod\Native 4x3 Aspect Ratio" "%APPDATA%\eden\load\010015100B514000\Native 4x3 Aspect Ratio" /E`.
+- Installed for testing at `%APPDATA%\eden\load\010015100B514000\Native 4x3 Aspect Ratio`. Sync with the game closed: `robocopy "mod\Native 4x3 Aspect Ratio" "%APPDATA%\eden\load\010015100B514000\Native 4x3 Aspect Ratio" /MIR` (mirror: deletes archives the build no longer ships).
 - Releases: tag prefix `smbw` (`.github/release-games.json`); procedure in the root AGENTS.md "Releasing". Bump `layout_count` there if the number of layout archives changes.
 
 ## Local inputs (outside the repo)
 
 | Input | Where it comes from | Used by |
 | --- | --- | --- |
-| Original layouts (1.2.1) | Workspace `SM Wonder Extracted\romfs-1.2.1\Layout` (235 archives), extracted with nstool (see Gotchas). Not won-aar's `wonder.zip`: that cache is older, 30 layouts differ | `build.py`, `verify.py`, `find_toplevel.py` |
+| Original layouts (1.2.1) | `<workspace>\extracted\romfs-1.2.1\Layout` (235 archives; in the maintainer's workspace the `extracted` folder is named `SM Wonder Extracted`), extracted with nstool (see Gotchas). Not won-aar's `wonder.zip`: that cache is older, 30 layouts differ | `build.py`, `verify.py`, `find_toplevel.py` |
 | `exefs/main` 1.2.1 | nstool from the update NSP (guide: Workflow and tools > Extracting) | `nso_to_bin.py` |
-| Flat image `main-1.2.1.bin` | `python tools/nso_to_bin.py <main> <out.bin>`; point `SMBW_MAIN_BIN` at it | `gen_zoom_v2.py`, `xref.py`, Ghidra |
+| Flat image `main-1.2.1.bin` | `python tools/nso_to_bin.py <main> <out.bin>`; point `SMBW_MAIN_BIN` at it for `gen_zoom_v2.py`; `xref.py` takes the path as its first argument | `gen_zoom_v2.py`, `xref.py`, Ghidra |
 | romfs `Stage`, `BancMapUnit`, `Event` | nstool with `--basenca` (see Gotchas) | `byml.py`, `bymlpatch.py` |
 
 ## Build and verify
@@ -31,7 +31,8 @@ python tools/verify.py tools <orig_layout_dir> <out_dir>/romfs/Layout   # must r
 # leaves unchanged archives out, so a stale file would otherwise stay); update layout_count in release-games.json
 
 # Code patch: regenerate patch lines, then disassemble the shipped file
-SMBW_MAIN_BIN=<path>/main-1.2.1.bin python tools/gen_zoom_v2.py <lines_out.txt>
+$env:SMBW_MAIN_BIN = '<path>\main-1.2.1.bin'      # PowerShell (bash: export SMBW_MAIN_BIN=...)
+python tools/gen_zoom_v2.py <lines_out.txt>
 python tools/verify_pchtxt.py                                     # defaults to the mod's exefs/1.2.1.pchtxt
 ```
 
@@ -39,7 +40,8 @@ A rebuild from the 1.2.1 originals reproduces the committed `romfs/Layout` byte 
 
 | Script | Use |
 | --- | --- |
-| `lyt.py`, `dump.py`, `analyze.py`, `find_toplevel.py`, `build.py`, `verify.py` | Layout (BFLYT/BFLAN) pipeline: parse, analyse, build, verify. First argument is the tools folder |
+| `lyt.py` (library), `find_toplevel.py`, `analyze.py`, `build.py`, `verify.py` | Layout (BFLYT/BFLAN) pipeline: parse, analyse, build, verify. First argument is the tools folder; `verify.py` exits 1 on any problem |
+| `dump.py <layout_dir> [names...]` | Print every pane of the given archives |
 | `nso_to_bin.py <main> <out.bin>` | NSO to flat image. A `.pchtxt` address with `offset_shift 0x100` equals the flat-image offset |
 | `xref.py <bin> 2138650 <addr...>` / `--float <v> --ro-start 2139000` | Code references (ADRP + load) to data addresses, or a float's locations and users |
 | `ghidra/DecompileAt.java` | Headless decompile of the functions containing given addresses (import the flat image as raw AArch64 at base 0) |
@@ -52,9 +54,9 @@ Ghidra headless (Java 21): `analyzeHeadless <proj_dir> <proj_name> -process main
 
 Flat image layout (1.2.1): `.text` 0x0-0x2138650, `.ro` 0x2139000-0x338BC78, `.data` 0x338C000-0x3728DF8. Code cave: zero bytes 0x2138650-0x2139000 (executable, patchable), used 0x2138780-0x2138F23. Spare .bss words used as mailboxes: 0x037D1F00-0x037D1F3B.
 
-## Current state (2026-10-29)
+## Current state (2026-10-30)
 
-Shipped patch `exefs/1.2.1.pchtxt`: SHA-256 `913A96F4...730D`, 266 lines (only a comment changed since the tested `EE1EF2D8...F167`). The tester reports the mod working well.
+Shipped patch `exefs/1.2.1.pchtxt`: SHA-256 `51A8B589...FE55`, 266 lines (only comments changed since the tested `EE1EF2D8...F167`). The tester reports the mod working well.
 
 **Layouts (`build.py`, built from the 1.2.1 originals since 2026-10-30):** 115 of the game's 235 archives ship (114 changed top-level layouts incl. the 1.2.1-only `AmiiboReadWindow`, plus `LCursor`); the other 120 are unchanged and fall back to the game's copies. top-level RootPane scale y 0.75 (`ROOT_SY`); HUD/header/footer edge-anchored (+/-180 root-local units, TransY keys shifted too); full-screen layers grown x4/3 (captures and fades height only, artwork uniform); parts layouts untouched; curated per-screen tables `FORCE_SHIFT`, `NO_SHIFT_SUBTREE`, `NO_SHIFT_LAYOUT`, `NO_FILL`. 638 float writes, 46 fill panes, `verify.py` clean. Until 2026-10-30 the mod was built from won-aar's older cache and shipped all 234 archives, so 30 screens (incl. Pause, MainMenu, Title, CourseList, talk windows, button icons) carried pre-1.2.1 layouts; the 1.2.1 rebuild applies identical edits. **Not yet played in game since the 1.2.1 rebuild.**
 

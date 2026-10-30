@@ -3,13 +3,15 @@
 usage:
   python scripts/release.py check   <game> <version>     checks only (game = tag prefix, e.g. smbw)
   python scripts/release.py package <game> <version>     checks + dist/<zip> + dist/notes.md, built from HEAD
-  python scripts/release.py publish <game> <version>     package, update Download links, commit, tag, push --atomic
+  python scripts/release.py publish <game> <version>     tag HEAD and push it, wait for the workflow's release,
+                                                         then commit and push the README Download links
+  python scripts/release.py links   <game> <version>     only the last step (if publish stopped waiting)
   python scripts/release.py ci <tag>                     used by .github/workflows/release.yml
 
-A version with a suffix (1.1.0-rc.1) is a pre-release: no Download-link change, no commit, the tag goes on HEAD.
-The release itself is published by the workflow when the tag arrives on GitHub.
+The Download links change only after the release and its zip exist, so a failed workflow never leaves a dead link.
+A version with a suffix (1.1.0-rc.1) is a pre-release: the links are left alone.
 """
-import io, json, os, re, subprocess, sys, tarfile, time, zipfile
+import io, json, os, re, shutil, subprocess, sys, tarfile, time, zipfile
 
 import check_repo
 
@@ -118,15 +120,9 @@ def render_notes(game, version):
 
 Download **[{zip_name}]({url})** from the Assets list below. (Not "Source code": that's the whole repo, not the mod.)
 
-Requires **{g['name']} v{g['game_version']}**.
-
 ## Install
 
-**Windows:** right-click the game > **Configure Game** > **Add-Ons** > **Import Mod from ZIP** and pick the zip. Then, in the same window, **Graphics** > Aspect Ratio > **Force 4:3**.
-
-**Android:** extract the zip, long-press the game > **Add-ons** > **Install**, and select the **{g['mod_folder']}** folder itself. Then set this game's aspect ratio to **4:3**.
-
-Updating from an older version, older emulator builds without ZIP import, and troubleshooting: see the [full install steps]({readme}).
+Requires game version **{g['game_version']}**. Turn off any other aspect-ratio mod for this game and remove older versions of this one first. Then follow the [install steps]({readme}) for Windows or Android: import the zip (Windows) or install the extracted **{g['mod_folder']}** folder (Android), make sure the add-on is ticked, and set this game's aspect ratio to 4:3.
 
 ## What's new
 
@@ -139,6 +135,8 @@ If you like this mod, you can support it on [Ko-fi](https://ko-fi.com/pyrodonkey
 
 def package(game, version, out=DIST):
     g = game_cfg(game)
+    if git('status', '--porcelain').strip():
+        print('warning: uncommitted changes; the zip is built from HEAD and does not include them')
     files = check(game, version)
     tag, zip_name, url, title = names(game, version)
     os.makedirs(out, exist_ok=True)
@@ -180,8 +178,7 @@ def update_links(game, version):
     return list(content)
 
 
-def publish(game, version):
-    tag, zip_name, url, title = names(game, version)
+def require_clean_main():
     if git('status', '--porcelain').strip():
         raise ReleaseError('working tree has uncommitted changes; commit or stash them first')
     branch = git('rev-parse', '--abbrev-ref', 'HEAD').decode().strip()
@@ -190,16 +187,58 @@ def publish(game, version):
     git('fetch', 'origin', 'main', '--tags')
     if git('rev-list', '--count', 'HEAD..origin/main').decode().strip() != '0':
         raise ReleaseError('main is behind origin/main; pull first')
+
+
+def gh():
+    for exe in (shutil.which('gh'), r'C:\Program Files\GitHub CLI\gh.exe'):
+        if exe and os.path.exists(exe):
+            return exe
+    raise ReleaseError('GitHub CLI (gh) not found; install it and run `gh auth login`')
+
+
+def wait_for_release(tag, zip_name, timeout=1200):
+    """Poll GitHub until the workflow has published <tag> with <zip_name> attached."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        r = subprocess.run([gh(), 'release', 'view', tag, '--repo', REPO, '--json', 'assets,isDraft'],
+                           capture_output=True, text=True)
+        if r.returncode == 0:
+            info = json.loads(r.stdout)
+            if not info['isDraft'] and any(a['name'] == zip_name for a in info['assets']):
+                return
+        time.sleep(15)
+    raise ReleaseError(f'no published release {tag} with {zip_name} after {timeout // 60} min. Check the Actions tab; '
+                       f'once the release exists, run: python scripts/release.py links {tag.split("-v")[0]} '
+                       f'{tag.split("-v", 1)[1]}')
+
+
+def links(game, version):
+    """Point the README Download links at a published release, commit and push."""
+    tag, zip_name, url, title = names(game, version)
+    require_clean_main()
+    changed = update_links(game, version)
+    if not git('status', '--porcelain').strip():
+        print('Download links already point at this release')
+        return
+    git('add', *changed)
+    git('commit', '-m', f'Point Download links at {game} v{version}')
+    git('push', 'origin', 'main')
+    print(f'Download links updated: {url}')
+
+
+def publish(game, version):
+    tag, zip_name, url, title = names(game, version)
+    require_clean_main()
     if git('tag', '--list', tag).strip() or git('ls-remote', '--tags', 'origin', f'refs/tags/{tag}').strip():
         raise ReleaseError(f'tag {tag} already exists')
     package(game, version)
-    if not is_prerelease(version):
-        changed = update_links(game, version)
-        git('add', *changed)
-        git('commit', '-m', f'Release {game} v{version}')
     git('tag', '-a', tag, '-m', title)
     git('push', '--atomic', 'origin', 'main', tag)
-    print(f'pushed {tag}; GitHub Actions now publishes the release:\n  https://github.com/{REPO}/releases/tag/{tag}')
+    print(f'pushed {tag}; waiting for GitHub Actions to publish https://github.com/{REPO}/releases/tag/{tag}')
+    wait_for_release(tag, zip_name)
+    print('release published')
+    if not is_prerelease(version):
+        links(game, version)
 
 
 def ci(tag, out=DIST):
@@ -213,7 +252,7 @@ def ci(tag, out=DIST):
 
 
 def main(argv):
-    if len(argv) < 2 or argv[0] not in ('check', 'package', 'publish', 'ci'):
+    if len(argv) < 2 or argv[0] not in ('check', 'package', 'publish', 'links', 'ci'):
         sys.exit(__doc__)
     cmd = argv[0]
     try:
@@ -226,6 +265,8 @@ def main(argv):
             print('checks passed')
         elif cmd == 'package':
             package(argv[1], argv[2])
+        elif cmd == 'links':
+            links(argv[1], argv[2])
         else:
             publish(argv[1], argv[2])
     except ReleaseError as e:

@@ -262,5 +262,5 @@
 //   002E2B30 0170261E   zoom 19: 92% of 16:9 width, 123% height
 //   002E2B30 0190261E   zoom 20: 97% of 16:9 width, 129% height
 
-// Aspect address from the v1.2.1 32:9 port by StevensND and KeatonTheBot; zoom values from
-// their 4:3 pack; camera fixes found in the 1.2.1 executable.
+// Aspect address from the 32:9 Super Ultrawide mod (Stevens, KeatonTheBot, Fl4sh_#9174; v1.2.1 port by
+// KillswitchR6); zoom values from their Aspect Ratio Mods pack; camera fixes found in the 1.2.1 executable.

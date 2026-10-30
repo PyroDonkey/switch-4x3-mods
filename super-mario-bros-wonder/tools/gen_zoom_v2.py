@@ -1,5 +1,6 @@
-"""Per-area view zoom for the 4:3 SMBW mod (v2): small rooms stay at the stock 15.5, wide world areas use 17, boss
-arenas use their own table value, and everything that depends on the base follows it.
+"""Per-area view zoom for the 4:3 SMBW mod (v2): small rooms stay at the stock 15.5, wide world areas use 15.75
+(G_LARGE; 17 was tried and reverted), boss arenas use their own table value, and everything that depends on the base
+follows it.
 
 All addresses are flat-image offsets (== pchtxt addresses with offset_shift 0x100) for 1.2.1.
 
@@ -17,8 +18,9 @@ cave B  @0x02138900  hooked at 0x002E2B30 (view height): s1 = max(15.5, G).
 cave D/E             pipe display-box scaling k = 15.5 / G.
 cave F1/F2 @0x02138D00/0x02138D20  hooked at 0x006C6358/0x006C6364 (controller view half-extents): height base s9 =
         max(15.5, G); width base = [0x2AEE9E8] * s9 / 15.5.
-cave G  @0x02138A00  hooked at 0x006C6FD0 (fixed-position camera target): X = fixed X + eased offset; the offset is 0
-        while fixed X moves (autoscroll, stock behaviour) and clamp(focus X - fixed X, +/- delta) in locked rooms.
+cave G  @0x02138A00  hooked at 0x006C6FD0 (fixed-position camera target, written only by SetAutoScrollPos): X = fixed X +
+        eased offset; the offset is 0 while fixed X moves (autoscroll, stock behaviour) and clamp(focus X - fixed X,
+        +/- delta) once the scroll has stopped for 2 s. StopScroll-locked rooms go through cave H, not here.
         Replaces the old 006C6FD0-006C6FE4 lines (X = focus X unclamped), which let the player outrun autoscrolls.
   0x037D1F30  previous fixed X    0x037D1F34  autoscroll hold counter    0x037D1F38  current camera offset
 cave H  @0x02138F00  hooked at 0x006C7BEC (side-lock X override, controller+0x29): X = locked X + clamp(normal X -
