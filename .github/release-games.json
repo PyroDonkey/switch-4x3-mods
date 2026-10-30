@@ -1,0 +1,15 @@
+{
+  "repo": "PyroDonkey/switch-4x3-mods",
+  "games": {
+    "smbw": {
+      "folder": "super-mario-bros-wonder",
+      "name": "Super Mario Bros. Wonder",
+      "mod_folder": "Native 4x3 Aspect Ratio",
+      "zip_stem": "SMBW-4x3-Native",
+      "title_id": "010015100B514000",
+      "game_version": "1.2.1",
+      "build_id": "FF773E90972D544EB79406EAA65396D53C43EFB9",
+      "layout_count": 115
+    }
+  }
+}

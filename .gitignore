@@ -1,0 +1,30 @@
+# Game files and keys never go in this repo
+*.nsp
+*.xci
+*.nca
+*.nsz
+*.xcz
+*.tik
+*.cert
+*.keys
+prod.keys
+title.keys
+main.npdm
+*.bin
+*.gpr
+*.rep/
+
+# Build outputs and caches
+build_report.json
+__pycache__/
+*.pyc
+*.zip
+
+# Local working copies
+*.bak
+*.bak-*
+*.pchtxt.*
+*.keep-fill-candidate
+
+# Release builds (scripts/release.py)
+dist/
