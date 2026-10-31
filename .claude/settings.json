@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "git -C \"$CLAUDE_PROJECT_DIR\" config core.hooksPath .githooks",
+            "command": "python .claude/hooks/enable_githooks.py",
             "statusMessage": "Enabling the repo's pre-commit check"
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_git.py\""
+            "command": "python .claude/hooks/guard_git.py"
           }
         ]
       }

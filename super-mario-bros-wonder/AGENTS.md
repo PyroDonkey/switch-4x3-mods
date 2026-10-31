@@ -54,11 +54,11 @@ Ghidra headless (Java 21): `analyzeHeadless <proj_dir> <proj_name> -process main
 
 Flat image layout (1.2.1): `.text` 0x0-0x2138650, `.ro` 0x2139000-0x338BC78, `.data` 0x338C000-0x3728DF8. Code cave: zero bytes 0x2138650-0x2139000 (executable, patchable), used 0x2138780-0x2138F23. Spare .bss words used as mailboxes: 0x037D1F00-0x037D1F3B.
 
-## Current state (2026-10-30)
+## Current state (2026-10-31)
 
 Shipped patch `exefs/1.2.1.pchtxt`: SHA-256 `51A8B589...FE55`, 266 lines (only comments changed since the tested `EE1EF2D8...F167`). The tester reports the mod working well.
 
-**Layouts (`build.py`, built from the 1.2.1 originals since 2026-10-30):** 115 of the game's 235 archives ship (114 changed top-level layouts incl. the 1.2.1-only `AmiiboReadWindow`, plus `LCursor`); the other 120 are unchanged and fall back to the game's copies. top-level RootPane scale y 0.75 (`ROOT_SY`); HUD/header/footer edge-anchored (+/-180 root-local units, TransY keys shifted too); full-screen layers grown x4/3 (captures and fades height only, artwork uniform); parts layouts untouched; curated per-screen tables `FORCE_SHIFT`, `NO_SHIFT_SUBTREE`, `NO_SHIFT_LAYOUT`, `NO_FILL`. 638 float writes, 46 fill panes, `verify.py` clean. Until 2026-10-30 the mod was built from won-aar's older cache and shipped all 234 archives, so 30 screens (incl. Pause, MainMenu, Title, CourseList, talk windows, button icons) carried pre-1.2.1 layouts; the 1.2.1 rebuild applies identical edits. **Not yet played in game since the 1.2.1 rebuild.**
+**Layouts (`build.py`, built from the 1.2.1 originals since 2026-10-30):** 115 of the game's 235 archives ship (114 changed top-level layouts incl. the 1.2.1-only `AmiiboReadWindow`, plus `LCursor`); the other 120 are unchanged and fall back to the game's copies. top-level RootPane scale y 0.75 (`ROOT_SY`); HUD/header/footer edge-anchored (+/-180 root-local units, TransY keys shifted too); full-screen layers grown x4/3 (captures and fades height only, artwork uniform); parts layouts untouched; curated per-screen tables `FORCE_SHIFT`, `NO_SHIFT_SUBTREE`, `NO_SHIFT_LAYOUT`, `NO_FILL`. 638 float writes, 46 fill panes, `verify.py` clean. Until 2026-10-30 the mod was built from won-aar's older cache and shipped all 234 archives, so 30 screens (incl. Pause, MainMenu, Title, CourseList, talk windows, button icons) carried pre-1.2.1 layouts; the 1.2.1 rebuild applies identical edits. **Play-tested after the 1.2.1 rebuild (2026-10-31): menus, HUD, pause, maps, transitions, course clear, cursor and amiibo look good.**
 
 - Capture sources (`N_Cap*`, `N_Capture`) stay 1920x1080 (WipeMiss 1080x1080); only use panes fill.
 - `CAPTURE_KEEP_FILL`: WipeCourseIn `N_Cap` stays 1440 with `P_CapUse` V cropped to 0.125-0.875 (round iris).
@@ -91,7 +91,6 @@ Boss table (all delta 0): Course150_Sub4 607466214 G 21.0; Course151_Sub2 101336
 **Open items:**
 - Death screen = `WipeMiss` (capture + spotlight) under `MissZanki`. WipeMiss has the capture setup that made WipeCourseIn's circle taller than wide, so its spotlight may be oval. Candidate fix: add `'WipeMiss': ('N_Cap','P_CapUse')` to `CAPTURE_KEEP_FILL` (N_Cap 1080 -> 1440, P_CapUse V 0.125-0.875). An A/B file was tried in Eden only; result unclear. Ship only after the tester confirms the spotlight round.
 - Other screen-projected patterns (`CourseIn` P_BG checker, `MissZanki` P_BG dots) may be ~0.75 wide; add them to `PROJECTED_PATTERN` only if seen.
-- Play-test the 1.2.1 rebuild (menus, HUD, pause, maps, transitions, course clear, cursor, amiibo screen) on Windows and the Nova before v1.0.0.
 
 ## Camera knowledge (1.2.1 addresses)
 

@@ -65,7 +65,7 @@ Still stuck? [Open an issue](https://github.com/PyroDonkey/switch-4x3-mods/issue
 
 ## Known limits
 
-- Played and checked on an earlier build: Pipe-Rock Plateau Palace boss, badge houses, W2 Outmaway Valley, the W2 airship autoscroll and its Wonder Flower, Up 'n' Down with Puffy Lifts, world and kingdom maps, course list, pause menu, level transitions, in-level HUD, button glyphs, Poplin shop, user select and player count menus, main-menu pointer, course-clear photo, Badge Challenge restart wipe. **This build now uses the game's own v1.2.1 menu files as its base, and is being re-checked before the first release.**
+- Played and checked: Pipe-Rock Plateau Palace boss, badge houses, W2 Outmaway Valley, the W2 airship autoscroll and its Wonder Flower, Up 'n' Down with Puffy Lifts, world and kingdom maps, course list, pause menu, level transitions, in-level HUD, button glyphs, Poplin shop, user select and player count menus, main-menu pointer, course-clear photo, Badge Challenge restart wipe, and the v1.2.1 rebuild of those UI screens (menus, HUD, pause, maps, transitions, course clear, cursor, amiibo).
 - Not yet played: the other three Bowser Jr. fights (zoomed but untested), the airship boss fights, the final boss, multiplayer, and some screen transitions (warp and slide wipes).
 - The death-screen spotlight may look slightly oval.
 - On some Android devices, bars may flash briefly when entering a level from the map; not seen on PC.

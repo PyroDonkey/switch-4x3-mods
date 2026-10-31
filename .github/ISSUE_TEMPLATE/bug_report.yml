@@ -1,0 +1,152 @@
+name: Something looks wrong
+description: A screen looks squashed, cut off or broken with a mod installed
+title: "[bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, check the game's [Install and Troubleshooting](https://github.com/PyroDonkey/switch-4x3-mods/blob/main/super-mario-bros-wonder/README.md#install) guide.
+
+        A screenshot helps a lot; one with the mod on and one with it off is even better.
+
+        Please don't attach or link game files, keys or dumps.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      description: Confirm each item (see the Install guide if any of these are unclear).
+      options:
+        - label: The game is updated to the version the mod's README lists
+          required: true
+        - label: This game's aspect ratio is set to 4:3 / Force 4:3
+          required: true
+        - label: No other aspect-ratio mods are enabled for this game
+          required: true
+        - label: This mod is enabled and the game was restarted after install
+          required: true
+        - label: I read the Troubleshooting table in that Install guide
+          required: true
+
+  - type: dropdown
+    id: game
+    attributes:
+      label: Game
+      options:
+        - Super Mario Bros. Wonder
+    validations:
+      required: true
+
+  - type: input
+    id: game_version
+    attributes:
+      label: Game version
+      description: The installed update (shown in the game list or game properties).
+      placeholder: "1.2.1"
+    validations:
+      required: true
+
+  - type: input
+    id: mod_version
+    attributes:
+      label: Mod version
+      description: From the release zip name.
+      placeholder: "v1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and OS
+      placeholder: "Windows 11 PC, Retroid Pocket Nova, ..."
+    validations:
+      required: true
+
+  - type: input
+    id: emulator
+    attributes:
+      label: Switch emulator name and version
+      description: Needed to diagnose the report. Do not link downloads.
+      placeholder: "name and version"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: aspect
+    attributes:
+      label: Aspect ratio setting for this game
+      options:
+        - Force 4:3
+        - 4:3
+        - Something else
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: other_mods
+    attributes:
+      label: Other mods enabled for this game
+      description: List any other add-ons, or leave as None.
+      value: None
+    validations:
+      required: false
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where it happens
+      options:
+        - In-level
+        - Menu or pause
+        - World or kingdom map
+        - Transition or wipe
+        - Boss
+        - Multiplayer
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: symptom
+    attributes:
+      label: What kind of problem
+      options:
+        - Tall / thin 3D
+        - Still stretched or side bars
+        - UI cut off or squashed
+        - Camera / framing
+        - Flash or flicker
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: What looks wrong
+      description: Where in the game (level, menu or screen) and what you see.
+      placeholder: e.g. Pause menu background doesn't fill the screen; HUD icons look stretched...
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reach that screen again
+      description: Optional. Steps from the title or map help.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Attach images to the issue if you can.
+      options:
+        - label: I attached a screenshot with the mod on
+          required: false
+        - label: I attached a screenshot with the mod off
+          required: false
