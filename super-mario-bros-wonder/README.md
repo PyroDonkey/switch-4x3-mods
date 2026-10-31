@@ -4,7 +4,7 @@
 
 Plays Super Mario Bros. Wonder natively at 4:3 instead of stretching or letterboxing it. The camera, level framing and the whole UI are adjusted so nothing is squashed.
 
-<!-- download:smbw -->**First release coming soon.**<!-- /download:smbw -->
+<!-- download:smbw -->**[Download v1.0.0 (for game v1.2.1)](https://github.com/PyroDonkey/switch-4x3-mods/releases/download/smbw-v1.0.0/SMBW-4x3-Native-v1.0.0-for-game-1.2.1.zip)** · [All releases](https://github.com/PyroDonkey/switch-4x3-mods/releases)<!-- /download:smbw -->
 
 Requires **game version 1.2.1**. Tested on Switch emulators on Windows and Android (Retroid Pocket Nova). Other versions of the game are not supported.
 

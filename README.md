@@ -8,7 +8,7 @@ Native 4:3 aspect-ratio mods for Nintendo Switch games. "Native" means the game 
 
 | Game | Needs game version | Download | Install steps |
 | --- | --- | --- | --- |
-| Super Mario Bros. Wonder | 1.2.1 | <!-- download:smbw -->Coming soon<!-- /download:smbw --> | [Install](super-mario-bros-wonder/README.md#install) |
+| Super Mario Bros. Wonder | 1.2.1 | <!-- download:smbw -->[Download v1.0.0](https://github.com/PyroDonkey/switch-4x3-mods/releases/download/smbw-v1.0.0/SMBW-4x3-Native-v1.0.0-for-game-1.2.1.zip)<!-- /download:smbw --> | [Install](super-mario-bros-wonder/README.md#install) |
 
 Tested on Switch emulators on Windows and Android (Retroid Pocket Nova). Each mod only works with the game version listed, so update your game first. To install, follow the install guide linked for your game in the table above; it also covers updating and troubleshooting.
 
