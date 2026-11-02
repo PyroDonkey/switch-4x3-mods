@@ -9,6 +9,8 @@ usage:
       Same, selecting the actor by its Hash.
   python bymlpatch.py <in.zs> <out.zs> --hash <Hash> --translate <x> <y> <z>
       Moves an actor (Translate is an array of three inline floats).
+  python bymlpatch.py <in.zs> <out.zs> --hash <Hash> --scale <x> <y> <z>
+      Rescales an actor (Scale, same layout as Translate).
 """
 import struct, sys
 from compression import zstd
@@ -103,11 +105,19 @@ class Byml:
         else:
             raise ValueError(f'unsupported inline type {t:#x}')
 
-    def set_translate(self, actor, xyz):
-        t, slot, raw = actor['Translate']
-        for (et, eslot, _), v in zip(self.array_slots(raw), xyz):
-            assert et == 0xD2
+    def vec3(self, actor, key):
+        """[(slot_offset, value)] of an actor's three-float array (Translate, Scale, Rotate)."""
+        t, slot, raw = actor[key]
+        slots = self.array_slots(raw)
+        assert len(slots) == 3 and all(et == 0xD2 for et, _, _ in slots), key
+        return [(eslot, struct.unpack('<f', struct.pack('<I', v))[0]) for _, eslot, v in slots]
+
+    def set_vec3(self, actor, key, xyz):
+        for (eslot, _), v in zip(self.vec3(actor, key), xyz):
             struct.pack_into('<f', self.d, eslot, float(v))
+
+    def set_translate(self, actor, xyz):
+        self.set_vec3(actor, 'Translate', xyz)
 
 
 def main(argv):
@@ -124,6 +134,8 @@ def main(argv):
         rest = rest[1:]
     if rest[0] == '--translate':
         b.set_translate(a, [float(x) for x in rest[1:4]])
+    elif rest[0] == '--scale':
+        b.set_vec3(a, 'Scale', [float(x) for x in rest[1:4]])
     else:
         key, value = rest[0], rest[1]
         target = a['Dynamic'] if '--top' not in rest else a
