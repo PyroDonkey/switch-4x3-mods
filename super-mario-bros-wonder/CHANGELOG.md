@@ -2,6 +2,16 @@
 
 Newest first. Each release's section becomes its GitHub release notes.
 
+## v1.1.0
+
+For game v1.2.1. World 4 Bowser Jr. (`Course152_Sub4`) fixes:
+
+- Fix underwater tint and light rays cutting off in 4:3 (scaled the water mix plane in stage data).
+- Fix fight camera drifting up and sticking high during swimming (pinned to stock 3.25 height via cave Y).
+- Fix Royal Seed and Prince Florian spawning too high to reach after the boss defeat.
+- Fix Bowser Jr. getting trapped spinning in the corner (cave K restores stock camera bounds for swim AI navigation).
+- Fix unrendered black void boxes in the bottom corners under the walls (extended wall terrain points to y = -10.0 in stage data).
+
 ## v1.0.0
 
 First release, for game v1.2.1.
