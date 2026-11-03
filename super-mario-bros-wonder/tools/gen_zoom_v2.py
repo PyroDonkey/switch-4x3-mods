@@ -24,8 +24,8 @@ cave Y  @0x02138D40  hooked at 0x006C66E8 (controller Y limits): in Course152_Su
 cave K  @0x02138D88  hooked at 0x01781B70 (GetCameraBoundBox2f): in Course152_Sub4 only, replaces minY/maxY with
         stock -5.50 / 12.00 so Bowser Jr.'s swim AI navigation targets points above the floor and never corners.
 cave G  @0x02138A00  hooked at 0x006C6FD0 (fixed-position camera target, written only by SetAutoScrollPos): X = fixed X +
-        eased offset; the offset is 0 while fixed X moves (autoscroll, stock behaviour) and clamp(focus X - fixed X,
-        +/- delta) once the scroll has stopped for 2 s. StopScroll-locked rooms go through cave H, not here.
+        eased offset; the offset is 0 while fixed X moves (autoscroll, stock behaviour) and clamp(focus X - fixed X -
+        delta, +/- delta) + delta once the scroll has stopped for 2 s. StopScroll-locked rooms go through cave H, not here.
         Replaces the old 006C6FD0-006C6FE4 lines (X = focus X unclamped), which let the player outrun autoscrolls.
   0x037D1F30  previous fixed X    0x037D1F34  autoscroll hold counter    0x037D1F38  current camera offset
 cave H  @0x02138F00  hooked at 0x006C7BEC (side-lock X override, controller+0x29): X = locked X + clamp(normal X -
@@ -251,8 +251,8 @@ emit(F2, [lambda pc: struct.unpack_from('<I', img, 0x6C6364)[0],           # ldr
 # subject+0x194. Target X = fixed X + offset, where the offset (mailbox 0x037D1F38) eases at STEP per frame towards:
 #   0                                         while fixed X is moving (autoscroll; held HOLD frames after it stops),
 #                                             so the camera rides the scroll exactly like stock and never drifts back
-#   clamp(focus X - fixed X, +/- delta)       once fixed X has been still for HOLD frames (stopped scroll, vertical
-#                                             scroll): the 4:3 view pans inside the 16:9 frame
+#   clamp(focus X - fixed X - delta, +/- delta) + delta   once fixed X has been still for HOLD frames (stopped scroll,
+#                                                         vertical scroll): the 4:3 view pans inside [0, 2*delta]
 # A fixed-X jump of more than 1 block in one frame (new area, respawn, cut) or a different controller (x19 != the one
 # cave A stored at 0x037D1F20) resets to offset 0 with a full hold, so the camera starts on the game's position.
 # Mailbox: 0x037D1F30 previous fixed X, 0x037D1F34 autoscroll hold counter, 0x037D1F38 current offset.
@@ -266,8 +266,10 @@ def clamp_delta():                    # s0 = clamp(s0, -delta, +delta), delta = 
             lambda pc: fmax_s(0, 0, 31)]
 
 
-def follow():                         # s0 = clamp(focus X - fixed X, +/- delta)
-    return [lambda pc: ldr_s(0, 19, 0x130), lambda pc: ldr_s(31, 20, 0x194), lambda pc: fsub_s(0, 0, 31)] + clamp_delta()
+def follow():                         # s0 = clamp(focus X - fixed X - delta, -delta, +delta) + delta  (range [0, 2*delta])
+    return [lambda pc: ldr_s(0, 19, 0x130), lambda pc: ldr_s(31, 20, 0x194), lambda pc: fsub_s(0, 0, 31),
+            lambda pc: ldr_s(31, 17, 0xF18), lambda pc: fsub_s(0, 0, 31), lambda pc: fmin_s(0, 0, 31),
+            lambda pc: fneg_s(31, 31), lambda pc: fmax_s(0, 0, 31), lambda pc: fsub_s(0, 0, 31)]
 
 
 def assemble(base, items, ldict=None):
@@ -309,7 +311,11 @@ G_ITEMS = [
     lambda pc: ldr_s_lit(31, pc, glab['stepv']), lambda pc: fmin_s(0, 0, 31), lambda pc: fneg_s(31, 31),
     lambda pc: fmax_s(0, 0, 31),
     lambda pc: ldr_s(31, 17, 0xF38), lambda pc: fadd_s(0, 0, 31),                      # offset += clamped step
-    *clamp_delta(),
+    lambda pc: ldr_s(31, 17, 0xF18),                                                   # s31 = delta
+    lambda pc: fadd_s(31, 31, 31),                                                     # s31 = 2*delta
+    lambda pc: fmin_s(0, 0, 31),                                                       # s0 = min(s0, 2*delta)
+    lambda pc: fmov_s_w(31, 31),                                                       # s31 = 0.0 (wzr)
+    lambda pc: fmax_s(0, 0, 31),                                                       # s0 = max(s0, 0.0)
     lambda pc: b_(pc, glab['write']),
     'jump',                                                                            # new area / respawn / cut:
     lambda pc: movz_w(9, HOLD), lambda pc: str_w(9, 17, 0xF34),                        # ride the fixed X (hold) and

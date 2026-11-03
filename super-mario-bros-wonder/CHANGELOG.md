@@ -2,6 +2,12 @@
 
 Newest first. Each release's section becomes its GitHub release notes.
 
+## v1.1.1
+
+For game v1.2.1.
+
+- Fix the Wonder Seed being off-screen and out of reach after the Wonder autoscroll stops in Piranha Plants on Parade ([#1](https://github.com/PyroDonkey/switch-4x3-mods/issues/1)). Once any autoscroll has stopped, the camera can now pan across the whole original 16:9 frame instead of stopping short of its right edge. This applies to every autoscroll that stops, not only this level.
+
 ## v1.1.0
 
 For game v1.2.1. World 4 Bowser Jr. (`Course152_Sub4`) fixes:
