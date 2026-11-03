@@ -56,7 +56,7 @@ Still stuck? [Open an issue](https://github.com/PyroDonkey/switch-4x3-mods/issue
 **`exefs/1.2.1.pchtxt`**: aspect ratio 16:9 to 4:3, plus camera fixes.
 
 - One-screen rooms keep their full 16:9 framing.
-- Autoscrolls move exactly like stock, so you can't outrun them. Once a scroll stops, the camera can pan inside the original 16:9 frame.
+- Autoscrolls move exactly like stock, so you can't outrun them. The camera stays locked during mid-scroll pauses (such as musical breaks); once a scroll reaches its final stop, the camera can pan inside the original 16:9 frame to reach items at the edge.
 - Screen-locked rooms and shafts let the camera pan inside the original 16:9 frame, so items at their edges stay reachable.
 - View height per area: houses, shops and small rooms use the stock height; wide levels are shown slightly wider than stock (base height 15.75).
 - Bowser Jr. fights are zoomed out so the whole arena is visible, with Pipe-Rock Plateau Palace's ceiling pipes kept in place.
@@ -65,7 +65,7 @@ Still stuck? [Open an issue](https://github.com/PyroDonkey/switch-4x3-mods/issue
 
 ## Known limits
 
-- Played and checked: Pipe-Rock Plateau Palace boss, badge houses, W2 Outmaway Valley, the W2 airship autoscroll and its Wonder Flower, the Wonder Seed at the end of Piranha Plants on Parade's autoscroll, Up 'n' Down with Puffy Lifts, World 4 Bowser Jr. (underwater tint, fight camera, Royal Seed after the boss, Bowser Jr. swim AI, corner voids under the walls), world and kingdom maps, course list, pause menu, level transitions, in-level HUD, button glyphs, Poplin shop, user select and player count menus, main-menu pointer, course-clear photo, Badge Challenge restart wipe, and the v1.2.1 rebuild of those UI screens (menus, HUD, pause, maps, transitions, course clear, cursor, amiibo).
+- Played and checked: Pipe-Rock Plateau Palace boss, badge houses, W2 Outmaway Valley, the W2 airship autoscroll and its Wonder Flower, Piranha Plants on Parade (Wonder Seed at autoscroll end, plus camera lock during mid-scroll singing pause), Up 'n' Down with Puffy Lifts, World 4 Bowser Jr. (underwater tint, fight camera, Royal Seed after the boss, Bowser Jr. swim AI, corner voids under the walls), world and kingdom maps, course list, pause menu, level transitions, in-level HUD, button glyphs, Poplin shop, user select and player count menus, main-menu pointer, course-clear photo, Badge Challenge restart wipe, and the v1.2.1 rebuild of those UI screens (menus, HUD, pause, maps, transitions, course clear, cursor, amiibo).
 - Not yet played: the other Bowser Jr. fights (zoomed but untested), the airship boss fights, the final boss, multiplayer, and some screen transitions (warp and slide wipes).
 - The death-screen spotlight may look slightly oval.
 - On some Android devices, bars may flash briefly when entering a level from the map; not seen on PC.
