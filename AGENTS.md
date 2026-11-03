@@ -12,15 +12,14 @@ docs/game-files-policy.md      What may be committed, how it's enforced, what to
 scripts/release.py             Release checks, packaging and publishing (all games)
 scripts/check_repo.py          Blocks game data, keys and decompiler dumps (pre-commit hook, release, CI)
 .githooks/pre-commit           Runs check_repo.py on staged files (enable: git config core.hooksPath .githooks)
-.claude/settings.json          Claude Code hooks: enable the git hook, deny commands that bypass it
+.claude/settings.json          Claude Code only: hooks that enable the git hook and deny commands that bypass it
 .github/workflows/validate.yml Reports check_repo.py failures after a push (a tripwire, not protection)
 .github/release-games.json     One entry per game: tag prefix, folders, game version, build ID, layout count
 .github/workflows/release.yml  Publishes a GitHub release when a <prefix>-v<version> tag is pushed
 <game-folder>/                 One per game, kebab-case English title (e.g. super-mario-bros-wonder)
   README.md                    Player-facing: Download link, the install guide (## Install), what it changes, known limits
   CHANGELOG.md                 "## v<version>" sections; each becomes that release's notes
-  AGENTS.md                    Agent-facing: current state (source of truth), build/verify commands, addresses, gotchas
-  CLAUDE.md                    Just "@AGENTS.md"
+  AGENTS.md (+ CLAUDE.md)      Agent-facing: current state (source of truth), build/verify commands, addresses, gotchas
   mod/<Mod Name>/              The installable mod folder exactly as players get it (exefs/, romfs/, README.txt)
   tools/                       Scripts that generate and check the mod
   docs/DEVELOPMENT.md          Dated log of how the mod got here
@@ -32,6 +31,7 @@ Games: [`super-mario-bros-wonder/`](super-mario-bros-wonder/) (1.2.1).
 
 - **Game files: follow [`docs/game-files-policy.md`](docs/game-files-policy.md).** In short: commit only archives the build changed, never dumps, keys, executables, extracted trees, Ghidra projects or unchanged game files. Never copy files from a workspace into the repo except a tool's build output into `<game>/mod/`.
 - **Never bypass the pre-commit check** (`--no-verify`, `git commit -n`, `git add -f`, changing `core.hooksPath`). If it blocks something, fix the cause. In a fresh clone, run `git config core.hooksPath .githooks` first.
+- **Don't commit or push unless the maintainer asks** (a release request counts as asking).
 - **Quote, don't dump:** never put key contents, whole decompiled functions, disassembly listings or data dumps into docs, commit messages, PR text or changelogs. Cite addresses and a few lines. Tool outputs holding original values (`build_report.json`, decompiler output) stay outside the repo.
 - Sending excerpts of game code to outside AI services for review is the maintainer's call; never send game files or whole binaries.
 - **No machine-specific paths** in scripts or docs. Scripts take paths as arguments or environment variables (e.g. `SMBW_MAIN_BIN`); docs use `%APPDATA%`, `<repo>` or placeholders.
@@ -39,7 +39,6 @@ Games: [`super-mario-bros-wonder/`](super-mario-bros-wonder/) (1.2.1).
 - **Each mod targets exact game builds.** A `.pchtxt` applies only when its `@nsobid` matches; say in the game's README which versions are supported.
 - **Report test status honestly.** Separate "confirmed in game" from "built, not yet played" in READMEs, AGENTS.md and commit messages.
 - Keep each game's `AGENTS.md` current-state section up to date in the same commit as the change; put the narrative in `docs/DEVELOPMENT.md`.
-
 - **Player-facing text names no emulators** and never links to emulator downloads: say "Switch emulators on Windows and Android". Developer docs (AGENTS.md, DEVELOPMENT.md, the guide) may name the emulator used for testing.
 
 ## Checks
@@ -52,7 +51,7 @@ python scripts/release.py check <prefix> <version> # release rules: changelog, b
 # plus the game's own verifiers, listed in its AGENTS.md (SMBW: tools/verify.py and tools/verify_pchtxt.py)
 ```
 
-`scripts/` needs only Python 3.8+ (CI uses the runner's 3.12). Game tools may need more (SMBW: Python 3.14 plus `capstone` and `lz4`).
+No package manager, build system, linter or type checker: Python scripts run directly. `scripts/` needs only Python 3.8+ (CI uses the runner's 3.12). Game tools may need more (SMBW: Python 3.14 plus `capstone` and `lz4`).
 
 ## Releasing
 
@@ -81,3 +80,11 @@ Only the human tester can play (the emulator is bound to a physical controller).
 4. Register it in `.github/release-games.json` under a short tag prefix (e.g. `botw`). The workflow needs no change.
 5. Generalise shared tools only when a second game actually needs them; until then each game keeps its own `tools/`.
 6. Add a row with its own download marker to the table in the root `README.md`, and add it to the list above.
+
+## Suggested workflow (suggestions, not requirements)
+
+1. Read the guide section for the task and the game's `AGENTS.md` current state; use a cheap read-only pass to find the files and addresses involved.
+2. For a non-trivial change, write a short plan (goal, files, how to verify) and get the maintainer's OK first.
+3. Change the generator, rebuild, run the game's verifiers and `python scripts/check_repo.py`; keep each diff small.
+4. Have a different model family review any non-trivial diff before it is committed; the maintainer decides what to commit.
+5. Update the game's `AGENTS.md` current state and `docs/DEVELOPMENT.md` in the same change.
