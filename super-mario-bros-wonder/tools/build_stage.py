@@ -1,17 +1,18 @@
-"""Stage (BancMapUnit) edits for the 4:3 mod: same-size float edits on single actors, built from the 1.2.1 originals.
+"""Stage (BancMapUnit) edits for the 4:3 mod: same-size float and guarded actor-type edits from the 1.2.1 originals.
 
 usage:
   python build_stage.py <orig_romfs> <out_dir>
       Writes <out_dir>/romfs/BancMapUnit/<course>.bcett.byml.zs for every course in EDITS.
   python build_stage.py --verify <orig_romfs> <mod_romfs>
-      Checks the shipped files in <mod_romfs>/BancMapUnit: exactly the EDITS courses, each differing from its
-      original only in the edited floats. Exits 1 on any problem.
+      Checks the shipped files in <mod_romfs>/BancMapUnit: exactly the declared courses, each differing from its
+      original only in the declared float/string edits. Exits 1 on any problem.
 
 <orig_romfs> is the extracted 1.2.1 romfs (needs BancMapUnit/).
 """
 import os, struct, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bymlpatch import Byml, read, write
+from byml import parse
 
 # (course, actor Hash, Gyaml, key, original xyz, new xyz)
 # Course152_Sub4 (W4 Bowser Jr.): KoopaJrSystemWaterMixAreaPlane draws the underwater tint, caustics and light rays.
@@ -36,7 +37,40 @@ EDITS = [
      (14.0, 14.5, -50.0), (14.0, 14.05, -50.0)),
     ('Course411_Course', 7448602804733534664, 'DVCommonMiniMokkinMiddleKabeA00', 'Translate',
      (14.0, 8.0, -50.0), (14.0, 6.05, -50.0)),
+    # Course415_Course (Bouncy Tunes): same camera/frame geometry as Course411, but the lower wall starts at y = 7.
+    # Preserve the arch/pillar joints with the same +1.45 shift; use the proven wall heights without scaling art.
+    ('Course415_Course', 11189840997242436358, 'MapObjCommonMiniMokkinKazariHashiraTopA00', 'Translate',
+     (14.0, 17.094999313354492, -1.5), (14.0, 18.545, -1.5)),
+    ('Course415_Course', 15973468427708520567, 'MapObjCommonMiniMokkinAshibaHashiraA00', 'Translate',
+     (0.0, 13.0, 0.0), (0.0, 14.45, 0.0)),
+    ('Course415_Course', 10768018882934825920, 'MapObjCommonMiniMokkinAshibaHashiraA00', 'Translate',
+     (28.0, 13.0, 0.0), (28.0, 14.45, 0.0)),
+    ('Course415_Course', 6698885844443459845, 'DVCommonMiniMokkinMiddleKabeA01', 'Translate',
+     (14.0, 14.5, -50.0), (14.0, 14.05, -50.0)),
+    ('Course415_Course', 7422773204426211404, 'DVCommonMiniMokkinMiddleKabeA00', 'Translate',
+     (14.0, 7.0, -50.0), (14.0, 6.05, -50.0)),
+    # Course417_Course starts with A01 pillars whose visible bases end above the taller view.
+    # GYAML_EDITS selects A00 instead; place those pillars at the proven Course411/415 height without scaling art.
+    # The arch and walls retain the positions previewed in the previous candidate; keep the left pillar's offsets.
+    ('Course417_Course', 5572109748998102819, 'MapObjCommonMiniMokkinKazariHashiraTopA00', 'Translate',
+     (14.0, 17.25, -1.5), (14.0, 18.545, -1.5)),
+    ('Course417_Course', 2563226780723368258, 'MapObjCommonMiniMokkinAshibaHashiraA01', 'Translate',
+     (9.5367431640625e-07, 12.999999046325684, 0.0), (9.5367431640625e-07, 14.449999046325684, 0.0)),
+    ('Course417_Course', 4481523648176900651, 'MapObjCommonMiniMokkinAshibaHashiraA01', 'Translate',
+     (28.0, 13.0, 0.0), (28.0, 14.45, 0.0)),
+    ('Course417_Course', 15951153385148960223, 'DVCommonMiniMokkinMiddleKabeA01', 'Translate',
+     (14.0, 14.0, -50.0), (14.0, 14.05, -50.0)),
+    ('Course417_Course', 15861247310196865901, 'DVCommonMiniMokkinMiddleKabeA00', 'Translate',
+     (14.0, 6.0, -50.0), (14.0, 6.05, -50.0)),
 ]
+
+# (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics
+# definitions; use the game's existing A00 art rather than stretching A01 or shipping an actor/model pack.
+GYAML_EDITS = [
+    ('Course417_Course', (2563226780723368258, 4481523648176900651),
+     'MapObjCommonMiniMokkinAshibaHashiraA01', 'MapObjCommonMiniMokkinAshibaHashiraA00'),
+]
+
 
 # (course, unit_idx, wall_idx, point_idx, orig_xyz, new_xyz)
 # In Course152_Sub4 (W4 Bowser Jr.), the arena walls (Unit 1 Wall 1 & Wall 2) and corridor (Wall 0) bottom out at
@@ -60,10 +94,58 @@ def bcett(romfs, course):
 def edits_by_course():
     out = {}
     for e in EDITS:
-        out.setdefault(e[0], {'actors': [], 'bg': []})['actors'].append(e)
+        out.setdefault(e[0], {'actors': [], 'bg': [], 'gyaml': []})['actors'].append(e)
     for b_edit in BG_EDITS:
-        out.setdefault(b_edit[0], {'actors': [], 'bg': []})['bg'].append(b_edit)
+        out.setdefault(b_edit[0], {'actors': [], 'bg': [], 'gyaml': []})['bg'].append(b_edit)
+    for g_edit in GYAML_EDITS:
+        out.setdefault(g_edit[0], {'actors': [], 'bg': [], 'gyaml': []})['gyaml'].append(g_edit)
     return out
+
+
+def replace_actor_gyaml(d, hashes, original, replacement):
+    """Rename a same-size pooled string only when its sole consumers are the selected actor Gyaml fields."""
+    assert hashes and len(set(hashes)) == len(hashes), 'duplicate or empty actor selection'
+    old, new = original.encode('utf-8'), replacement.encode('utf-8')
+    assert old != new and len(old) == len(new), 'Gyaml replacement must be distinct and the same byte length'
+    b = Byml(d)
+    assert b.strs.count(original) == 1 and replacement not in b.strs, 'unexpected Gyaml string table'
+    for h in hashes:
+        matches = [a for a in b.actors() if b.hash_of(a) == h]
+        assert len(matches) == 1, f'actor hash {h} is missing or duplicated'
+        a = matches[0]
+        assert a['Gyaml'][0] == 0xA0 and b.actor_value(a, 'Gyaml') == original, f'actor {h}: wrong original Gyaml'
+
+    expected = parse(bytes(d))
+    for a in expected['Actors']:
+        if a['Hash'] in hashes:
+            a['Gyaml'] = replacement
+
+    index = b.strs.index(original)
+    strings = b.strs[:]
+    strings[index] = replacement
+    assert strings == sorted(strings), 'Gyaml replacement would unsort the string table'
+    count = len(b.strs)
+    assert d[b.strs_off] == 0xC2
+    offsets = struct.unpack_from(f'<{count + 1}I', d, b.strs_off + 4)
+    table_end = b.strs_off + offsets[-1]
+    start = b.strs_off + offsets[index]
+    end = start + len(old)
+    assert b.strs_off + 4 + 4 * (count + 1) <= start < end < table_end <= len(d), 'invalid string bounds'
+    assert d[start:end] == old and d[end] == 0, 'wrong string payload or terminator'
+    for i, offset in enumerate(offsets[:-1]):
+        if i == index:
+            continue
+        other_start = b.strs_off + offset
+        other_end = d.index(b'\0', other_start) + 1
+        assert other_end <= table_end, 'string exceeds table bounds'
+        assert max(start, other_start) >= min(end + 1, other_end), 'overlapping string storage'
+
+    allowed = {start + i for i, (a, c) in enumerate(zip(old, new)) if a != c}
+    candidate = bytearray(d)
+    candidate[start:end] = new
+    assert parse(bytes(candidate)) == expected, 'Gyaml replacement affects unintended fields or shared consumers'
+    d[start:end] = new
+    return allowed
 
 
 def apply(d, course_edits):
@@ -111,6 +193,8 @@ def apply(d, course_edits):
         for eslot, _ in b.vec3(p, 'Translate'):
             allowed.update(range(eslot, eslot + 4))
 
+    for course, hashes, original, replacement in course_edits.get('gyaml', []):
+        allowed.update(replace_actor_gyaml(d, hashes, original, replacement))
     return allowed
 
 
@@ -149,11 +233,11 @@ def verify(orig_romfs, mod_romfs):
         if not diff:
             problems.append(f'{course}: identical to the original')
         if diff - allowed:
-            problems.append(f'{course}: {len(diff - allowed)} byte(s) changed outside the edited floats')
+            problems.append(f'{course}: {len(diff - allowed)} byte(s) changed outside the declared edits')
         elif bytes(ship) != bytes(ref):
-            problems.append(f'{course}: edited values differ from EDITS')
+            problems.append(f'{course}: edited values differ from the edit tables')
         elif diff:
-            n_total = len(edits.get('actors', [])) + len(edits.get('bg', []))
+            n_total = len(edits.get('actors', [])) + len(edits.get('bg', [])) + len(edits.get('gyaml', []))
             print(f'{course}: {len(diff)} byte(s) differ, all inside {n_total} edit(s)')
     for p in problems:
         print('PROBLEM:', p)

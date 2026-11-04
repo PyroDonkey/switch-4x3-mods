@@ -2,6 +2,36 @@
 
 Newest first. Each release's section becomes its GitHub release notes.
 
+## v1.1.7
+
+For game v1.2.1. Development build; not released. Visual framing approved on Windows on 2026-11-04; full gameplay checks remain open.
+
+- Replace the two visibly short A01 side pillars in Break Time! — Trottin' Piranha Plants with the existing A00 variant used in Wonder Token Tunes and Bouncy Tunes, at its proven alignment. The maintainer approved the bottom coverage and flush upper joints without stretching artwork. The full enemy sequence, edge movement/activation, completion, retry and current Wonder Token Tunes regression are not yet confirmed.
+
+## v1.1.6
+
+For game v1.2.1. Artwork development trial; not released. A preview showed the A01 pillar bases ending above the screen bottom; superseded by v1.1.7.
+
+- Fit Break Time! — Trottin' Piranha Plants (`Course417_Course`) to the original room width and reposition its arch, A01 side pillars and backdrop panels for the taller 4:3 view without stretching artwork. Final coverage, enemy movement/activation, completion and retry still need checks.
+
+## v1.1.5
+
+For game v1.2.1. Camera-only development trial; not released.
+
+- Zoom out Break Time! — Trottin' Piranha Plants (`Course417_Course`) to fit the full original room width at 4:3. A human preview showed space above the arch and dark space below the backdrop; superseded by the v1.1.6 artwork candidate.
+
+## v1.1.4
+
+For game v1.2.1. Development build; not released. Artwork framing approved in game, gameplay checks still open.
+
+- Fit Break Time! — Bouncy Tunes (`Course415_Course`) to the full original room width at 4:3, with its arch, pillars and backdrop panels repositioned to cover the taller view without stretching artwork. The framing was approved in game; the full moving-token sequence, completion and retry are not yet confirmed.
+
+## v1.1.3
+
+For game v1.2.1. Camera-only development trial; not released.
+
+- Zoom out Break Time! — Bouncy Tunes (`Course415_Course`) to fit the full original room width at 4:3. A human preview showed bottom void and space above the arch with the original artwork; superseded by the v1.1.4 framing candidate.
+
 ## v1.1.2
 
 For game v1.2.1.
