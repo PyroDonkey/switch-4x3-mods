@@ -50,7 +50,8 @@ G_SMALL, D_SMALL = 15.5, 3.4444444
 BOSS = [(607466214, 21.0, 0.0),                 # Course150_Sub4 Pipe-Rock Plateau Palace (user-confirmed at stock lock)
         (101336182, 20.6666667, 0.0),           # Course151_Sub2
         (1778226157, 20.6666667, 0.0),          # Course152_Sub4
-        (1019598315, 20.6666667, 0.0)]          # Course153_Sub3
+        (1019598315, 20.6666667, 0.0),          # Course153_Sub3
+        (1607468536, 20.6666667, 0.0)]          # Course411_Course Break Time! Wonder Token Tunes
 for _h, _g, _d in BOSS + [(0, G_LARGE, D_LARGE), (0, G_SMALL, D_SMALL)]:
     assert _d <= max(0.0, (27.5556 - _g * 4.0 / 3.0) / 2.0) + 1e-4, (_h, _g, _d)
 

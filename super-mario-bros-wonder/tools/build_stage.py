@@ -19,6 +19,23 @@ from bymlpatch import Byml, read, write
 # the fight framing sits ~2.9 blocks higher (about y -5.6 to 17.7), so Scale Y 1.5 (minimum ~1.35) covers both.
 EDITS = [
     ('Course152_Sub4', 2115412732, 'KoopaJrSystemWaterMixAreaPlane', 'Scale', (1.0, 1.0, 1.0), (1.0, 1.5, 1.0)),
+    # Course411_Course (Break Time! Wonder Token Tunes): in 4:3 with G = 20.6667 (matching stock 16:9 width 27.56),
+    # view height expands to 20.67 (top y = 18.58, bottom y = -2.08).
+    # 1. Shift top arch and both side pillars together by +1.45 in Y so the corner joints stay flush and the arch
+    #    sits at the top of the 4:3 screen (matching 16:9 relative framing).
+    # 2. Upper wall (DVCommonMiniMokkinMiddleKabeA01) nudged down slightly (y 14.5 -> 14.05) matching Course417.
+    # 3. Shift backdrop / lower wall (DVCommonMiniMokkinMiddleKabeA00) up to y = 6.05 (Scale 1.0) so its top
+    #    overlaps cleanly behind the upper scallops, completely sealing the top gap with zero distortion.
+    ('Course411_Course', 17065616487753818880, 'MapObjCommonMiniMokkinKazariHashiraTopA00', 'Translate',
+     (14.0, 17.094999313354492, -1.5), (14.0, 18.545, -1.5)),
+    ('Course411_Course', 2621125777637998454, 'MapObjCommonMiniMokkinAshibaHashiraA00', 'Translate',
+     (0.0, 13.0, 0.0), (0.0, 14.45, 0.0)),
+    ('Course411_Course', 16950009666873027591, 'MapObjCommonMiniMokkinAshibaHashiraA00', 'Translate',
+     (28.0, 13.0, 0.0), (28.0, 14.45, 0.0)),
+    ('Course411_Course', 10511750659666636920, 'DVCommonMiniMokkinMiddleKabeA01', 'Translate',
+     (14.0, 14.5, -50.0), (14.0, 14.05, -50.0)),
+    ('Course411_Course', 7448602804733534664, 'DVCommonMiniMokkinMiddleKabeA00', 'Translate',
+     (14.0, 8.0, -50.0), (14.0, 6.05, -50.0)),
 ]
 
 # (course, unit_idx, wall_idx, point_idx, orig_xyz, new_xyz)

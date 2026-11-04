@@ -2,6 +2,13 @@
 
 Newest first. Each release's section becomes its GitHub release notes.
 
+## v1.1.2
+
+For game v1.2.1.
+
+- Fix Break Time! — Wonder Token Tunes (`Course411_Course`): zoomed out to fit the full 16:9 room width in 4:3 so all wonder tokens and note blocks are visible at once as originally intended.
+- Stage framing adjustments in Wonder Token Tunes: shifted the proscenium arch and side pillars together to crown the top of the 4:3 screen with flush corner joints, and adjusted the backdrop panels to extend the natural wood slats across the bottom of the screen, eliminating the out-of-bounds void without stretching artwork.
+
 ## v1.1.1
 
 For game v1.2.1.
