@@ -62,6 +62,16 @@ EDITS = [
      (14.0, 14.0, -50.0), (14.0, 14.05, -50.0)),
     ('Course417_Course', 15861247310196865901, 'DVCommonMiniMokkinMiddleKabeA00', 'Translate',
      (14.0, 6.0, -50.0), (14.0, 6.05, -50.0)),
+    # Course403_Course (Break Time! Zip-Go-Round): at 4:3 with G = 20.6667 (matching stock 16:9 width 27.56),
+    # view height expands to 20.67 (bottom y = -2.08), exposing unrendered black floor at y >= 1057.
+    # Widen floor cloud Hash 3184768010431751081 across the full floor and nudge slightly down
+    # (Translate Y 0.0 -> -0.4, Scale X 6.0 -> 28.0) so the bottom puff row lobes seal both bottom corners
+    # and scalloped edge gaps off-screen, while keeping the top at y = 1.6 flush against the red dash floor.
+    # All 9 other base clouds (4 ceiling, 5 side walls) remain stock. 2 float writes (8 bytes).
+    ('Course403_Course', 3184768010431751081, 'ObjectCloudArea', 'Translate',
+     (12.5, 0.0, 0.0), (14.0, -0.4, 0.0)),
+    ('Course403_Course', 3184768010431751081, 'ObjectCloudArea', 'Scale',
+     (6.0, 4.0, 1.0), (28.0, 4.0, 1.0)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics
