@@ -5,7 +5,7 @@ Developer QA checklist for **Super Mario Bros. Wonder 1.2.1**. Created 2026-11-0
 **Current status:**
 - **Group 1 (Musical theater framing, [PR #4](https://github.com/PyroDonkey/switch-4x3-mods/pull/4)):** Course411 confirmed fixed (reference). Course415 and Course417 visual framing approved in Eden on 2026-11-04; gameplay sequence, completion/retry, and regression checks remain open.
 - **Group 2 (Wide puzzle arenas, [PR #5](https://github.com/PyroDonkey/switch-4x3-mods/pull/5)):** Course403 visual framing approved in Eden on 2026-11-05 (full-room camera zoom $G = 20.6667$, $\text{delta} = 0$ plus widened floor cloud to cover the background dome void without flicker); token collection, moving rail sequence, completion, and retry checks remain open. Course400 visual framing approved in Eden on 2026-11-06; Hoppo spawn raised off-screen ($Y = 12.0 \to 17.0$, `PopUpTag` $16.5 \to 21.5$) to eliminate visible mid-air pop-in; awaiting retry/gameplay checks.
-- **Remaining 14 courses:** Pending play-test.
+- **Remaining 14 courses:** Course414 checked; no change needed. 13 pending play-test.
 
 ## Scope and baseline
 
@@ -130,7 +130,7 @@ A separate camera case; do not treat it as another static one-screen theater.
 
 | Done | Course / level | World | Status | Tested commit / result |
 | --- | --- | --- | --- | --- |
-| [ ] | `Course414` — Tumble House | W5 — Fungi Mines | Pending play-test | Not tested |
+| [x] | Course414 — Tumble House | W5 — Fungi Mines | Checked; no change needed | 2026-11-06, Windows/Eden: maintainer confirmed room does not fit within 1 screen; normal camera tracking is acceptable. |
 
 - Check token visibility, camera following, backdrop coverage, and pipe positions in every orientation and during rotations.
 - The room rotates in 90-degree steps and already exceeds one stock screen vertically. Some token positions reach beyond the default horizontal half-width; actual visibility still needs play-testing.
