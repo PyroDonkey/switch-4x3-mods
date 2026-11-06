@@ -136,6 +136,7 @@ def verify_patch(path):
         (3684305666, 20.6666667),     # Course415_Course
         (2579434623, 20.6666667),     # Course417_Course
         (177084102, 20.6666667),      # Course403_Course
+        (3214359175, 20.6666667),     # Course008_Sub2
     ]
     for i, (area_hash, height) in enumerate(expected_areas):
         addr = 0x02138E00 + 12 * i
