@@ -6,6 +6,7 @@ Verifies:
 - Original instructions are preserved in each code cave
 - All code caves and tables are disjoint (no overlap) and within [0x02138650, 0x02139000)
 - Cave A stores the current area RootAreaHash in mailbox 0x037D1F04
+- Per-area zoom table preserves every arena/fixed-room override and ends before cave H
 - Cave Y (stock vertical camera centre) gates on Course152_Sub4 (RootAreaHash 1778226157), pins the Y
   limits with the fight zoom (stock half-height >= 8.5) and returns to 0x006C66EC
 - Cave K (CameraBoundBox2f Y bounds) gates on Course152_Sub4 (RootAreaHash 1778226157), replaces minY/maxY
@@ -44,11 +45,14 @@ def verify_patch(path):
     # Identify known data addresses in caves
     DATA_HASHES = {0x02138D84: 1778226157, 0x02138DB4: 1778226157,
                    0x02138E00: 607466214, 0x02138E0C: 101336182,
-                   0x02138E18: 1778226157, 0x02138E24: 1019598315}
+                   0x02138E18: 1778226157, 0x02138E24: 1019598315,
+                   0x02138E30: 1607468536, 0x02138E3C: 3684305666,
+                   0x02138E48: 2579434623, 0x02138E54: 177084102}
     DATA_FLOATS = {0x02138788, 0x021388E0, 0x021388E4, 0x021388E8, 0x021388EC, 0x021388F0,
                    0x02138AE0, 0x02138AE4, 0x02138D34, 0x02138DB8, 0x02138DBC,
-                   0x02138E04, 0x02138E10, 0x02138E1C, 0x02138E28}
-    DATA_ZEROS = {0x02138E08, 0x02138E14, 0x02138E20, 0x02138E2C, 0x02138E30, 0x02138E34, 0x02138E38}
+                   0x02138E04, 0x02138E10, 0x02138E1C, 0x02138E28, 0x02138E34, 0x02138E40, 0x02138E4C, 0x02138E58}
+    DATA_ZEROS = {0x02138E08, 0x02138E14, 0x02138E20, 0x02138E2C,
+                  0x02138E38, 0x02138E44, 0x02138E50, 0x02138E5C, 0x02138E60, 0x02138E64, 0x02138E68}
 
     # Print disassembly / data listing
     for addr, word, raw in lines:
@@ -121,6 +125,28 @@ def verify_patch(path):
     assert not any(0x02138D38 <= a < 0x02138D40 for a in patch), "gap between caves F2 and Y is not empty"
     assert max(a for a in cave_addrs if a < 0x02138E00) == 0x02138DBC, "Cave K does not end at its maxy literal"
     assert min(a for a in cave_addrs if a > 0x02138DBC) == 0x02138E00, "TABLE does not start at 0x02138E00"
+
+    # Per-area table: check values independently of the generator, including the terminator and cave H boundary.
+    expected_areas = [
+        (607466214, 21.0),            # Course150_Sub4
+        (101336182, 20.6666667),      # Course151_Sub2
+        (1778226157, 20.6666667),     # Course152_Sub4
+        (1019598315, 20.6666667),     # Course153_Sub3
+        (1607468536, 20.6666667),     # Course411_Course
+        (3684305666, 20.6666667),     # Course415_Course
+        (2579434623, 20.6666667),     # Course417_Course
+        (177084102, 20.6666667),      # Course403_Course
+        (3214359175, 20.6666667),     # Course008_Sub2
+    ]
+    for i, (area_hash, height) in enumerate(expected_areas):
+        addr = 0x02138E00 + 12 * i
+        assert patch.get(addr) == area_hash, f"Area table hash at 0x{addr:08X} != {area_hash}"
+        assert patch.get(addr + 4) == struct.unpack('<I', struct.pack('<f', height))[0], f"Area {area_hash}: wrong G"
+        assert patch.get(addr + 8) == 0, f"Area {area_hash}: delta must be zero"
+    end = 0x02138E00 + 12 * len(expected_areas)
+    assert all(patch.get(end + off) == 0 for off in (0, 4, 8)), "Area table terminator missing"
+    assert end + 12 <= 0x02138F00, "Area table overlaps cave H"
+    assert {a for a in patch if 0x02138E00 <= a < 0x02138F00} == set(range(0x02138E00, end + 12, 4)), "Unexpected area table words"
 
     # Cave Y: gated on Course152_Sub4, both exits return to 0x006C66EC; with the fight zoom it pins upper = lower
     def dis(a):
