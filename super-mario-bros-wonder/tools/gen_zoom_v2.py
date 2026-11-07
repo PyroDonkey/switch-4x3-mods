@@ -54,6 +54,17 @@ BOSS = [(607466214, 21.0, 0.0),                 # Course150_Sub4 Pipe-Rock Plate
 for _h, _g, _d in BOSS + [(0, G_LARGE, D_LARGE), (0, G_SMALL, D_SMALL)]:
     assert _d <= max(0.0, (27.5556 - _g * 4.0 / 3.0) / 2.0) + 1e-4, (_h, _g, _d)
 
+# Autoscroll end stops: (RootAreaHash, end key). Key = rail final point X + 16:9 view half-width (27.5556 / 2).
+# Only areas with intermediate pauses >= 120 frames are included. Terminated by hash 0.
+AUTOSCROLL_ENDS = [
+    (885847797, 247.25 + 27.5556 / 2),         # Course002_Main (002_歌って踊って パックンマーチ_Main)
+    (2740185052, 693.00 + 27.5556 / 2),        # Course022_Main (022_氷つるつる ズンドコの谷_Main)
+    (3839196513, 203.25 + 27.5556 / 2),        # Course062_Sub1 (062_ロングキラー スクランブル_Sub1（メインルート後半）)
+    (4167497323, 18.50 + 27.5556 / 2),         # Course102_Main (102_マグマノ樹海の飛行戦艦_Main（スタートエリア）)
+    (2931365200, 371.00 + 27.5556 / 2),        # Course290_Main (290_最後の戦い！ワガハイ・オン・ステージ_Main)
+    (3856421716, 536.25 + 27.5556 / 2),        # Course857_Main (857_チャンピオンシップ みんなでつなぐマーチング_Main)
+]
+
 
 def f32(x): return struct.unpack('<I', struct.pack('<f', x))[0]
 def b_(pc, t): return 0x14000000 | (((t - pc) >> 2) & 0x3FFFFFF)
@@ -75,6 +86,12 @@ def ldrsb_x(rt, rn, off): return 0x39800000 | (off << 10) | (rn << 5) | rt
 def ldr_x_lsl3(rt, rn, rm): return 0xF8607800 | (rm << 16) | (rn << 5) | rt
 def cbz_x(rt, pc, t): return 0xB4000000 | ((((t - pc) >> 2) & 0x7FFFF) << 5) | rt
 def cbz_w(rt, pc, t): return 0x34000000 | ((((t - pc) >> 2) & 0x7FFFF) << 5) | rt
+def tbz(rt, bit, pc, t):
+    imm14 = ((t - pc) >> 2) & 0x3FFF
+    b5 = (bit >> 5) & 1
+    b40 = bit & 0x1F
+    return 0x36000000 | (b5 << 31) | (b40 << 19) | (imm14 << 5) | rt
+def orr_x_bit32(dst, rn): return 0xB2600000 | (rn << 5) | dst
 def bcond(c, pc, t): return 0x54000000 | ((((t - pc) >> 2) & 0x7FFFF) << 5) | c
 EQ, NE, MI, GE, GT, LE = 0, 1, 4, 10, 12, 13
 def cmn_x1(rn): return 0xB100041F | (rn << 5)
@@ -190,7 +207,14 @@ for h, g, dl in BOSS:
     words += [(t, h), (t + 4, f32(g)), (t + 8, f32(dl))]
     t += 12
 words += [(t, 0), (t + 4, 0), (t + 8, 0)]
-assert t + 12 <= 0x2138F00, hex(t + 12)       # cave H starts at 0x2138F00
+t += 12
+TABLE_ENDS = t
+for ah, aend in AUTOSCROLL_ENDS:
+    words += [(t, ah), (t + 4, f32(aend))]
+    t += 8
+words += [(t, 0), (t + 4, 0)]
+t += 8
+assert t <= 0x2138F00, hex(t)       # cave H starts at 0x2138F00
 
 # ------------------------------------------------------------------ cave B (view height base)
 B = 0x2138900
@@ -272,19 +296,73 @@ def follow():                         # s0 = clamp(focus X - fixed X - delta, -d
             lambda pc: fneg_s(31, 31), lambda pc: fmax_s(0, 0, 31), lambda pc: fsub_s(0, 0, 31)]
 
 
-def assemble(base, items, ldict=None):
-    """items: label strings or lambdas pc -> word (labels resolved through ldict, default glab)."""
-    if ldict is None:
-        ldict = glab
+def pre_labels(base, items, ldict):
     pc = base
     for it in items:
         if isinstance(it, str):
             ldict[it] = pc
         else:
             pc += 4
+
+
+def assemble(base, items, ldict=None):
+    """items: label strings or lambdas pc -> word (labels resolved through ldict, default glab)."""
+    if ldict is None:
+        ldict = glab
+    pre_labels(base, items, ldict)
     seq = [it for it in items if not isinstance(it, str)]
     return emit(base, seq)
 
+
+# Cave G helper (0x02138914..0x02138988): when hold counter expires, check autoscroll end stops table.
+# Free registers in G: s0, s31, w9, x10, x17.
+# Bit 32 of x9 tracks whether the current area matched any entry in the table.
+# In the helper compare fixed X + delta (delta = mailbox 0xF18) with the key (rail end + 13.7778):
+# unlock if |fixed X + delta - key| <= 0.05.
+# If area is in table and |(fixed X + delta) - key| <= 0.05 -> lock (follow player).
+# If area is in table but not at an end stop -> not at end (desired offset 0, ease towards 0).
+# If area is not in table at all -> lock (normal locked room, follow player).
+G_HELPER = 0x2138914
+ghlab = {}
+G_HELPER_ITEMS = [
+    'check_lock',
+    lambda pc: ldr_w(9, 17, 0xF04),                                         # w9 = mailbox area hash
+    lambda pc: ldr_s(31, 20, 0x194),                                        # s31 = current fixed X
+    lambda pc: ldr_s(0, 17, 0xF18),                                         # s0 = delta (mailbox 0xF18)
+    lambda pc: fadd_s(31, 31, 0),                                           # s31 = fixed X + delta
+    lambda pc: adr(10, pc, TABLE_ENDS),                                     # x10 = TABLE_ENDS
+    'loop',
+    lambda pc: ldr_w(17, 10, 0),                                            # w17 = entry hash
+    lambda pc: cbz_w(17, pc, ghlab['tbl_end']),                             # 0 = terminator
+    lambda pc: cmp_w(17, 9),                                                # match area hash?
+    lambda pc: bcond(NE, pc, ghlab['next']),
+    lambda pc: orr_x_bit32(9, 9),                                           # bit 32 = 1 (matched flag)
+    lambda pc: ldr_s(0, 10, 4),                                             # s0 = key (rail end + 13.7778)
+    lambda pc: fsub_s(0, 31, 0),                                            # s0 = (fixed X + delta) - key
+    lambda pc: fabs_s(0, 0),                                                # s0 = |diff|
+    lambda pc: ldr_s_lit(31, pc, ghlab['thresh']),                          # s31 = 0.05f
+    lambda pc: fcmp_s(0, 31),
+    lambda pc: bcond(LE, pc, ghlab['lock']),                                # <= 0.05 -> lock camera
+    # If not <= 0.05, reload s31 = fixed X + delta for next iteration
+    lambda pc: adrp(17, pc, BSS),                                           # restore x17 to BSS
+    lambda pc: ldr_s(31, 17, 0xF18),                                        # s31 = delta
+    lambda pc: ldr_s(0, 20, 0x194),                                         # s0 = fixed X
+    lambda pc: fadd_s(31, 31, 0),                                           # s31 = fixed X + delta
+    'next',
+    lambda pc: add_x_imm(10, 10, 8),                                        # next entry
+    lambda pc: b_(pc, ghlab['loop']),
+    'tbl_end',
+    lambda pc: tbz(9, 32, pc, ghlab['lock']),                               # bit 32 == 0 -> locked room
+    # not at end: desired offset 0, ease towards 0
+    lambda pc: adrp(17, pc, BSS),                                           # restore x17
+    lambda pc: fmov_s_w(0, 31),                                             # s0 = 0.0 (wzr)
+    lambda pc: b_(pc, glab['step']),                                        # step offset towards 0
+    'lock',
+    lambda pc: adrp(17, pc, BSS),                                           # restore x17
+    lambda pc: b_(pc, glab['locked']),                                      # locked camera -> follow player
+    'thresh',
+    lambda pc: f32(0.05),
+]
 
 glab = {}
 G_ITEMS = [
@@ -302,7 +380,7 @@ G_ITEMS = [
     lambda pc: cbz_w(9, pc, glab['desired']), lambda pc: sub_w_imm(9, 9, 1),
     'desired',
     lambda pc: str_w(9, 17, 0xF34),
-    lambda pc: cbz_w(9, pc, glab['locked']),
+    lambda pc: cbz_w(9, pc, ghlab['check_lock']),
     lambda pc: fmov_s_w(0, 31), lambda pc: b_(pc, glab['step']),                       # autoscroll: desired 0
     'locked',
     *follow(),                                                                         # locked room: follow
@@ -327,7 +405,11 @@ G_ITEMS = [
     'eps', lambda pc: f32(EPS),
     'stepv', lambda pc: f32(STEP),
 ]
-G_END = assemble(G_CAVE, G_ITEMS)
+pre_labels(G_HELPER, G_HELPER_ITEMS, ghlab)
+pre_labels(G_CAVE, G_ITEMS, glab)
+G_HELPER_END = assemble(G_HELPER, G_HELPER_ITEMS, ghlab)
+assert G_HELPER_END <= 0x2138A00, hex(G_HELPER_END)
+G_END = assemble(G_CAVE, G_ITEMS, glab)
 assert G_END <= 0x2138B00, hex(G_END)
 G_DATA = {glab['eps'], glab['stepv']}
 
@@ -426,12 +508,14 @@ seen = set()
 for a, w in allw:
     assert a not in seen, hex(a)
     seen.add(a)
-data_addrs = {L_THR, L_G17, L_D17, L_G155, L_D155, F2 + 20} | {TABLE + 4 * i for i in range(3 * (len(BOSS) + 1))} | G_DATA | Y_DATA | K_DATA
+ENDS_DATA = {TABLE_ENDS + 4 * i for i in range(2 * (len(AUTOSCROLL_ENDS) + 1))}
+G_HELPER_DATA = {ghlab['thresh']}
+data_addrs = {L_THR, L_G17, L_D17, L_G155, L_D155, F2 + 20} | {TABLE + 4 * i for i in range(3 * (len(BOSS) + 1))} | ENDS_DATA | G_HELPER_DATA | G_DATA | Y_DATA | K_DATA
 if __name__ == '__main__':
     for a, w in allw:
         dis = list(md.disasm(struct.pack('<I', w), a))
         if a in data_addrs or not dis:
-            if a in {TABLE + 12 * i for i in range(len(BOSS))} | {ylab['hash'], klab['hash']}:
+            if a in {TABLE + 12 * i for i in range(len(BOSS))} | {ylab['hash'], klab['hash']} | {TABLE_ENDS + 8 * i for i in range(len(AUTOSCROLL_ENDS) + 1)}:
                 text = f"(data) 0x{w:08X} = hash {w}"
             else:
                 text = f"(data) 0x{w:08X} = {struct.unpack('<f', struct.pack('<I', w))[0]:.6g}"

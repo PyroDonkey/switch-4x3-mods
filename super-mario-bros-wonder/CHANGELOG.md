@@ -2,6 +2,12 @@
 
 Newest first. Each release's section becomes its GitHub release notes.
 
+## v1.1.2
+
+For game v1.2.1.
+
+- Keep the autoscroll camera locked during mid-scroll pauses (such as the singing break in Piranha Plants on Parade). In v1.1.1, pauses longer than 2 seconds allowed the camera to ease towards the player mid-scroll and snap back when scrolling resumed. The camera now stays locked during intermediate pauses and only unlocks to follow the player when arriving at the autoscroll's final end stop.
+
 ## v1.1.1
 
 For game v1.2.1.

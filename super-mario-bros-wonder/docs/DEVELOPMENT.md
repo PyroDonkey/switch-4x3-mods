@@ -210,3 +210,32 @@ Cave W (hook `0x01C5B694` in `FluidTagInfo::method4` `0x01C5B658`, which returns
 **Status:** built and verified (`verify_pchtxt.py`, words diffed against the generator, cave G disassembled). User-confirmed 2026-11-03 in Eden: the Course002 seed is reachable and the Course101 airship autoscroll + Wonder Flower still work.
 
 **Scan of the bug class (read-only review, QA-checked against the stage data):** only `AutoScrollControlSignalFrame` and `SoundRhythmAutoScrollControlSignalFrame` call `SetAutoScrollPos`, so the fix covers every stopped autoscroll. `Course061_Sub2` (seed x 595.0, rail end 570.75) was 0.03 blocks inside the old reach and now has 3.3; coins and display-box triggers at stops in Course002 (mid-rail pause at x 166), Course010, Course064_Sub1, Course290 and Course858 also come into view. Not covered: while a scroll moves the view stays left-aligned (the rightmost 6.56 blocks appear only after 2 s still; centring would make the left push edge 3.3 blocks earlier than stock), and Course857_Main's stops last 104 and 100 frames, under the 120-frame hold, so its `CourseDisplayBoxSwitch` triggers (a `DisplayAreaSwitch` node, not a player switch) fire later than stock instead of during the pause. Vertical autoscrolls keep the stock top edge (fixed Y = rail Y - half-height). `StopScroll` side locks are authored at the 16:9 centre, so cave H's lock X +/- delta covers their frames. POW blocks hit the visible 4:3 screen.
+
+## 23. 2026-11-03: autoscroll camera locking during mid-scroll pauses (Cave G end-stop table)
+
+**Problem:** In v1.1.1, stopped autoscrolls ease camera offset towards the player after 120 frames (~2 s) of stillness. On stages with long intermediate pauses, notably Course002 *Piranha Plants on Parade* (`Course002_Main`, which pauses for 361 frames during the Wonder musical section), the stillness counter expired mid-scroll. The camera unlocked, drifted towards the player, and then abruptly snapped back when autoscrolling resumed.
+
+**Survey (`tools/scan_autoscroll_ends.py`):**
+Added an automated scanner to examine all 22 autoscroll courses in RomFS for any intermediate pauses $\ge 120$ frames prior to the final rail point across three mechanisms:
+1. `WaitFrame` attributes on autoscroll rail points.
+2. Plateaus (consecutive identical rail coordinates with duration $\ge 120$ frames).
+3. `PulledWaitFrame` initial start delays on autoscroll actors.
+
+The scan confirmed intermediate pauses $\ge 120$ frames on the autoscroll rail in 6 areas:
+- `Course002_Main` (885847797): plateau pts 1->2 (361f pause at rail x 166.0, margin 81.25 blocks from rail end 247.25)
+- `Course022_Main` (2740185052): WaitFrame on pt 0 (120f pause at rail x 445.25, margin 247.75 blocks from rail end 693.00)
+- `Course062_Sub1` (3839196513): plateau pts 0->1 (150f pause at rail x 138.25, margin 65.00 blocks from rail end 203.25)
+- `Course102_Main` (4167497323): actor PulledWaitFrame (120f start pause at rail x 8.00, margin 10.50 blocks from rail end 18.50)
+- `Course290_Main` (2931365200): plateau pts 16->17 (360f pause at rail x 174.00, margin 197.00 blocks from rail end 371.00)
+- `Course857_Main` (3856421716): plateau pts 0->2 (360f pause at rail x 53.00, margin 483.25 blocks from rail end 536.25)
+
+Every listed pause has a margin $> 0.05$ blocks from the rail's final point, preventing any false unlock.
+
+**Fix (`tools/gen_zoom_v2.py`):**
+1. Added `AUTOSCROLL_ENDS` table in `gen_zoom_v2.py`, emitted as `TABLE_ENDS` at `0x02138E3C` (after the boss table). Each entry stores `(RootAreaHash, rail_end_X + 13.7778)` pairs terminated by `(0, 0)`.
+2. Added helper in Cave G at `0x02138914`: when the 120-frame stillness counter reaches 0, Cave G jumps to helper `0x02138914`. It compares current `fixed X + delta` against the table key.
+   - If the area is listed in the table and $|(\text{fixed X} + \Delta) - \text{key}| \le 0.05$, the camera unlocks to follow the player within $[0, 2\Delta]$.
+   - If the area is listed in the table but not at the end stop, desired offset remains 0.0, keeping the camera locked to scroll coordinates.
+   - If the area is not listed in `TABLE_ENDS` (standard locked rooms or autoscrolls with no mid-scroll pauses), it falls through to unlocked camera follow.
+
+**Status:** Built and verified with `verify_pchtxt.py` (304 patch lines, 11 hooks). Confirmed in game on Course002 in Eden: camera remains locked during the mid-scroll singing pause, and unlocks at the final stop to reach the Wonder Seed.
