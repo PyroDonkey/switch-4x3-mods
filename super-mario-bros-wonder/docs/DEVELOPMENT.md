@@ -393,3 +393,43 @@ Every listed pause has a margin $> 0.05$ blocks from the rail's final point, pre
 
 **Fix:**
 Added Course008_Sub2 (RootAreaHash 3214359175, G = 20.6666667, delta = 0.0) to BOSS table in tools/gen_zoom_v2.py. At G = 20.6667, 4:3 view width expands to 20.6667 * 4 / 3 = 27.56 blocks, matching stock 16:9 width exactly. With delta = 0.0, the camera remains centered at X = 19.0, extending into the solid side walls with 0 out-of-bounds void exposed and all rising/sinking pipes and the Wonder Seed fully visible.
+
+## 35. 2026-11-06: Course400 (Pop Up, Hoppo!) Break Time full-width camera candidate
+
+**Request:** apply a camera fix to Course400 (Break Time! Pop Up, Hoppo!, World 1 - Pipe-Rock Plateau) so it fits within the 4:3 display.
+
+**Investigation:**
+1. Course identification: `Course400_Course` (`RootAreaHash` 2214662437, `0x84011125`), World 1 Pipe-Rock Plateau.
+2. Contains a `CameraArea` (`Hash` 5315702174901982453) with Translate `[14.0, 0.5, 0.0]` and Scale `[27.5, 15.5, 1.0]`, authored for a single stock 16:9 screen (width 27.56 blocks).
+3. In stock 16:9, the camera remains fixed in place to display the Hoppo rebound puzzle across the room.
+4. In 4:3 with default small-room base G = 15.5, the visible width shrinks to 20.67 blocks, unlocking the camera to pan horizontally following Mario and cropping ~25% of the room.
+5. Added `(2214662437, 20.6666667, 0.0)` to the `BOSS` table in `tools/gen_zoom_v2.py`. With G = 20.6667, 4:3 view width expands to 20.6667 * 4 / 3 = 27.56 blocks, matching the stock 16:9 width with zero horizontal panning (delta = 0.0).
+6. Stage artwork is deliberately unchanged for the first candidate preview.
+
+**Build and verification:**
+- Patch lines generated via `tools/gen_zoom_v2.py` and checked with `tools/verify_pchtxt.py` (279 patch lines, 11 hooks, 0 errors).
+- All 16 stage tool unit tests and stage verifiers pass (`build_stage.py --verify` reports 0 problems).
+- Shipped patch SHA-256: `ca091bb6d71f87bcd5df3e25bb145b413fb3911c6b325a20305846808970bb67`.
+
+## 36. 2026-11-06: Course400 visual framing approved and Hoppo spawn elevation fix
+
+**Human verification:** the maintainer play-tested the Course400 full-width camera ($G = 20.6667$, $\text{delta} = 0$) in Windows/Eden and confirmed:
+- Framing and camera lock approved: "Okay, looks good."
+- Observed issue: "The one thing that looks a little weird is that the hippo spawns on screen now so you see it pop in. Is there potentially a safe adjustment that can be made to fix this?"
+
+**Investigation:**
+1. In stock 16:9 ($G = 15.5$), the camera view height is 15.5 blocks, placing the top screen edge at $Y \approx 11.0$ (or ~14.8 at peak jump). Nintendo authored `EnemyKoropon` at $Y = 12.0$ (and linked `PopUpTag` at $Y = 16.5$) specifically so the Hoppo would spawn off-screen above the visible frame and fall into the room.
+2. In 4:3 with $G = 20.6667$, the view height expands to 20.67 blocks (center $Y \approx 3.5$–$4.5$), placing the visible top of the screen at $Y \approx 14.0$–$14.8$.
+3. As a result, the original spawn coordinate ($Y = 12.0$) sits inside the active viewport, causing the Hoppo to visually materialize in mid-air on-screen when triggered.
+
+**Fix:**
+Added stage edits for `Course400_Course` to `EDITS` in `tools/build_stage.py`:
+- `EnemyKoropon` (Hash `17703685394400552912`): `Translate.Y` $12.0 \to 17.0$ ($+5.0$ blocks).
+- `PopUpTag` (Hash `3402723882765168318`): `Translate.Y` $16.5 \to 21.5$ ($+5.0$ blocks, preserving the relative 4.5-block offset and 4.0 jump height parameter).
+- At $Y = 17.0$, the spawn occurs safely above the 4:3 top screen edge even when jumping. Horizontal position ($X = 3.0$) and falling trajectory are unchanged; drop time increases by ~0.3s.
+
+**Build and verification:**
+- Stage build via `tools/build_stage.py` wrote `mod/Native 4x3 Aspect Ratio/romfs/BancMapUnit/Course400_Course.bcett.byml.zs` (SHA-256: `c51dc7836e74ce07e9e7b913ec7b50a0fce691600efdcd5c4d152371188b1add`).
+- `build_stage.py --verify` passes with 0 problems across all 6 stage files (`Course400_Course: 2 byte(s) differ, all inside 2 edit(s)`).
+- All 16 stage tool unit tests pass; `verify_pchtxt.py` passes (279 lines, 11 hooks, 0 errors).
+- Synchronized to `%APPDATA%\eden\load\010015100B514000\Native 4x3 Aspect Ratio` via robocopy.

@@ -72,6 +72,14 @@ EDITS = [
      (12.5, 0.0, 0.0), (14.0, -0.4, 0.0)),
     ('Course403_Course', 3184768010431751081, 'ObjectCloudArea', 'Scale',
      (6.0, 4.0, 1.0), (28.0, 4.0, 1.0)),
+    # Course400_Course (Break Time! Pop Up, Hoppo!): at 4:3 with G = 20.6667 (matching stock 16:9 width 27.56),
+    # view height expands to 20.67, exposing the stock spawn point (y = 12.0) on screen.
+    # Raise EnemyKoropon and its linked PopUpTag by +5.0 in Y (12.0 -> 17.0, 16.5 -> 21.5) so the Hoppo spawns
+    # off-screen above the 4:3 frame and drops into view as intended, preserving the 4.5-block relative spacing.
+    ('Course400_Course', 17703685394400552912, 'EnemyKoropon', 'Translate',
+     (3.0, 12.0, 0.0), (3.0, 17.0, 0.0)),
+    ('Course400_Course', 3402723882765168318, 'PopUpTag', 'Translate',
+     (2.5, 16.5, 0.0), (2.5, 21.5, 0.0)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics

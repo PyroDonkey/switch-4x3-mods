@@ -1,15 +1,15 @@
 # Break Time! 4:3 framing review
 
-Developer QA checklist for **Super Mario Bros. Wonder 1.2.1**. Created 2026-11-04 after the read-only course census; updated 2026-11-06 to reflect musical theater framing fixes (PR #4) and Zip-Go-Round camera and floor cloud framing (PR #5).
+Developer QA checklist for **Super Mario Bros. Wonder 1.2.1**. Created 2026-11-04 after the read-only course census; updated 2026-11-06 to reflect musical theater framing fixes (PR #4), Zip-Go-Round camera and floor cloud framing (PR #5), and Course400 full-room camera and Hoppo spawn fix.
 
 **Current status:**
 - **Group 1 (Musical theater framing, [PR #4](https://github.com/PyroDonkey/switch-4x3-mods/pull/4)):** Course411 confirmed fixed (reference). Course415 and Course417 visual framing approved in Eden on 2026-11-04; gameplay sequence, completion/retry, and regression checks remain open.
-- **Group 2 (Wide puzzle arenas, [PR #5](https://github.com/PyroDonkey/switch-4x3-mods/pull/5)):** Course403 visual framing approved in Eden on 2026-11-05 (full-room camera zoom $G = 20.6667$, $\text{delta} = 0$ plus widened floor cloud to cover the background dome void without flicker); token collection, moving rail sequence, completion, and retry checks remain open.
-- **Remaining 15 courses:** Pending play-test.
+- **Group 2 (Wide puzzle arenas, [PR #5](https://github.com/PyroDonkey/switch-4x3-mods/pull/5)):** Course403 visual framing approved in Eden on 2026-11-05 (full-room camera zoom $G = 20.6667$, $\text{delta} = 0$ plus widened floor cloud to cover the background dome void without flicker); token collection, moving rail sequence, completion, and retry checks remain open. Course400 visual framing approved in Eden on 2026-11-06; Hoppo spawn raised off-screen ($Y = 12.0 \to 17.0$, `PopUpTag` $16.5 \to 21.5$) to eliminate visible mid-air pop-in; awaiting retry/gameplay checks.
+- **Remaining 14 courses:** Course414 checked; no change needed. 13 pending play-test.
 
 ## Scope and baseline
 
-- All **19** Break Time courses are listed below: **15 pending play-test**, **Course403, Course415, and Course417 visually approved; awaiting remaining gameplay checks**, plus **Course411 confirmed fixed** on PR #4 (`smbw-course411-framing`).
+- All **19** Break Time courses are listed below: **14 pending play-test**, **Course400 visual framing approved; Hoppo spawn fix awaiting retry**, **Course403, Course415, and Course417 visually approved; awaiting remaining gameplay checks**, plus **Course411 confirmed fixed** on PR #4 (`smbw-course411-framing`).
 - Static-review baseline: mod commit `6bfcf0d`, game 1.2.1. A baseline is not a tested-build claim; record the actual mod commit when a human tests each course.
 - Census coverage: all 151 `Stage/CourseInfo` records and 451 `Stage/StageParam` records; the 19 `CourseKind = Mini` courses match the Break Time labels and existing world-map entries. Recursive stage references resolve to 24 map-unit files, including two container roots and five linked subareas.
 - No other Break Time courses exist outside Course400–418. Course450–453 are `SecretSquare`; Course460 is `Bonus`, not Break Time.
@@ -69,7 +69,7 @@ Replace `Not tested` with the **mod commit, test date, platform, and a short res
 | [ ] | `Course403` — Zip-Go-Round | W2 — Fluff-Puff Peaks | Visual framing approved; gameplay pending | 2026-11-05, Windows/Eden: maintainer approved v1.1.8 Candidate C28 framing ("Yes that's good") on [PR #5](https://github.com/PyroDonkey/switch-4x3-mods/pull/5) (commit `0192150`; patch SHA-256 `08ebeeb79a45`, stage SHA-256 `d71bef2fab7e`). Full-room camera ($G = 20.6667$, $\text{delta} = 0$) and floor cloud expansion (Hash `3184768010431751081`: Scale X 28.0, Translate Y -0.4) cover bottom void and seal corner/edge gaps with 0 flicker and 0 art stretch. Token collection, moving rail sequence, completion, and retry remain open. See DEVELOPMENT.md §§31–33. |
 | [ ] | `Course408` — Floating Wonder Tokens | W4 — Sunbaked Desert | Pending play-test | Not tested |
 | [ ] | `Course401` — Kick It, Outmaway | W2 — Fluff-Puff Peaks | Pending play-test | Not tested |
-| [ ] | `Course400` — Pop Up, Hoppo! | W1 — Pipe-Rock Plateau | Pending play-test | Not tested |
+| [ ] | `Course400` — Pop Up, Hoppo! | W1 — Pipe-Rock Plateau | Visual framing approved; gameplay pending | 2026-11-06, Windows/Eden: maintainer approved full-room camera framing ("Okay, looks good"). In 4:3 with $G = 20.6667$, stock Hoppo spawn at $Y = 12.0$ was exposed on-screen. Added stage edit in `build_stage.py` shifting `EnemyKoropon` $Y = 12.0 \to 17.0$ and `PopUpTag` $16.5 \to 21.5$ (patch SHA-256 `ca091bb6d71f`, stage SHA-256 `c51dc7836e74`). Off-screen spawn drop, rebound sequence, completion, and retry remain open. See DEVELOPMENT.md §§35–36. |
 
 - **403:** opposing rails at $X = 1.5$ and $26.5$ cannot both fit in the default narrow view. Full-room camera ($G = 20.6667$, $\text{delta} = 0$) approved. Unrendered floor void covered by widened floor cloud; all other 9 clouds remain stock.
 - **408:** outer token centers span 21 blocks, slightly more than the default 20.67-block view. Check all-token readability and incoming enemy cues.
@@ -130,7 +130,7 @@ A separate camera case; do not treat it as another static one-screen theater.
 
 | Done | Course / level | World | Status | Tested commit / result |
 | --- | --- | --- | --- | --- |
-| [ ] | `Course414` — Tumble House | W5 — Fungi Mines | Pending play-test | Not tested |
+| [x] | Course414 — Tumble House | W5 — Fungi Mines | Checked; no change needed | 2026-11-06, Windows/Eden: maintainer confirmed room does not fit within 1 screen; normal camera tracking is acceptable. |
 
 - Check token visibility, camera following, backdrop coverage, and pipe positions in every orientation and during rotations.
 - The room rotates in 90-degree steps and already exceeds one stock screen vertically. Some token positions reach beyond the default horizontal half-width; actual visibility still needs play-testing.
