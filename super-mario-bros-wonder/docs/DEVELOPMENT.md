@@ -379,3 +379,17 @@ Every listed pause has a margin $> 0.05$ blocks from the rail's final point, pre
 **Human verification:** the maintainer play-tested Candidate C28 in Windows/Eden and approved the result: "Yes that's good" (seamless coverage across the full width, no bottom void, unobstructed rails, 100% flicker-free).
 
 **Build and verification:** added Course403 to `EDITS` in `tools/build_stage.py`. `build_stage.py --verify` passes with 0 problems across all 5 stages; Course403 differs from 1.2.1 stock by exactly 7 bytes across 2 float edits. Shipped RomFS count is 120 (115 layouts + 5 stage archives). Shipped patch SHA-256: `08ebeeb79a458b90a5ba61ee3c457a13cfaef03d5d52a8ba1a5f6e0da508a5c5`; Course403 stage SHA-256: `d71bef2fab7e769391949622a8cbfa6259a88ece0201c18af64f9d3d079e3d6f`.
+
+## 34. 2026-11-06: Course008_Sub2 (Angry Spikes Sinkin' Pipes) Wonder area full-width camera zoom
+
+**Bug report:** in W2 Angry Spikes Sinkin' Pipes, entering the Wonder area resulted in a soft lock because the player could not reach/collect the Wonder Seed due to camera positioning. The camera zoom needed adjustment to show the full room width as in 16:9.
+
+**Investigation:**
+1. Course identification: Course008_Course StageParam has label 008 (Gabon's Hideout, Valley of the Sinking Pipes == W2 Angry Spikes Sinkin' Pipes).
+2. The Wonder sequence takes place in sub-area Course008_Sub2 (RootAreaHash 3214359175, 0xBF973A87), which contains CameraArea with Scale X 27.5 and Translate X 19.0, spanning X in [5.25, 32.75] with solid walls at X [1.0, 7.0] (Wall 0) and X [31.0, 37.0] (Wall 1).
+3. The vertical rhythm autoscroll runs along Y from 16 to 81, ending at ItemWonderFinishWonderSead at Y = 76.24 and Exit Dokan at Y = 77.0. Rising and sinking pipes span X = 7.0 to 31.0.
+4. In stock 16:9, view width is 27.56 blocks (15.5 * 16 / 9), so the full 27.5 width fits on screen with zero horizontal camera panning required.
+5. In 4:3 with default small-room base G = 15.5, view width was only 20.67 blocks (15.5 * 4 / 3), cropping the left pipes (X in [7, 8]) and right pipes (X in [30, 31]) off-screen, and preventing proper tracking of the seed spawn.
+
+**Fix:**
+Added Course008_Sub2 (RootAreaHash 3214359175, G = 20.6666667, delta = 0.0) to BOSS table in tools/gen_zoom_v2.py. At G = 20.6667, 4:3 view width expands to 20.6667 * 4 / 3 = 27.56 blocks, matching stock 16:9 width exactly. With delta = 0.0, the camera remains centered at X = 19.0, extending into the solid side walls with 0 out-of-bounds void exposed and all rising/sinking pipes and the Wonder Seed fully visible.
