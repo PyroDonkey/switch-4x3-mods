@@ -128,33 +128,43 @@ EDITS = [
      (23.5, 48.0, -167.5), (23.5, 49.5, -167.5)),
     ('Course407_Course', 3373664933504165692, 'DVWaKaiganFarIwaA01', 'Scale',
      (0.699999988079071, 0.699999988079071, 0.699999988079071), (0.82, 0.82, 0.82)),
-    # Course290_Main (Bowser's Rage Stage - Bowser statue section): SetAutoScrollPos left-aligns the 21.0-wide
-    # 4:3 view to the autoscroll rail, cutting 6.56 blocks off the right edge vs stock 16:9 (27.56). Shift the
-    # statue-section CourseDisplayBoxSwitch triggers left by 6.56 blocks in X so EnemyTossinGroup spawns during
-    # the slow approach (pt 13->14, rail X 147.94) before the scroll reaches the statue at X = 156.5, and the
-    # post-statue pause/Packun switch (12855344573256944945) enters the 4:3 view (max X 195.0) at rail X = 174.0.
-    ('Course290_Main', 777445035, 'CourseDisplayBoxSwitch', 'Translate',
-     (198.0, 52.0, 0.0), (191.44, 52.0, 0.0)),
-    ('Course290_Main', 212790001, 'CourseDisplayBoxSwitch', 'Translate',
-     (223.04513549804688, 51.73638153076172, 0.0), (216.48513549804688, 51.73638153076172, 0.0)),
-    ('Course290_Main', 12855344573256944945, 'CourseDisplayBoxSwitch', 'Translate',
-     (199.5, 52.0, 0.0), (192.94, 52.0, 0.0)),
-    ('Course290_Main', 4029477259, 'CourseDisplayBoxSwitch', 'Translate',
-     (206.00457763671875, 51.45623779296875, 0.0), (199.44457763671875, 51.45623779296875, 0.0)),
-    # Course290_Main (Bowser's Rage Stage - Dragon & vertical shaft section): shift the dragon and shaft
-    # CourseDisplayBoxSwitch triggers left by 6.56 blocks in X to match the 4:3 view's right edge. Shifting
-    # 999420502 (Ring 1 1799465718 spawn) alongside 1755951341 (Ring 1 delete / Ring 2 2094148528 spawn) and
-    # 1787195044 (dragon 2206909489 transform) while keeping pt 6 at stock 92.0 preserves the exact stock 16:9
-    # trigger intervals (403.0f and 488.9f) so Ring 1 completes its 300-frame leftward roll before Ring 2 spawns
-    # at X = 69.5. Switch 4273434636 (stock min_x = 146.50, missed by the 4:3 right edge at 146.0) fires to
-    # spawn the bottom horizontal snake-block ground (ObjectBlockSnakePole 34729090 at Y = 27.5..31.5) and guide
-    # coins before the vertical shaft climb.
+    # Course290_Main (Bowser's Rage Stage - Kuribo grow & zap relay): shift the Kuribo spawn switch (578319643)
+    # and both subsequent zap/smoke switches (1536962149, 14869113733391977869) left by 6.56 blocks in X.
+    # This preserves the ~383-frame growth interval before the lightning strikes, matching stock 16:9 timing.
+    ('Course290_Main', 578319643, 'CourseDisplayBoxSwitch', 'Translate',
+     (38.5, 20.537498474121094, 0.0), (31.94, 20.537498474121094, 0.0)),
+    ('Course290_Main', 1536962149, 'CourseDisplayBoxSwitch', 'Translate',
+     (44.0, 34.051910400390625, 0.0), (37.44, 34.051910400390625, 0.0)),
+    ('Course290_Main', 14869113733391977869, 'CourseDisplayBoxSwitch', 'Translate',
+     (44.0, 33.16312026977539, 0.0), (37.44, 33.16312026977539, 0.0)),
+    # Course290_Main (Bowser's Rage Stage - Tilt, rolling spiked ball, fossil rings & dragon relay):
+    # Shift the sequence of environmental zap switches (1060316225, 663300194, 17459050152995009628, 742103869,
+    # 2303338937), the screen tilt / gravity slide switch (206918284 that triggers the rolling spiked ball
+    # EnemyIronBallBigForLastStage 910706480), fossil ring 1 spawn (999420502), fossil ring 2 spawn (1755951341),
+    # and dragon transform (1787195044) left by 6.56 blocks in X. This eliminates relative timing drift across the
+    # entire rolling obstacle and zap obstacle course, ensuring Ring 1 completes its roll before Ring 2 spawns.
+    ('Course290_Main', 1060316225, 'CourseDisplayBoxSwitch', 'Translate',
+     (73.5, 34.513580322265625, 0.0), (66.94, 34.513580322265625, 0.0)),
+    ('Course290_Main', 206918284, 'CourseDisplayBoxSwitch', 'Translate',
+     (81.5, 20.342161178588867, 0.0), (74.94, 20.342161178588867, 0.0)),
+    ('Course290_Main', 663300194, 'CourseDisplayBoxSwitch', 'Translate',
+     (88.5, 35.5, 0.0), (81.94, 35.5, 0.0)),
+    ('Course290_Main', 17459050152995009628, 'CourseDisplayBoxSwitch', 'Translate',
+     (89.5, 35.5, 0.0), (82.94, 35.5, 0.0)),
     ('Course290_Main', 999420502, 'CourseDisplayBoxSwitch', 'Translate',
      (90.5, 21.96936798095703, 0.0), (83.94, 21.96936798095703, 0.0)),
+    ('Course290_Main', 742103869, 'CourseDisplayBoxSwitch', 'Translate',
+     (98.52086639404297, 35.10392761230469, 0.0), (91.96086639404297, 35.10392761230469, 0.0)),
     ('Course290_Main', 1755951341, 'CourseDisplayBoxSwitch', 'Translate',
      (106.0, 19.168628692626953, 0.0), (99.44, 19.168628692626953, 0.0)),
+    ('Course290_Main', 2303338937, 'CourseDisplayBoxSwitch', 'Translate',
+     (121.0, 34.49203872680664, 0.0), (114.44, 34.49203872680664, 0.0)),
     ('Course290_Main', 1787195044, 'CourseDisplayBoxSwitch', 'Translate',
      (136.0, 26.0, 0.0), (129.44, 26.0, 0.0)),
+    # Course290_Main (Bowser's Rage Stage - Vertical shaft ground & guide coins):
+    # Switch 4273434636 (stock min_x = 146.50, missed by 4:3 right edge at 146.0) fires to spawn the bottom
+    # horizontal snake-block ground (ObjectBlockSnakePole 34729090 at Y = 27.5..31.5) and guide coins before
+    # the vertical shaft climb. Switches 1117151842, 3717095890, and 1344248650 spawn intermediate snake poles.
     ('Course290_Main', 1117151842, 'CourseDisplayBoxSwitch', 'Translate',
      (146.0, 32.5, 0.0), (139.44, 32.5, 0.0)),
     ('Course290_Main', 4273434636, 'CourseDisplayBoxSwitch', 'Translate',
@@ -163,6 +173,19 @@ EDITS = [
      (155.3033447265625, 47.0, 0.0), (148.7433447265625, 47.0, 0.0)),
     ('Course290_Main', 1344248650, 'CourseDisplayBoxSwitch', 'Translate',
      (155.8292236328125, 58.66417694091797, 0.0), (149.2692236328125, 58.66417694091797, 0.0)),
+    # Course290_Main (Bowser's Rage Stage - Bowser statue section): SetAutoScrollPos left-aligns the 21.0-wide
+    # 4:3 view to the autoscroll rail, cutting 6.56 blocks off the right edge vs stock 16:9 (27.56). Shift the
+    # statue-section CourseDisplayBoxSwitch triggers left by 6.56 blocks in X so EnemyTossinGroup spawns during
+    # the slow approach (pt 13->14, rail X 147.94) before the scroll reaches the statue at X = 156.5, and the
+    # post-statue pause/Packun switch (12855344573256944945) enters the 4:3 view (max X 195.0) at rail X = 174.0.
+    # Note: switch 4029477259 is intentionally kept at stock X = 206.00457763671875 (min_x = 202.82) so it fires
+    # after the rhythm pause (pt 17 -> pt 18) instead of prematurely during the pause.
+    ('Course290_Main', 777445035, 'CourseDisplayBoxSwitch', 'Translate',
+     (198.0, 52.0, 0.0), (191.44, 52.0, 0.0)),
+    ('Course290_Main', 212790001, 'CourseDisplayBoxSwitch', 'Translate',
+     (223.04513549804688, 51.73638153076172, 0.0), (216.48513549804688, 51.73638153076172, 0.0)),
+    ('Course290_Main', 12855344573256944945, 'CourseDisplayBoxSwitch', 'Translate',
+     (199.5, 52.0, 0.0), (192.94, 52.0, 0.0)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics
