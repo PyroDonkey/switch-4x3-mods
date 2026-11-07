@@ -1,15 +1,16 @@
 # Break Time! 4:3 framing review
 
-Developer QA checklist for **Super Mario Bros. Wonder 1.2.1**. Created 2026-11-04 after the read-only course census; updated 2026-11-06 to reflect musical theater framing fixes (PR #4), Zip-Go-Round camera and floor cloud framing (PR #5), and Course400 full-room camera and Hoppo spawn fix.
+Developer QA checklist for **Super Mario Bros. Wonder 1.2.1**. Created 2026-11-04 after the read-only course census; updated 2026-11-07 to reflect musical theater framing fixes (PR #4), Zip-Go-Round camera and floor cloud framing (PR #5), Course400/Course401 spawn fixes, and the Course401/404/407/408 play-test approvals.
 
 **Current status:**
 - **Group 1 (Musical theater framing, [PR #4](https://github.com/PyroDonkey/switch-4x3-mods/pull/4)):** Course411 confirmed fixed (reference). Course415 and Course417 visual framing approved in Eden on 2026-11-04; gameplay sequence, completion/retry, and regression checks remain open.
-- **Group 2 (Wide puzzle arenas, [PR #5](https://github.com/PyroDonkey/switch-4x3-mods/pull/5)):** Course403 visual framing approved in Eden on 2026-11-05 (full-room camera zoom $G = 20.6667$, $\text{delta} = 0$ plus widened floor cloud to cover the background dome void without flicker); token collection, moving rail sequence, completion, and retry checks remain open. Course400 visual framing approved in Eden on 2026-11-06; Hoppo spawn raised off-screen ($Y = 12.0 \to 17.0$, `PopUpTag` $16.5 \to 21.5$) to eliminate visible mid-air pop-in; awaiting retry/gameplay checks.
-- **Remaining 14 courses:** Course414 checked; no change needed. 13 pending play-test.
+- **Group 2 (Wide puzzle arenas, [PR #5](https://github.com/PyroDonkey/switch-4x3-mods/pull/5)):** Course403 visual framing approved in Eden on 2026-11-05 (full-room camera zoom $G = 20.6667$, $\text{delta} = 0$ plus widened floor cloud to cover the background dome void without flicker); token collection, moving rail sequence, completion, and retry checks remain open. Course400 visual framing approved in Eden on 2026-11-06; Hoppo spawn raised off-screen ($Y = 12.0 \to 17.0$, `PopUpTag` $16.5 \to 21.5$) to eliminate visible mid-air pop-in. Course401 ice-block spawns are raised off-screen ($Y = 18.0 \to 27.0$ and $19.0 \to 28.0$) and approved in Eden on 2026-11-07. Course408 keeps the stock CameraArea height and Y centre, locks X at 64.0, and moves only `CreateTag` Y positions (top-right $+6.0$, bottom pair $-1.5$); all four Balloon Killers spawn with no visible pop-in, approved in Eden on 2026-11-07.
+- **Group 4 (Linked foreground/background scenes, 2026-11-07):** Course404's full-room camera is approved in Eden on 2026-11-07. Course409 is reverted to stock and remains on the TODO list for a later play-test.
+- **Remaining 13 courses:** Course400, Course403, Course415 and Course417 still have gameplay checks open; Course409 is stock and remains on the TODO list; 8 others remain pending play-test. Course414 was checked; no change needed.
 
 ## Scope and baseline
 
-- All **19** Break Time courses are listed below: **14 pending play-test**, **Course400 visual framing approved; Hoppo spawn fix awaiting retry**, **Course403, Course415, and Course417 visually approved; awaiting remaining gameplay checks**, plus **Course411 confirmed fixed** on PR #4 (`smbw-course411-framing`).
+- All **19** Break Time courses are listed below: **13 not complete**, including Course400 (visual framing approved; Hoppo spawn fix awaiting retry), Course403/Course415/Course417 (visually approved; remaining gameplay checks), Course409 (stock; TODO), and 8 pending play-tests; **Course401, Course404, Course407 and Course408 are approved in Eden on 2026-11-07**, and **Course411 is confirmed fixed** on PR #4 (`smbw-course411-framing`).
 - Static-review baseline: mod commit `6bfcf0d`, game 1.2.1. A baseline is not a tested-build claim; record the actual mod commit when a human tests each course.
 - Census coverage: all 151 `Stage/CourseInfo` records and 451 `Stage/StageParam` records; the 19 `CourseKind = Mini` courses match the Break Time labels and existing world-map entries. Recursive stage references resolve to 24 map-unit files, including two container roots and five linked subareas.
 - No other Break Time courses exist outside Course400–418. Course450–453 are `SecretSquare`; Course460 is `Bonus`, not Break Time.
@@ -67,12 +68,12 @@ Replace `Not tested` with the **mod commit, test date, platform, and a short res
 | Done | Course / level | World | Status | Tested commit / result |
 | --- | --- | --- | --- | --- |
 | [ ] | `Course403` — Zip-Go-Round | W2 — Fluff-Puff Peaks | Visual framing approved; gameplay pending | 2026-11-05, Windows/Eden: maintainer approved v1.1.8 Candidate C28 framing ("Yes that's good") on [PR #5](https://github.com/PyroDonkey/switch-4x3-mods/pull/5) (commit `0192150`; patch SHA-256 `08ebeeb79a45`, stage SHA-256 `d71bef2fab7e`). Full-room camera ($G = 20.6667$, $\text{delta} = 0$) and floor cloud expansion (Hash `3184768010431751081`: Scale X 28.0, Translate Y -0.4) cover bottom void and seal corner/edge gaps with 0 flicker and 0 art stretch. Token collection, moving rail sequence, completion, and retry remain open. See DEVELOPMENT.md §§31–33. |
-| [ ] | `Course408` — Floating Wonder Tokens | W4 — Sunbaked Desert | Pending play-test | Not tested |
-| [ ] | `Course401` — Kick It, Outmaway | W2 — Fluff-Puff Peaks | Pending play-test | Not tested |
+| [x] | `Course408` — Floating Wonder Tokens | W4 — Sunbaked Desert | Approved in Eden | 2026-11-07, Windows/Eden: maintainer approved the final build. `CameraArea` Hash `892663682` keeps Translate Y = 0.5 and Scale Y = 15.5, locking X at 64.0 with Scale X = 24.6667. All four `EnemyBalloonKiller` actors and tag `2621681372` are stock; only `CreateTag` Y moves: `2021327989` 13.5 -> 19.5 (+6.0), `1522517719` and `1001471908` -1.5 -> -3.0 (-1.5). All four spawn with no visible pop-in and unchanged paths. Completion/retry not separately reported. See DEVELOPMENT.md §§42–43. |
+| [x] | `Course401` — Kick It, Outmaway | W2 — Fluff-Puff Peaks | Approved in Eden | 2026-11-07, Windows/Eden: maintainer approved the play-test. BOSS table entry at G = 20.6667, delta = 0.0; 14 ice-block actors raised +9.0 in Y keep their spawns above the 4:3 view. Completion/retry not separately reported. See DEVELOPMENT.md §43. |
 | [ ] | `Course400` — Pop Up, Hoppo! | W1 — Pipe-Rock Plateau | Visual framing approved; gameplay pending | 2026-11-06, Windows/Eden: maintainer approved full-room camera framing ("Okay, looks good"). In 4:3 with $G = 20.6667$, stock Hoppo spawn at $Y = 12.0$ was exposed on-screen. Added stage edit in `build_stage.py` shifting `EnemyKoropon` $Y = 12.0 \to 17.0$ and `PopUpTag` $16.5 \to 21.5$ (patch SHA-256 `ca091bb6d71f`, stage SHA-256 `c51dc7836e74`). Off-screen spawn drop, rebound sequence, completion, and retry remain open. See DEVELOPMENT.md §§35–36. |
 
 - **403:** opposing rails at $X = 1.5$ and $26.5$ cannot both fit in the default narrow view. Full-room camera ($G = 20.6667$, $\text{delta} = 0$) approved. Unrendered floor void covered by widened floor cloud; all other 9 clouds remain stock.
-- **408:** outer token centers span 21 blocks, slightly more than the default 20.67-block view. Check all-token readability and incoming enemy cues.
+- **408:** the locked camera centres the 24.6667-block-wide room at X = 64.0 while keeping the stock Y centre and height. Approved after play-test in Eden. Observed in Eden, cause unknown: changing a `CreateTag` X stopped the Balloon Killers spawning; Y-only moves kept them spawning. Stock Course408 tags have `onAppearSensor` false.
 - **401:** starting players and incoming blocks occupy opposite sides. Review both the normal camera and the upper signal-camera phase, including the transition.
 - **400:** check launch, rebound, and exit-state readability together. Main mechanism centers span only 18.5 blocks, so full-width zoom is not established as necessary.
 
@@ -84,7 +85,7 @@ Replace `Not tested` with the **mod commit, test date, platform, and a short res
 
 | Done | Course / level | World | Status | Tested commit / result |
 | --- | --- | --- | --- | --- |
-| [ ] | `Course407` — Watery Wonder Tokens | W3 — Shining Falls | Pending play-test | Not tested |
+| [x] | `Course407` — Watery Wonder Tokens | W3 — Shining Falls | Approved in Eden | 2026-11-07, Windows/Eden: maintainer approved the play-test. BOSS table entry for RootAreaHash `2395215932` at G = 20.6667, delta = 0.0; `DVWaKaiganFarIwaA02` stock, carved `DVWaKaiganFarIwaA01` Y 48.0 -> 49.5 and Scale 0.7 -> 0.82. Completion/retry not separately reported. See DEVELOPMENT.md §43. |
 
 - Check lateral token visibility/reach during descent, the end of the autoscroll, and the reward observation camera.
 - The autoscroll rail moves vertically with constant X. Cave G's X-still behavior deserves checking during the descent; this is not a reproduced bug or a reason to apply Course411's fixed-room solution.
@@ -97,8 +98,8 @@ Review foreground readability and background alignment as one scene. The root `C
 
 | Done | Course / level | World | Status | Tested commit / result |
 | --- | --- | --- | --- | --- |
-| [ ] | `Course404` — Unreachable Treasure? | W3 — Shining Falls | Pending play-test | Not tested |
-| [ ] | `Course409` — Raise the Stage | W4 — Sunbaked Desert | Pending play-test | Not tested |
+| [x] | `Course404` — Unreachable Treasure? | W3 — Shining Falls | Approved in Eden | 2026-11-07, Windows/Eden: maintainer approved the play-test. `Course404_Main` BOSS table entry at G = 20.6667, delta = 0.0; no stage edits. Completion/retry not separately reported. See DEVELOPMENT.md §43. |
+| [ ] | `Course409` — Raise the Stage | W4 — Sunbaked Desert | Stock; TODO | Reverted to stock; leave on the TODO list for a later play-test and investigation. |
 
 - **404:** inspect `Course404_Main` with background `Course404_Sub1`: clue/action visibility, alignment during panning, and reward access.
 - **409:** inspect `Course409_Main` with background performer units `Course409_Sub1` and `Course409_Sub2`: rhythm cues and stage composition. These use different wall artwork from Course411. Sub2's loading/activation is established, but its precise background-locator relationship remains unresolved.
