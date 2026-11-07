@@ -186,6 +186,23 @@ EDITS = [
      (223.04513549804688, 51.73638153076172, 0.0), (216.48513549804688, 51.73638153076172, 0.0)),
     ('Course290_Main', 12855344573256944945, 'CourseDisplayBoxSwitch', 'Translate',
      (199.5, 52.0, 0.0), (192.94, 52.0, 0.0)),
+    # Course290_Main (Bowser's Rage Stage - Post-statue rhythm pause singing plants & pipes):
+    # In 4:3 (width 21.0), with the rhythm pause plateau at rail X = 179.0, the camera frames X = [179.0, 200.0].
+    # Shift the 3 left rising pipes (SoundRhythmObjectUpDownDokan) and 3 singing Piranha Plants (EnemySoundRunRunPackun)
+    # right by +2.0 blocks (X = 178, 180, 182 -> 180, 182, 184) to pull them away from the left screen edge and frame
+    # both the left singing group and the right Spike thrower (X = 199.0) simultaneously with 1.0 block margin.
+    ('Course290_Main', 14018291091925094241, 'SoundRhythmObjectUpDownDokan', 'Translate',
+     (178.0, 39.0, 0.0), (180.0, 39.0, 0.0)),
+    ('Course290_Main', 18409431755698402034, 'SoundRhythmObjectUpDownDokan', 'Translate',
+     (180.0, 39.0, 0.0), (182.0, 39.0, 0.0)),
+    ('Course290_Main', 4568669752595535956, 'SoundRhythmObjectUpDownDokan', 'Translate',
+     (182.0, 39.0, 0.0), (184.0, 39.0, 0.0)),
+    ('Course290_Main', 1451404568616177091, 'EnemySoundRunRunPackun', 'Translate',
+     (178.0, 47.0, 0.0), (180.0, 47.0, 0.0)),
+    ('Course290_Main', 16407013882060977642, 'EnemySoundRunRunPackun', 'Translate',
+     (180.0, 47.0, 0.0), (182.0, 47.0, 0.0)),
+    ('Course290_Main', 1044554605811720563, 'EnemySoundRunRunPackun', 'Translate',
+     (182.0, 47.0, 0.0), (184.0, 47.0, 0.0)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics
@@ -208,6 +225,24 @@ BG_EDITS = [
     ('Course152_Sub4', 1, 1, 5, (50.0, -7.0, 0.0), (50.0, -10.0, 0.0)),
     ('Course152_Sub4', 1, 2, 0, (79.0, -7.0, 0.0), (79.0, -10.0, 0.0)),
     ('Course152_Sub4', 1, 2, 21, (92.0, -7.0, 0.0), (92.0, -10.0, 0.0)),
+    # Course290_Main (Bowser's Rage Stage - Post-statue rhythm pause pipe gap):
+    # Shift Wall 2 right boundary (pts 2-3) and Wall 5 left boundary (pts 0-1) right by +2.0 blocks in X so the gap
+    # beneath the rising rhythm pipes moves from X = [177, 183] to [179, 185].
+    ('Course290_Main', 0, 2, 2, (177.0, 47.0, 0.0), (179.0, 47.0, 0.0)),
+    ('Course290_Main', 0, 2, 3, (177.0, 8.0, 0.0), (179.0, 8.0, 0.0)),
+    ('Course290_Main', 0, 5, 0, (183.0, 42.0, 0.0), (185.0, 42.0, 0.0)),
+    ('Course290_Main', 0, 5, 1, (183.0, 47.0, 0.0), (185.0, 47.0, 0.0)),
+]
+
+
+# (course, unit_idx, belt_idx, point_idx, orig_xyz, new_xyz)
+# In Course290_Main, BgUnits[0] has matching conveyor belt collision rails (BeltRails) that define the top surface
+# of Wall 2 and Wall 5. Both Walls and BeltRails must be shifted together to keep the visual geometry and collision aligned.
+BELT_EDITS = [
+    ('Course290_Main', 0, 2, 2, (177.0, 47.0, 0.0), (179.0, 47.0, 0.0)),
+    ('Course290_Main', 0, 2, 3, (177.0, 8.0, 0.0), (179.0, 8.0, 0.0)),
+    ('Course290_Main', 0, 5, 0, (183.0, 42.0, 0.0), (185.0, 42.0, 0.0)),
+    ('Course290_Main', 0, 5, 1, (183.0, 47.0, 0.0), (185.0, 47.0, 0.0)),
 ]
 
 
@@ -219,17 +254,17 @@ BG_EDITS = [
 #   Shift pt 8 right to frame Wall 1 [113, 122] without pushing the player off Wall 0 (ends at X = 104), and shift
 #   pts 9-11 right by +3.28 so the 840-frame vertical shaft climb (CameraArea 3010860670, X = [124.75, 152.25])
 #   is centered at X = 138.78.
-# - Post-statue rhythm pause (pts 16-17): shift the rhythm pause plateau from 174.0 to 179.5 to frame
-#   X = [179.5, 200.5] in 4:3, keeping EnemyRhythmGabon (15920962010745316511 at X = 199.0) and its pipe
-#   (9780181108041827457 at X = 199.0) visible with 1.5 blocks of right margin and 6.5-16 blocks of reaction
-#   room across Wall 5 (X = [183, 192]).
+# - Post-statue rhythm pause (pts 16-17): shift the rhythm pause plateau from 174.0 to 179.0 to frame
+#   X = [179.0, 200.0] in 4:3, fitting all 3 shifted singing plants/pipes ([179.0, 185.0]) and the Spike thrower
+#   (15920962010745316511 at X = 199.0) + right pipe (9780181108041827457 at X = 199.0) simultaneously with
+#   1.0 block of margin from both actor centers (180.0 and 199.0) to the screen edges.
 RAIL_EDITS = [
     ('Course290_Main', 185828596, 8, (101.0, 35.0, 0.0), (102.0, 35.0, 0.0)),
     ('Course290_Main', 185828596, 9, (112.0, 35.0, 0.0), (115.28, 35.0, 0.0)),
     ('Course290_Main', 185828596, 10, (125.0, 35.0, 0.0), (128.28, 35.0, 0.0)),
     ('Course290_Main', 185828596, 11, (125.0, 60.0, 0.0), (128.28, 60.0, 0.0)),
-    ('Course290_Main', 185828596, 16, (174.0, 60.0, 0.0), (179.5, 60.0, 0.0)),
-    ('Course290_Main', 185828596, 17, (174.0, 60.0, 0.0), (179.5, 60.0, 0.0)),
+    ('Course290_Main', 185828596, 16, (174.0, 60.0, 0.0), (179.0, 60.0, 0.0)),
+    ('Course290_Main', 185828596, 17, (174.0, 60.0, 0.0), (179.0, 60.0, 0.0)),
 ]
 
 
@@ -240,13 +275,15 @@ def bcett(romfs, course):
 def edits_by_course():
     out = {}
     for e in EDITS:
-        out.setdefault(e[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['actors'].append(e)
+        out.setdefault(e[0], {'actors': [], 'bg': [], 'belts': [], 'gyaml': [], 'rails': []})['actors'].append(e)
     for b_edit in BG_EDITS:
-        out.setdefault(b_edit[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['bg'].append(b_edit)
+        out.setdefault(b_edit[0], {'actors': [], 'bg': [], 'belts': [], 'gyaml': [], 'rails': []})['bg'].append(b_edit)
+    for belt_edit in BELT_EDITS:
+        out.setdefault(belt_edit[0], {'actors': [], 'bg': [], 'belts': [], 'gyaml': [], 'rails': []})['belts'].append(belt_edit)
     for g_edit in GYAML_EDITS:
-        out.setdefault(g_edit[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['gyaml'].append(g_edit)
+        out.setdefault(g_edit[0], {'actors': [], 'bg': [], 'belts': [], 'gyaml': [], 'rails': []})['gyaml'].append(g_edit)
     for r_edit in RAIL_EDITS:
-        out.setdefault(r_edit[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['rails'].append(r_edit)
+        out.setdefault(r_edit[0], {'actors': [], 'bg': [], 'belts': [], 'gyaml': [], 'rails': []})['rails'].append(r_edit)
     return out
 
 
@@ -341,6 +378,30 @@ def apply(d, course_edits):
         for eslot, _ in b.vec3(p, 'Translate'):
             allowed.update(range(eslot, eslot + 4))
 
+    for course, uidx, bidx, pidx, orig, new in course_edits.get('belts', []):
+        unit = b.hash_entries(slots[uidx][2])
+        belts = b.array_slots(unit['BeltRails'][2])
+        belt = b.hash_entries(belts[bidx][2])
+        pts = b.array_slots(belt['Points'][2])
+        p = b.hash_entries(pts[pidx][2])
+        node = p['Translate'][2]
+        all_bpts = []
+        for u in slots:
+            unit_dict = b.hash_entries(u[2])
+            if 'BeltRails' in unit_dict:
+                for _, _, braw in b.array_slots(unit_dict['BeltRails'][2]):
+                    belt_dict = b.hash_entries(braw)
+                    if 'Points' in belt_dict:
+                        for _, _, praw in b.array_slots(belt_dict['Points'][2]):
+                            all_bpts.append(b.hash_entries(praw))
+        sharers = [pt for pt in all_bpts if pt['Translate'][2] == node]
+        assert len(sharers) == 1, f'{course} Unit {uidx} BeltRail {bidx} Pt {pidx}: Translate shared by {len(sharers)} points'
+        cur = [v for _, v in b.vec3(p, 'Translate')]
+        assert cur == list(orig), f'{course} Unit {uidx} BeltRail {bidx} Pt {pidx}: {cur}, expected {orig}'
+        b.set_vec3(p, 'Translate', new)
+        for eslot, _ in b.vec3(p, 'Translate'):
+            allowed.update(range(eslot, eslot + 4))
+
     rails_slots = b.array_slots(root['Rails'][2]) if 'Rails' in root else []
     all_rpts = []
     for s in rails_slots:
@@ -408,6 +469,7 @@ def verify(orig_romfs, mod_romfs):
             problems.append(f'{course}: edited values differ from the edit tables')
         elif diff:
             n_total = (len(edits.get('actors', [])) + len(edits.get('bg', [])) +
+                       len(edits.get('belts', [])) +
                        len(edits.get('gyaml', [])) + len(edits.get('rails', [])))
             print(f'{course}: {len(diff)} byte(s) differ, all inside {n_total} edit(s)')
     for p in problems:
