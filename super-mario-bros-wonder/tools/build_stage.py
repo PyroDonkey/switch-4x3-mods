@@ -128,6 +128,19 @@ EDITS = [
      (23.5, 48.0, -167.5), (23.5, 49.5, -167.5)),
     ('Course407_Course', 3373664933504165692, 'DVWaKaiganFarIwaA01', 'Scale',
      (0.699999988079071, 0.699999988079071, 0.699999988079071), (0.82, 0.82, 0.82)),
+    # Course290_Main (Bowser's Rage Stage - Bowser statue section): SetAutoScrollPos left-aligns the 21.0-wide
+    # 4:3 view to the autoscroll rail, cutting 6.56 blocks off the right edge vs stock 16:9 (27.56). Shift the
+    # statue-section CourseDisplayBoxSwitch triggers left by 6.56 blocks in X so EnemyTossinGroup spawns during
+    # the slow approach (pt 13->14, rail X 147.94) before the scroll reaches the statue at X = 156.5, and the
+    # post-statue pause/Packun switch (12855344573256944945) enters the 4:3 view (max X 195.0) at rail X = 174.0.
+    ('Course290_Main', 777445035, 'CourseDisplayBoxSwitch', 'Translate',
+     (198.0, 52.0, 0.0), (191.44, 52.0, 0.0)),
+    ('Course290_Main', 212790001, 'CourseDisplayBoxSwitch', 'Translate',
+     (223.04513549804688, 51.73638153076172, 0.0), (216.48513549804688, 51.73638153076172, 0.0)),
+    ('Course290_Main', 12855344573256944945, 'CourseDisplayBoxSwitch', 'Translate',
+     (199.5, 52.0, 0.0), (192.94, 52.0, 0.0)),
+    ('Course290_Main', 4029477259, 'CourseDisplayBoxSwitch', 'Translate',
+     (206.00457763671875, 51.45623779296875, 0.0), (199.44457763671875, 51.45623779296875, 0.0)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics
