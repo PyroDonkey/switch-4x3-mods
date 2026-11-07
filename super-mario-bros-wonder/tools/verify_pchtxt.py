@@ -51,6 +51,7 @@ def verify_patch(path):
         (1607468536, 20.6666667),     # Course411_Course
         (3684305666, 20.6666667),     # Course415_Course
         (2579434623, 20.6666667),     # Course417_Course
+        (177084102, 20.6666667),      # Course403_Course
     ]
     expected_autoscroll_ends = [
         (885847797, 247.25 + 27.5556 / 2),         # Course002_Main

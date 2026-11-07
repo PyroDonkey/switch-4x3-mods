@@ -332,3 +332,50 @@ Every listed pause has a margin $> 0.05$ blocks from the rail's final point, pre
 **Human result:** after the v1.1.7 test question asking whether both pillars continue below the screen with their upper arch joints flush, the maintainer replied "Looks good" in Windows/Eden. This approves visual framing only. The full enemy sequence, edge movement/activation, completion, retry and current-build Course411 regression were not reported; Course417's checklist row stays open, as does Course415's separate gameplay follow-up.
 
 **Tested identity:** development v1.1.7 over `6bfcf0d` with uncommitted changes. Unchanged patch SHA-256 `0e7b9b513ec228bfeb715b66e47ffa6d90ce92d5de7833b637db17c801a0788d`; Course417 stage SHA-256 `aaea4bd8d67582658e7f5178ea4f7f8553f605af07ea84b181675be0d4400758`. No mod output changed to record this approval. It does not establish full gameplay confirmation or a release.
+
+
+## 31. 2026-11-04: Course403 Zip-Go-Round camera-only candidate
+
+**Request:** the maintainer chose to apply the next full-room camera candidate before looking at the level. Course403 remains untested; this is not a human-reproduced defect or a confirmed fix. Course415/417 retain their separate visual framing approvals, with full gameplay checks and the current-build Course411 regression still open.
+
+**Camera (v1.1.8):** the local 1.2.1 original confirms `Course403_Course` RootAreaHash `177084102`, with a `CameraArea` at `[14.0, 0.5, 0.0]`, scale `[27.5, 15.5, 1.0]`. Appended `(177084102, 20.6666667, 0.0)` to the existing per-area table in `gen_zoom_v2.py`. This restores about 27.56 blocks of width at 4:3 without lock panning, so the opposing rails and moving Wonder Tokens can be reviewed together. Stage artwork is deliberately unchanged for the first preview; no Course403 stage archive is shipped. All 119 RomFS files remain byte-identical.
+
+**Patch scope:** the generator replaces the former terminator's hash/height at `0x02138E54` / `0x02138E58`, keeps delta zero at `0x02138E5C`, and adds a three-word zero terminator at `0x02138E60–0x02138E6B`, before cave H. Exact enabled-word comparison confirms every previous hook, instruction and area override is unchanged. The independent verifier now requires eight entries and the relocated terminator.
+
+**Verification:** `verify_pchtxt.py` passes (273 lines, 11 hooks, 0 errors). Eight negative/regression controls reject the previous patch without Course403, incorrect Course403 hash/height/delta, a missing terminator, and Course411/415/417 height regressions for the intended reasons. Stage verification reports 0 problems across all four unchanged archives; all 16 stage-tool unit tests pass. A fresh external layout rebuild verifies with 0 problems and matches all 115 shipped layouts byte-for-byte. A separate read-only review found no issue in the generator, generated table, independent verifier or candidate-status docs. `check_repo.py` and `git diff --check` pass.
+
+**Identity and handoff:** development v1.1.8 over `68af3fd` (uncommitted); patch SHA-256 `08ebeeb79a458b90a5ba61ee3c457a13cfaef03d5d52a8ba1a5f6e0da508a5c5`. Repository and installed-mod backups were saved outside the repo before editing. With Eden at its idle game-list window, mirrored the candidate into the existing test mod using `robocopy /MIR`; all 121 installed files match, with only the patch changed. Built and verified, awaiting the first human preview. Ask whether both side rails and moving tokens are visible together without top/bottom artwork gaps; completion/retry follow later. No commit or release.
+
+## 32. 2026-11-04: Course403 background evaluation and camera-only decision
+
+**Report and investigation:** the maintainer play-tested the v1.1.8 camera candidate in Eden on Windows and reported that the framing "looks fairly good already", but questioned the dark bottom band beneath the bottom rail. Investigation of screenshot `step_408_media_0.png` and extracted 1.2.1 assets confirmed:
+1. The rail box is vertically centered (top margin 195 px, bottom margin 172 px; center y = 8.25 matches stock).
+2. The dark bottom gradient is 100% attached to the background sky dome: the panoramic sphere fades to black at its bottom nadir pole. In stock 16:9, the camera bottom stops at the bottom rail (y = 0.5), keeping the bottom pole completely off-screen. In 4:3 with full-room zoom (G = 20.6667), the taller view extends 2.58 blocks below the rail (y = -2.08), revealing the bottom pole of the sphere.
+3. Sibling sky stages (such as `AA_Yama_Jyoku_Hare`) mask this nadir with a vertical height fog (`Fog.MainWorld`), which is disabled in Course403's exclusive palette (`AA_Yama_Jyoku_AxcelBlockMini`).
+
+**Decision:** after evaluating background behavior, the maintainer directed to leave the mod at the camera zoom and nothing else. No stage or palette archives are shipped. Course403 runs cleanly with full-room zoom (G = 20.6667, delta = 0), fitting the entire 27.5-wide level inside the 4:3 screen.
+
+**Identity and state:** development v1.1.8 over `68af3fd` (uncommitted); patch SHA-256 `08ebeeb79a458b90a5ba61ee3c457a13cfaef03d5d52a8ba1a5f6e0da508a5c5`. RomFS count is 119 files (115 layouts + 4 stages). `verify_pchtxt.py` passes (273 lines, 11 hooks). `build_stage.py --verify` passes on all 4 unchanged stage files; 16 stage unit tests, `check_repo.py` and `git diff --check` pass.
+
+## 33. 2026-11-05: Course403 floor cloud expansion and visual framing approval
+
+**Follow-up report:** during subsequent testing, the maintainer requested covering the dark bottom sky void using the level's cloud assets, reporting visible flickering on initial wide-cloud trials.
+
+**Reverse engineering `ObjectCloudArea`:**
+1. Analysis of `Pack/Actor/ObjectCloudArea.pack.zs` and executable functions at `0x015b14bc`–`0x015b20c8` confirmed `ObjectCloudArea` has zero physics collision bodies (`ControllerEntityNamePathAry: []`), only an `AreaSensor` (`Box1x1Center`). Players and objects pass through freely; the actor is 100% cosmetic decorative fluff.
+2. The actor allocates decorative cloud puffs on an integer grid: `count = ceil(Scale.X) * ceil(Scale.Y)`, allocating 184 bytes (`0xb8`) per puff. Puff positions are placed deterministically at cell centers (`min + 0.5 + i`), with zero random jitter.
+3. Draw capacity cap: at `0x01b808ec`–`0x01b80908` in `main-1.2.1.bin`, the engine compares the accumulated puff draw count against a fixed capacity buffer (`[x8, #0xd40]`). If count exceeds the limit, the draw call silently early-returns (`b.le #0x1b80960`), causing puffs to pop on and off (flicker). A single 30-wide actor (120 puffs) saturated this limit when combined with the right-wall clouds.
+
+**Candidate iterations:**
+- Candidate A / A2 / A3: Scale X = 30.0, Translate Y = -1.5. Covered the dark band but suffered puff flickering due to the draw buffer limit. An overlap audit of A3 confirmed zero bounding box overlaps, proving the flicker was capacity-driven, not coincident z-fighting.
+- Diagnostic B2: five separate 6x4 clouds at Y = -1.5. Proved 100% flicker-free, confirming puff capacity, but removing the right wall clouds stripped the stage framing and exposed a horizontal gap under the red dash platform.
+- Candidate C: restored all 9 base clouds (4 ceiling, 5 side walls) and widened the floor cloud to Scale X = 20.0. Clean and flicker-free, but left corner gaps.
+- Candidates C26 / C27: widened floor cloud to 26 and 27 blocks. Flicker-free, but left scalloped edge gaps at Y = -2.08 (the 4:3 view bottom).
+- Candidate C28 (Approved): Floor cloud Hash `3184768010431751081`:
+  - `Translate`: `[12.5, 0.0, 0.0]` -> `[14.0, -0.4, 0.0]`
+  - `Scale`: `[6.0, 4.0, 1.0]` -> `[28.0, 4.0, 1.0]`
+  Centering at X = 14.0 spans [0.0, 28.0], past the screen edges [0.22, 27.78]. Shifting Translate Y to -0.4 pushes bottom puff lobes to Y = -2.40 (past view bottom Y = -2.08), sealing both bottom corners and scalloped edge gaps off-screen, while keeping top puff lobes at Y = 1.60 neatly tucked inside the red dash floor thickness (Y in [1.0, 2.0]). Total puffs (112) remain safely within the engine draw budget.
+
+**Human verification:** the maintainer play-tested Candidate C28 in Windows/Eden and approved the result: "Yes that's good" (seamless coverage across the full width, no bottom void, unobstructed rails, 100% flicker-free).
+
+**Build and verification:** added Course403 to `EDITS` in `tools/build_stage.py`. `build_stage.py --verify` passes with 0 problems across all 5 stages; Course403 differs from 1.2.1 stock by exactly 7 bytes across 2 float edits. Shipped RomFS count is 120 (115 layouts + 5 stage archives). Shipped patch SHA-256: `08ebeeb79a458b90a5ba61ee3c457a13cfaef03d5d52a8ba1a5f6e0da508a5c5`; Course403 stage SHA-256: `d71bef2fab7e769391949622a8cbfa6259a88ece0201c18af64f9d3d079e3d6f`.
