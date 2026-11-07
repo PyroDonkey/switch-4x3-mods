@@ -201,6 +201,10 @@ BG_EDITS = [
 #   Shift pt 8 right to frame Wall 1 [113, 122] without pushing the player off Wall 0 (ends at X = 104), and shift
 #   pts 9-11 right by +3.28 so the 840-frame vertical shaft climb (CameraArea 3010860670, X = [124.75, 152.25])
 #   is centered at X = 138.78.
+# - Post-statue rhythm pause (pts 16-17): shift the rhythm pause plateau from 174.0 to 179.5 to frame
+#   X = [179.5, 200.5] in 4:3, keeping EnemyRhythmGabon (15920962010745316511 at X = 199.0) and its pipe
+#   (9780181108041827457 at X = 199.0) visible with 1.5 blocks of right margin and 6.5-16 blocks of reaction
+#   room across Wall 5 (X = [183, 192]).
 RAIL_EDITS = [
     ('Course290_Main', 185828596, 0, (-4.0, 35.0, 0.0), (1.5, 35.0, 0.0)),
     ('Course290_Main', 185828596, 1, (11.0, 35.0, 0.0), (16.5, 35.0, 0.0)),
@@ -211,6 +215,8 @@ RAIL_EDITS = [
     ('Course290_Main', 185828596, 9, (112.0, 35.0, 0.0), (115.28, 35.0, 0.0)),
     ('Course290_Main', 185828596, 10, (125.0, 35.0, 0.0), (128.28, 35.0, 0.0)),
     ('Course290_Main', 185828596, 11, (125.0, 60.0, 0.0), (128.28, 60.0, 0.0)),
+    ('Course290_Main', 185828596, 16, (174.0, 60.0, 0.0), (179.5, 60.0, 0.0)),
+    ('Course290_Main', 185828596, 17, (174.0, 60.0, 0.0), (179.5, 60.0, 0.0)),
 ]
 
 
