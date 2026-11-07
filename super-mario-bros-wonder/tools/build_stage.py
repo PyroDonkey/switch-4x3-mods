@@ -186,12 +186,22 @@ BG_EDITS = [
 
 # (course, rail_hash, point_idx, orig_xyz, new_xyz)
 # In Course290_Main, AutoScrollControlSignalFrame (4286093022) on Rail 185828596 passes rail_X + current_half_width
-# to SetAutoScrollPos, shifting the 21.0-wide 4:3 view center 3.28 blocks left of stock 16:9 (half-width 13.78).
-# Shift pts 6 and 8 right to frame the fossil/dragon boarding and Wall 1 [113, 122] without pushing the player off
-# Wall 0 (ends at X = 104), and shift pts 9-11 right by +3.28 so the 840-frame vertical shaft climb (CameraArea
-# 3010860670, X = [124.75, 152.25]) is centered at X = 138.78 (view [128.28, 149.28]), framing all four vertical
-# snake poles (X = 127.5..150.5) and the bottom/top horizontal snake poles.
+# to SetAutoScrollPos, left-aligning the 21.0-wide 4:3 view to rail_X and cutting 6.56 blocks off the right edge vs
+# stock 16:9 (27.56):
+# - Opening fist section (pts 0-4): at stock pt 0 (-4.0), [-4.0, 17.0] wastes 4 blocks behind the start platform
+#   (X = 0) and cuts off Fist 1's right edge (22.5) and the middle platform (19.0); at stock pt 1 (11.0), [11.0, 32.0]
+#   cuts off Fist 3's right edge (33.5) and the safe landing beyond it. Shift pts 0-1 by +5.5 (to 1.5 and 16.5, framing
+#   [1.5, 22.5] -> [16.5, 37.5] while keeping PlayerLocator X = 3.0 and the X = 19.0 platform inside the left edge)
+#   and pts 2-4 by +3.28 (stock 16:9 center).
+# - Dragon & vertical shaft section (pts 6, 8-11): shift pts 6 and 8 right to frame the fossil/dragon boarding and
+#   Wall 1 [113, 122] without pushing the player off Wall 0 (ends at X = 104), and shift pts 9-11 right by +3.28 so
+#   the 840-frame vertical shaft climb (CameraArea 3010860670, X = [124.75, 152.25]) is centered at X = 138.78.
 RAIL_EDITS = [
+    ('Course290_Main', 185828596, 0, (-4.0, 35.0, 0.0), (1.5, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 1, (11.0, 35.0, 0.0), (16.5, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 2, (29.0, 35.0, 0.0), (32.28, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 3, (33.0, 35.0, 0.0), (36.28, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 4, (38.0, 35.0, 0.0), (41.28, 35.0, 0.0)),
     ('Course290_Main', 185828596, 6, (92.0, 35.0, 0.0), (95.0, 35.0, 0.0)),
     ('Course290_Main', 185828596, 8, (101.0, 35.0, 0.0), (102.0, 35.0, 0.0)),
     ('Course290_Main', 185828596, 9, (112.0, 35.0, 0.0), (115.28, 35.0, 0.0)),
