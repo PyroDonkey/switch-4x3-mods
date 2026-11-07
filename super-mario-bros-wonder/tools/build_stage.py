@@ -142,11 +142,15 @@ EDITS = [
     ('Course290_Main', 4029477259, 'CourseDisplayBoxSwitch', 'Translate',
      (206.00457763671875, 51.45623779296875, 0.0), (199.44457763671875, 51.45623779296875, 0.0)),
     # Course290_Main (Bowser's Rage Stage - Dragon & vertical shaft section): shift the dragon and shaft
-    # CourseDisplayBoxSwitch triggers left by 6.56 blocks in X to match the 4:3 view's right edge. This restores
-    # stock autoscroll timing for the fossil ring (1755951341) and dragon transformation (1787195044, avoiding a
-    # ~180-frame delay at pt 6->7), and ensures switch 4273434636 (stock min_x = 146.50, missed by the 4:3 right
-    # edge at 146.0) fires to spawn the bottom horizontal snake-block ground (ObjectBlockSnakePole 34729090 at
-    # Y = 27.5..31.5) and guide coins before the vertical shaft climb.
+    # CourseDisplayBoxSwitch triggers left by 6.56 blocks in X to match the 4:3 view's right edge. Shifting
+    # 999420502 (Ring 1 1799465718 spawn) alongside 1755951341 (Ring 1 delete / Ring 2 2094148528 spawn) and
+    # 1787195044 (dragon 2206909489 transform) while keeping pt 6 at stock 92.0 preserves the exact stock 16:9
+    # trigger intervals (403.0f and 488.9f) so Ring 1 completes its 300-frame leftward roll before Ring 2 spawns
+    # at X = 69.5. Switch 4273434636 (stock min_x = 146.50, missed by the 4:3 right edge at 146.0) fires to
+    # spawn the bottom horizontal snake-block ground (ObjectBlockSnakePole 34729090 at Y = 27.5..31.5) and guide
+    # coins before the vertical shaft climb.
+    ('Course290_Main', 999420502, 'CourseDisplayBoxSwitch', 'Translate',
+     (90.5, 21.96936798095703, 0.0), (83.94, 21.96936798095703, 0.0)),
     ('Course290_Main', 1755951341, 'CourseDisplayBoxSwitch', 'Translate',
      (106.0, 19.168628692626953, 0.0), (99.44, 19.168628692626953, 0.0)),
     ('Course290_Main', 1787195044, 'CourseDisplayBoxSwitch', 'Translate',
@@ -193,16 +197,16 @@ BG_EDITS = [
 #   cuts off Fist 3's right edge (33.5) and the safe landing beyond it. Shift pts 0-1 by +5.5 (to 1.5 and 16.5, framing
 #   [1.5, 22.5] -> [16.5, 37.5] while keeping PlayerLocator X = 3.0 and the X = 19.0 platform inside the left edge)
 #   and pts 2-4 by +3.28 (stock 16:9 center).
-# - Dragon & vertical shaft section (pts 6, 8-11): shift pts 6 and 8 right to frame the fossil/dragon boarding and
-#   Wall 1 [113, 122] without pushing the player off Wall 0 (ends at X = 104), and shift pts 9-11 right by +3.28 so
-#   the 840-frame vertical shaft climb (CameraArea 3010860670, X = [124.75, 152.25]) is centered at X = 138.78.
+# - Dragon & vertical shaft section (pts 8-11): pt 6 is kept at stock 92.0 to maintain the fossil relay timing.
+#   Shift pt 8 right to frame Wall 1 [113, 122] without pushing the player off Wall 0 (ends at X = 104), and shift
+#   pts 9-11 right by +3.28 so the 840-frame vertical shaft climb (CameraArea 3010860670, X = [124.75, 152.25])
+#   is centered at X = 138.78.
 RAIL_EDITS = [
     ('Course290_Main', 185828596, 0, (-4.0, 35.0, 0.0), (1.5, 35.0, 0.0)),
     ('Course290_Main', 185828596, 1, (11.0, 35.0, 0.0), (16.5, 35.0, 0.0)),
     ('Course290_Main', 185828596, 2, (29.0, 35.0, 0.0), (32.28, 35.0, 0.0)),
     ('Course290_Main', 185828596, 3, (33.0, 35.0, 0.0), (36.28, 35.0, 0.0)),
     ('Course290_Main', 185828596, 4, (38.0, 35.0, 0.0), (41.28, 35.0, 0.0)),
-    ('Course290_Main', 185828596, 6, (92.0, 35.0, 0.0), (95.0, 35.0, 0.0)),
     ('Course290_Main', 185828596, 8, (101.0, 35.0, 0.0), (102.0, 35.0, 0.0)),
     ('Course290_Main', 185828596, 9, (112.0, 35.0, 0.0), (115.28, 35.0, 0.0)),
     ('Course290_Main', 185828596, 10, (125.0, 35.0, 0.0), (128.28, 35.0, 0.0)),
