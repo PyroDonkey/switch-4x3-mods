@@ -80,6 +80,54 @@ EDITS = [
      (3.0, 12.0, 0.0), (3.0, 17.0, 0.0)),
     ('Course400_Course', 3402723882765168318, 'PopUpTag', 'Translate',
      (2.5, 16.5, 0.0), (2.5, 21.5, 0.0)),
+    # Course401_Course (Break Time! Kick It, Outmaway!): with the full-room 4:3 camera, the stock ice-block
+    # spawn points are visible above the play area. Raise both ice-block variants by +9.0 in Y so they enter
+    # the frame from above without changing their horizontal placement or relative spacing.
+    ('Course401_Course', 3763676935, 'ObjectBlockPushIce', 'Translate',
+     (24.0, 18.0, 0.0), (24.0, 27.0, 0.0)),
+    ('Course401_Course', 1355151212, 'ObjectBlockPushIce', 'Translate',
+     (24.0, 18.0, 0.0), (24.0, 27.0, 0.0)),
+    ('Course401_Course', 3838668586, 'ObjectBlockPushIce', 'Translate',
+     (24.0, 18.0, 0.0), (24.0, 27.0, 0.0)),
+    ('Course401_Course', 2125968292, 'ObjectBlockPushIce', 'Translate',
+     (24.0, 18.0, 0.0), (24.0, 27.0, 0.0)),
+    ('Course401_Course', 3554852052, 'ObjectBlockPushIce', 'Translate',
+     (24.0, 18.0, 0.0), (24.0, 27.0, 0.0)),
+    ('Course401_Course', 3087609171, 'ObjectBlockPushIce', 'Translate',
+     (24.0, 18.0, 0.0), (24.0, 27.0, 0.0)),
+    ('Course401_Course', 53176105, 'ObjectBlockPushIce', 'Translate',
+     (24.0, 18.0, 0.0), (24.0, 27.0, 0.0)),
+    ('Course401_Course', 3181913597, 'ObjectBlockPushIce', 'Translate',
+     (24.0, 18.0, 0.0), (24.0, 27.0, 0.0)),
+    ('Course401_Course', 1321743696, 'ObjectBlockPushIce4x4', 'Translate',
+     (23.0, 19.0, 0.0), (23.0, 28.0, 0.0)),
+    ('Course401_Course', 333063829, 'ObjectBlockPushIce4x4', 'Translate',
+     (23.0, 19.0, 0.0), (23.0, 28.0, 0.0)),
+    ('Course401_Course', 4116886011, 'ObjectBlockPushIce4x4', 'Translate',
+     (23.0, 19.0, 0.0), (23.0, 28.0, 0.0)),
+    ('Course401_Course', 3391928854, 'ObjectBlockPushIce4x4', 'Translate',
+     (23.0, 19.0, 0.0), (23.0, 28.0, 0.0)),
+    ('Course401_Course', 2898691502, 'ObjectBlockPushIce4x4', 'Translate',
+     (23.0, 19.0, 0.0), (23.0, 28.0, 0.0)),
+    ('Course401_Course', 2362422353, 'ObjectBlockPushIce4x4', 'Translate',
+     (23.0, 19.0, 0.0), (23.0, 28.0, 0.0)),
+    # Course408_Course (Break Time! Floating Wonder Tokens): lock the camera horizontally at X = 64.0
+    # while keeping the stock Y centre and height. Y-only spawner shifts (X stays stock):
+    # top-right +6.0; bottom pair -1.5 (Y -1.5 -> -3.0) to hide the pop-in at the screen edges.
+    ('Course408_Course', 892663682, 'CameraArea', 'Scale',
+     (27.5, 15.5, 1.0), (24.6667, 15.5, 1.0)),
+    ('Course408_Course', 2021327989, 'CreateTag', 'Translate',
+     (79.5, 13.5, 0.0), (79.5, 19.5, 0.0)),
+    ('Course408_Course', 1522517719, 'CreateTag', 'Translate',
+     (58.5, -1.5, 0.0), (58.5, -3.0, 0.0)),
+    ('Course408_Course', 1001471908, 'CreateTag', 'Translate',
+     (69.5, -1.5, 0.0), (69.5, -3.0, 0.0)),
+    # Course407_Course (Break Time! Watery Wonder Tokens): adjust the carved A01 pillar proportionally
+    # so its square top is preserved while covering the taller 4:3 view's top-right void.
+    ('Course407_Course', 3373664933504165692, 'DVWaKaiganFarIwaA01', 'Translate',
+     (23.5, 48.0, -167.5), (23.5, 49.5, -167.5)),
+    ('Course407_Course', 3373664933504165692, 'DVWaKaiganFarIwaA01', 'Scale',
+     (0.699999988079071, 0.699999988079071, 0.699999988079071), (0.82, 0.82, 0.82)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics

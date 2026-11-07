@@ -433,3 +433,89 @@ Added stage edits for `Course400_Course` to `EDITS` in `tools/build_stage.py`:
 - `build_stage.py --verify` passes with 0 problems across all 6 stage files (`Course400_Course: 2 byte(s) differ, all inside 2 edit(s)`).
 - All 16 stage tool unit tests pass; `verify_pchtxt.py` passes (279 lines, 11 hooks, 0 errors).
 - Synchronized to `%APPDATA%\eden\load\010015100B514000\Native 4x3 Aspect Ratio` via robocopy.
+
+## 37. 2026-11-06: Course401 ice-block spawn elevation
+
+The full-room Course401 camera uses $G = 20.6667$, which expands the 4:3 view enough to expose the stock ice-block spawn points. Added 14 `Course401_Course` actor edits to `tools/build_stage.py`: eight `ObjectBlockPushIce` actors move from $(24.0, 18.0, 0.0)$ to $(24.0, 27.0, 0.0)$, and six `ObjectBlockPushIce4x4` actors move from $(23.0, 19.0, 0.0)$ to $(23.0, 28.0, 0.0)$. X/Z placement and relative spacing are unchanged.
+
+**Build and verification:**
+- Rebuilt `mod/Native 4x3 Aspect Ratio/romfs/BancMapUnit/Course401_Course.bcett.byml.zs` from the 1.2.1 originals (SHA-256: `EDDB23C7711DB860072139B3101C3BB57F4EBAAEAB87DAE07240F88F45576112`).
+- `build_stage.py --verify` reports 0 problems across all 7 stage files; Course401 differs by 14 bytes, all inside the 14 declared edits.
+- All 16 `test_build_stage.py` tests pass; `scripts/check_repo.py` passes. Gameplay, completion, and retry remain untested.
+
+## 38. 2026-11-06: Course408 camera horizontal lock and Balloon Killer spawn relocation
+
+In Course408 (Break Time! Floating Wonder Tokens), the maintainer requested zooming the camera in slightly ( = 18.5$) to cut off the unrendered lower gradient while keeping all Wonder tokens and gameplay visible, locking the horizontal camera panning at center  = 64.0$ while keeping the stock vertical camera height ( = 0.5$), and eliminating mid-air Balloon Killer pop-in.
+
+**Implementation:**
+- Code patch: Added Course408 (AreaHash 1474562704) to the BOSS table in 	ools/gen_zoom_v2.py with  = 18.5$ and $\text{delta} = 0.0$.
+- Stage edits (	ools/build_stage.py):
+  - CameraArea (Hash 892663682): Translate stays at stock 64 0.5 0$; Scale adjusted from 27.5 15.5 1$ to 24.6667 15.5 1$. Matching the area width to the camera's 4:3 view width (.5 \times 4/3 = 24.6667$) locks the camera horizontally at  = 64.0$ without lateral panning, while retaining the stock  = 0.5$ height.
+  - Left EnemyBalloonKiller (Hash 3427707647): Translate moved from 54 17.5 0$ to 45 10 0$, spawning off-screen left.
+  - Right EnemyBalloonKiller (Hash 2369650736): Translate moved from 84.5 18.5 0$ to 85 10 0$, spawning off-screen right.
+
+**Build and verification:**
+- Stage build wrote mod/Native 4x3 Aspect Ratio/romfs/BancMapUnit/Course408_Course.bcett.byml.zs.
+- uild_stage.py --verify reports 0 problems (7 bytes differ, all inside 3 edits).
+- Verified with erify_pchtxt.py (291 lines, 11 hooks, 0 errors).
+
+## 39. 2026-11-06: Course407 top-right background void coverage
+
+In Course407 (Break Time! Watery Wonder Tokens), the camera zoom ( = 20.6667$, $\text{delta} = 0.0$) was approved, but an unrendered triangular background void in the top-right corner was exposed.
+
+**Implementation:**
+- Stage edit (	ools/build_stage.py):
+  - The foreground carved pillar DVWaKaiganFarIwaA01 (Hash 3373664933504165692) is kept stock, preserving its square carved top surface.
+  - Background rock wall actor DVWaKaiganFarIwaA02 (Hash 14008780977747261966 at  = -193.0$): Translate.Y raised from .5$ to .0$ ($+4.5$ in Y) so the rock wall rises naturally behind the unmodified pillar to cover the void.
+
+**Build and verification:**
+- Stage build wrote mod/Native 4x3 Aspect Ratio/romfs/BancMapUnit/Course407_Course.bcett.byml.zs.
+- uild_stage.py --verify reports 0 problems (1 byte differs, inside 1 edit).
+
+## 40. 2026-11-06: Course409 reversion to stock
+
+Per maintainer request, all modifications for Course409 (Raise the Stage) were reverted:
+- Removed Course409_Main entry from BOSS table in 	ools/gen_zoom_v2.py.
+- Rebuilt exefs/1.2.1.pchtxt.
+- Removed stage edits from 	ools/build_stage.py and deleted mod/Native 4x3 Aspect Ratio/romfs/BancMapUnit/Course409_Main.bcett.byml.zs.
+- Kept Course409 listed on the Break Time review TODO list for later investigation.
+
+## 41. 2026-11-06: Course408 spawn elevation and Course407 proportional rock coverage
+
+Updated the Break Time stage edits in `tools/build_stage.py`:
+- Course408 keeps the CameraArea scale change from $(27.5, 15.5, 1.0)$ to $(24.6667, 15.5, 1.0)$, and raises both `EnemyBalloonKiller` actors plus their `CreateTag` actors by +9.0 in Y while preserving X/Z placement.
+- Course407 reverts `DVWaKaiganFarIwaA02` and instead adjusts `DVWaKaiganFarIwaA01` (Hash `3373664933504165692`) from Translate $(23.5, 48.0, -167.5)$ / Scale $(0.7, 0.7, 0.7)$ to Translate $(23.5, 49.5, -167.5)$ / Scale $(0.82, 0.82, 0.82)$.
+
+**Build and verification:**
+- Rebuilt all nine declared `BancMapUnit` archives from the 1.2.1 originals.
+- `build_stage.py --verify` reports 0 problems: Course408 differs by 7 bytes across 5 edits; Course407 differs by 10 bytes across 2 edits.
+- All 16 `test_build_stage.py` tests pass; `scripts/check_repo.py` passes. Gameplay remains untested for these changes.
+
+## 42. 2026-11-07: Course408 (Floating Wonder Tokens) Balloon Killer spawn investigation and final edits
+
+The camera-only build for Course408 (CameraArea Hash `892663682`, Scale $(27.5, 15.5, 1.0) \to (24.6667, 15.5, 1.0)$, Translate stock $(64.0, 0.5, 0.0)$) spawned all four Balloon Killers, but the top-right and bottom-right pairs visibly popped into existence at the screen edges. Top-left and bottom-left were fine.
+
+**Probes (all observed by the maintainer in Eden; cause unknown):**
+- Moving both the Balloon Killer and its `CreateTag` by a small diagonal step (X and Y together) stopped every pair spawning; larger diagonal shifts also produced no spawns.
+- A Y-only $+9.0$ move of the top pair (the Course401-style fix) spawned, but the bottom pairs were still stock and still popped in.
+- X-only $+3$ on the top-right `CreateTag` (`2021327989`): no spawn.
+- Y-only $-3$ on the bottom-right `CreateTag` (`1001471908`): spawned, and the pop-in was no longer visible.
+- Final Y-only probe: top-right tag $+6.0$, bottom-left/bottom-right tags $-1.5$; all four spawned with no visible pop-in and unchanged paths/timing. Approved by the maintainer on 2026-11-07.
+
+**Rule observed in Eden, cause unknown:** keep each `CreateTag` X at stock and change only Y. No code or data mechanism for the X sensitivity has been established; do not state one.
+
+**Stock data note:** all four Course408 `CreateTag` actors have `onAppearSensor` false and `SensorRateY` 1.0, so the earlier sensor-range explanation does not apply. Each Balloon Killer stores a `PopUp` link to its tag; the top-left and bottom-left tags also receive `Create` from `LogicalSignalORTag` `3900693894`, which is fed by `AreaSwitchLocal` `4039892632`, `671366925` and `3555004888`. That link graph is data, not an explanation for the X sensitivity.
+
+**Final stage edits in `tools/build_stage.py` (all four Balloon Killers and tag `2621681372` stock):**
+- `CameraArea` `892663682`: Scale $(27.5, 15.5, 1.0) \to (24.6667, 15.5, 1.0)$.
+- `CreateTag` `2021327989` (top-right): Translate Y $13.5 \to 19.5$ ($+6.0$).
+- `CreateTag` `1522517719` (bottom-left): Translate Y $-1.5 \to -3.0$ ($-1.5$).
+- `CreateTag` `1001471908` (bottom-right): Translate Y $-1.5 \to -3.0$ ($-1.5$).
+
+This supersedes §§38 and 41 for Course408. Rebuild and verification: `build_stage.py --verify` reports 0 problems with `Course408_Course: 8 byte(s) differ, all inside 4 edit(s)`; `verify_pchtxt.py` reports OK (291 lines, 11 hooks, 0 errors); all 16 stage tests pass. Course408 stage SHA-256: `04c887078a75fedb2412975ae9a2280b6ae4b9f7221a379aa495a002eae18898`.
+
+## 43. 2026-11-07: Break Time play-test approvals (Course401, Course404, Course407, Course408)
+
+The maintainer play-tested the current build in Windows/Eden and approved Course401, Course404, Course407 and Course408. Course409 remains stock on the TODO list. Course408 is described in §42; Course401 keeps its 14 ice-block Y moves, Course407 keeps the A01 pillar translate/scale, and Course404 keeps its `Course404_Main` BOSS entry. Completion and retry were not separately reported for these four courses.
+
+The mod now ships 124 romfs files (115 layouts + 9 stage archives). Patch SHA-256: `636492eb2b6a2bac8098d70f409aaf4b38ca1109d4ff3e842791e83e5962aadf`. Stage verification covers all nine stage files with 0 problems; `scripts/check_repo.py` passes.

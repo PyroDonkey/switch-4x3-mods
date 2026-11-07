@@ -56,7 +56,11 @@ BOSS = [(607466214, 21.0, 0.0),                 # Course150_Sub4 Pipe-Rock Plate
         (2579434623, 20.6666667, 0.0),          # Course417_Course Break Time! Trottin' Piranha Plants (framing approved)
         (177084102, 20.6666667, 0.0),           # Course403_Course Break Time! Zip-Go-Round (awaiting play-test)
         (3214359175, 20.6666667, 0.0),          # Course008_Sub2 Angry Spikes Sinkin' Pipes (Wonder area)
-        (2214662437, 20.6666667, 0.0)]          # Course400_Course Break Time! Pop Up, Hoppo! (awaiting play-test)
+        (2214662437, 20.6666667, 0.0),          # Course400_Course Break Time! Pop Up, Hoppo! (awaiting play-test)
+        (1219170747, 20.6666667, 0.0),          # Course401
+        (1474562704, 18.5, 0.0),                 # Course408
+        (1725897490, 20.6666667, 0.0),          # Course404_Main
+        (2395215932, 20.6666667, 0.0)]          # Course407
 for _h, _g, _d in BOSS + [(0, G_LARGE, D_LARGE), (0, G_SMALL, D_SMALL)]:
     assert _d <= max(0.0, (27.5556 - _g * 4.0 / 3.0) / 2.0) + 1e-4, (_h, _g, _d)
 
