@@ -141,6 +141,24 @@ EDITS = [
      (199.5, 52.0, 0.0), (192.94, 52.0, 0.0)),
     ('Course290_Main', 4029477259, 'CourseDisplayBoxSwitch', 'Translate',
      (206.00457763671875, 51.45623779296875, 0.0), (199.44457763671875, 51.45623779296875, 0.0)),
+    # Course290_Main (Bowser's Rage Stage - Dragon & vertical shaft section): shift the dragon and shaft
+    # CourseDisplayBoxSwitch triggers left by 6.56 blocks in X to match the 4:3 view's right edge. This restores
+    # stock autoscroll timing for the fossil ring (1755951341) and dragon transformation (1787195044, avoiding a
+    # ~180-frame delay at pt 6->7), and ensures switch 4273434636 (stock min_x = 146.50, missed by the 4:3 right
+    # edge at 146.0) fires to spawn the bottom horizontal snake-block ground (ObjectBlockSnakePole 34729090 at
+    # Y = 27.5..31.5) and guide coins before the vertical shaft climb.
+    ('Course290_Main', 1755951341, 'CourseDisplayBoxSwitch', 'Translate',
+     (106.0, 19.168628692626953, 0.0), (99.44, 19.168628692626953, 0.0)),
+    ('Course290_Main', 1787195044, 'CourseDisplayBoxSwitch', 'Translate',
+     (136.0, 26.0, 0.0), (129.44, 26.0, 0.0)),
+    ('Course290_Main', 1117151842, 'CourseDisplayBoxSwitch', 'Translate',
+     (146.0, 32.5, 0.0), (139.44, 32.5, 0.0)),
+    ('Course290_Main', 4273434636, 'CourseDisplayBoxSwitch', 'Translate',
+     (152.5449676513672, 25.0, 0.0), (145.9849676513672, 25.0, 0.0)),
+    ('Course290_Main', 3717095890, 'CourseDisplayBoxSwitch', 'Translate',
+     (155.3033447265625, 47.0, 0.0), (148.7433447265625, 47.0, 0.0)),
+    ('Course290_Main', 1344248650, 'CourseDisplayBoxSwitch', 'Translate',
+     (155.8292236328125, 58.66417694091797, 0.0), (149.2692236328125, 58.66417694091797, 0.0)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics
@@ -166,6 +184,22 @@ BG_EDITS = [
 ]
 
 
+# (course, rail_hash, point_idx, orig_xyz, new_xyz)
+# In Course290_Main, AutoScrollControlSignalFrame (4286093022) on Rail 185828596 passes rail_X + current_half_width
+# to SetAutoScrollPos, shifting the 21.0-wide 4:3 view center 3.28 blocks left of stock 16:9 (half-width 13.78).
+# Shift pts 6 and 8 right to frame the fossil/dragon boarding and Wall 1 [113, 122] without pushing the player off
+# Wall 0 (ends at X = 104), and shift pts 9-11 right by +3.28 so the 840-frame vertical shaft climb (CameraArea
+# 3010860670, X = [124.75, 152.25]) is centered at X = 138.78 (view [128.28, 149.28]), framing all four vertical
+# snake poles (X = 127.5..150.5) and the bottom/top horizontal snake poles.
+RAIL_EDITS = [
+    ('Course290_Main', 185828596, 6, (92.0, 35.0, 0.0), (95.0, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 8, (101.0, 35.0, 0.0), (102.0, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 9, (112.0, 35.0, 0.0), (115.28, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 10, (125.0, 35.0, 0.0), (128.28, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 11, (125.0, 60.0, 0.0), (128.28, 60.0, 0.0)),
+]
+
+
 def bcett(romfs, course):
     return os.path.join(romfs, 'BancMapUnit', f'{course}.bcett.byml.zs')
 
@@ -173,11 +207,13 @@ def bcett(romfs, course):
 def edits_by_course():
     out = {}
     for e in EDITS:
-        out.setdefault(e[0], {'actors': [], 'bg': [], 'gyaml': []})['actors'].append(e)
+        out.setdefault(e[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['actors'].append(e)
     for b_edit in BG_EDITS:
-        out.setdefault(b_edit[0], {'actors': [], 'bg': [], 'gyaml': []})['bg'].append(b_edit)
+        out.setdefault(b_edit[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['bg'].append(b_edit)
     for g_edit in GYAML_EDITS:
-        out.setdefault(g_edit[0], {'actors': [], 'bg': [], 'gyaml': []})['gyaml'].append(g_edit)
+        out.setdefault(g_edit[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['gyaml'].append(g_edit)
+    for r_edit in RAIL_EDITS:
+        out.setdefault(r_edit[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['rails'].append(r_edit)
     return out
 
 
@@ -272,6 +308,28 @@ def apply(d, course_edits):
         for eslot, _ in b.vec3(p, 'Translate'):
             allowed.update(range(eslot, eslot + 4))
 
+    rails_slots = b.array_slots(root['Rails'][2]) if 'Rails' in root else []
+    all_rpts = []
+    for s in rails_slots:
+        rdict = b.hash_entries(s[2])
+        if 'Points' in rdict:
+            for ps in b.array_slots(rdict['Points'][2]):
+                all_rpts.append(b.hash_entries(ps[2]))
+    for course, rhash, pidx, orig, new in course_edits.get('rails', []):
+        matching_rails = [b.hash_entries(s[2]) for s in rails_slots if b.hash_of(b.hash_entries(s[2])) == rhash]
+        assert len(matching_rails) == 1, f'{course} rail {rhash}: {len(matching_rails)} matches'
+        rdict = matching_rails[0]
+        pts = b.array_slots(rdict['Points'][2])
+        p = b.hash_entries(pts[pidx][2])
+        node = p['Translate'][2]
+        sharers = [pt for pt in all_rpts if pt['Translate'][2] == node]
+        assert len(sharers) == 1, f'{course} Rail {rhash} Pt {pidx}: Translate shared by {len(sharers)} points'
+        cur = [v for _, v in b.vec3(p, 'Translate')]
+        assert cur == list(orig), f'{course} Rail {rhash} Pt {pidx}: {cur}, expected {orig}'
+        b.set_vec3(p, 'Translate', new)
+        for eslot, _ in b.vec3(p, 'Translate'):
+            allowed.update(range(eslot, eslot + 4))
+
     for course, hashes, original, replacement in course_edits.get('gyaml', []):
         allowed.update(replace_actor_gyaml(d, hashes, original, replacement))
     return allowed
@@ -316,7 +374,8 @@ def verify(orig_romfs, mod_romfs):
         elif bytes(ship) != bytes(ref):
             problems.append(f'{course}: edited values differ from the edit tables')
         elif diff:
-            n_total = len(edits.get('actors', [])) + len(edits.get('bg', [])) + len(edits.get('gyaml', []))
+            n_total = (len(edits.get('actors', [])) + len(edits.get('bg', [])) +
+                       len(edits.get('gyaml', [])) + len(edits.get('rails', [])))
             print(f'{course}: {len(diff)} byte(s) differ, all inside {n_total} edit(s)')
     for p in problems:
         print('PROBLEM:', p)
