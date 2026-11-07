@@ -43,14 +43,17 @@ SLOT = 0x37D1F00
 THRESH = 60.0
 G_LARGE, D_LARGE = 15.75, (27.5556 - 15.75 * 4.0 / 3.0) / 2.0
 G_SMALL, D_SMALL = 15.5, 3.4444444
-# Boss rooms: (RootAreaHash, base view height G, reach delta). G = 20.6667 shows the full 16:9 width (27.56) at 4:3;
+# Boss arenas and fixed rooms: (RootAreaHash, base view height G, reach delta). G = 20.6667 shows the full 16:9 width (27.56) at 4:3;
 # with delta 0 the StopScroll-locked camera (cave H) stays exactly where the game locks it, like stock. Course152_Sub4
 # also has the game's own zoom signal (17.5 blocks), which multiplies the base, so 20.6667 also gives the stock zoomed
 # width. The delta must never exceed (27.5556 - G*4/3)/2, or cave H would pan the view past the 16:9 frame.
 BOSS = [(607466214, 21.0, 0.0),                 # Course150_Sub4 Pipe-Rock Plateau Palace (user-confirmed at stock lock)
         (101336182, 20.6666667, 0.0),           # Course151_Sub2
         (1778226157, 20.6666667, 0.0),          # Course152_Sub4
-        (1019598315, 20.6666667, 0.0)]          # Course153_Sub3
+        (1019598315, 20.6666667, 0.0),          # Course153_Sub3
+        (1607468536, 20.6666667, 0.0),          # Course411_Course Break Time! Wonder Token Tunes
+        (3684305666, 20.6666667, 0.0),          # Course415_Course Break Time! Bouncy Tunes (framing approved)
+        (2579434623, 20.6666667, 0.0)]          # Course417_Course Break Time! Trottin' Piranha Plants (framing approved)
 for _h, _g, _d in BOSS + [(0, G_LARGE, D_LARGE), (0, G_SMALL, D_SMALL)]:
     assert _d <= max(0.0, (27.5556 - _g * 4.0 / 3.0) / 2.0) + 1e-4, (_h, _g, _d)
 

@@ -239,3 +239,96 @@ Every listed pause has a margin $> 0.05$ blocks from the rail's final point, pre
    - If the area is not listed in `TABLE_ENDS` (standard locked rooms or autoscrolls with no mid-scroll pauses), it falls through to unlocked camera follow.
 
 **Status:** Built and verified with `verify_pchtxt.py` (304 patch lines, 11 hooks). Confirmed in game on Course002 in Eden: camera remains locked during the mid-scroll singing pause, and unlocks at the final stop to reach the Wonder Seed.
+
+## 23b. 2026-11-03: Break Time! Wonder Token Tunes (`Course411_Course`) full-room 4:3 framing
+
+**Report:** In 4:3 with stock base height (15.5), Break Time! Wonder Token Tunes (`Course411_Course`, label `411_ちょっと一息 ワンダーピースの音楽室_Course`, RootAreaHash `1607468536`) cuts off the left and right sides of the room by 25%. In 16:9 this single-screen rhythm puzzle is designed to show all note blocks and wonder tokens across the room at once; at 4:3, players had to guess where tokens spawned off-screen.
+
+**Analysis:**
+- Sizing: Room width is 27.5 blocks, framed by pillars at x = 0.0 and x = 28.0 with `CameraArea` `[14.0, 0.5, 0.0]`, `[27.5, 15.5, 1.0]`. In 4:3, showing the full 27.56-block width requires base view height G = 20.6667 (`20.6667 * 4/3 = 27.5556`).
+- Code patch: Added `(1607468536, 20.6666667, 0.0)` to the `BOSS` table in `gen_zoom_v2.py`. Cave A assigns G = 20.6667, delta = 0.0, fitting the room width exactly to the screen edges.
+- Framing challenge: With G = 20.6667, view height expands from 15.5 to 20.67 blocks (5.17 blocks taller). Centered at stock y = 8.25, the screen reaches y = 18.58 at the top and y = -2.08 at the bottom. The original room artwork is only ~17.5 blocks tall (y = 0.0 to 17.5). At the top, the arch (`MapObjCommonMiniMokkinKazariHashiraTopA00` at y = 17.095) sat below the ceiling, exposing 1.5 blocks of bare wall planks above it; at the bottom, an unrendered pitch-black void was exposed below the wood slats (y in [-2.08, 0.0]).
+- Attempt 1 (rejected): Translating the arch up alone to y = 19.68 broke the sculpted corner joints with the side pillars (`MapObjCommonMiniMokkinAshibaHashiraA00` at y = 13.0). Scaling the lower wall `DVCommonMiniMokkinMiddleKabeA00` by 1.45 in Y vertically stretched the wavy red curtain and music staff, looking visibly deformed while still leaving a bottom void.
+- Solution (stage edits via `build_stage.py`, 0 problems on `--verify`):
+  1. Synchronized frame: moved arch `KazariHashiraTopA00` (y 17.095 -> 18.545) and both side pillars `AshibaHashiraA00` (y 13.0 -> 14.45) together by +1.45 in Y. The arch crowns the 4:3 ceiling exactly as in 16:9 while corner joints remain 100% flush.
+  2. Background wall framing: nudged upper wall `DVCommonMiniMokkinMiddleKabeA01` to y = 14.05 (matching Course417) and shifted backdrop / lower wall `DVCommonMiniMokkinMiddleKabeA00` to y = 6.05 (Scale 1.0). Its top edge (y = 13.9) tucks cleanly behind the upper scallops (sealing the sky blue gap), while its bottom extends the unstretched vertical slats past the bottom of the screen (y = -2.08), eliminating the void box with zero distortion.
+
+**Status:** Built, verified and user-confirmed in Eden.
+
+## 24. 2026-11-04: complete Break Time census and grouped review checklist
+
+**Scope:** read-only inspection of the local 1.2.1 originals identified 19 Break Time courses (Course400–418). All 151 CourseInfo and 451 StageParam records were checked; the Mini category, Break Time labels and existing world-map entries agree. Recursive stage references cover 24 map-unit files, including container roots and background subareas. Course450–453 (SecretSquare) and Course460 (Bonus) are not Break Time courses.
+
+**Tracking:** added [BREAK-TIME-REVIEW.md](BREAK-TIME-REVIEW.md) as the working checklist, linked from AGENTS.md. Course411 remains the user-confirmed reference from §23; the other 18 courses are pending human play-tests, not confirmed bugs. The audit baseline is mod commit `6bfcf0d`. English titles were cross-checked against public course references rather than read from a local 1.2.1 English message archive.
+
+**First group:** Course415 (Bouncy Tunes) and Course417 (Trottin' Piranha Plants) share Course411's Mokkin theater assets and one-screen camera geometry. Review full-room gameplay visibility and artwork coverage together, but do not copy Course411's stage coordinates: their original framing differs. Next full-room candidates are Course403, Course408 and Course401. Course407's vertical autoscroll is a separate early behavior check; the remaining checklist groups distinguish linked backgrounds, vertical traversal, a rotating room and horizontal traversal.
+
+**Status:** documentation and static-review findings only. No new mod output, candidate fixes or in-game results.
+
+## 25. 2026-11-04: Course415 Bouncy Tunes full-width camera candidate
+
+**Request:** the maintainer chose to build and test a full-room camera for Course415 before doing a baseline play-test. This is a requested candidate, not a human-reproduced defect or a confirmed fix.
+
+**Camera:** the local 1.2.1 original confirms `Course415_Course` RootAreaHash `3684305666` and a `CameraArea` at `[14.0, 0.5, 0.0]`, scale `[27.5, 15.5, 1.0]`. Added `(3684305666, 20.6666667, 0.0)` after Course411 in `gen_zoom_v2.py`'s existing per-area table. This restores about 27.56 blocks of horizontal view at 4:3, with no lock panning. The view is also taller; Course415's stage artwork is deliberately unchanged for this first test. Course417 is unchanged.
+
+**Build identity:** development v1.1.3 over `6bfcf0d` (uncommitted); patch SHA-256 `7df9c5b273902858e61e7e416d859362b9b3a49871763eb78c53e72932ec9304`. The regenerated patch replaces the old table terminator's hash/height at `0x02138E3C` / `0x02138E40`, retains zero delta at `0x02138E44`, and places the new terminator at `0x02138E48–0x02138E53`, before cave H. Exact word comparison shows all prior hooks, instructions and other area settings are unchanged. Repository and installed-mod backups were made outside the repo before editing.
+
+**Verification:** `verify_pchtxt.py` passes (267 patch lines, 11 hooks, 0 errors), now independently checking all six area overrides and table termination. It rejects the previous patch without Course415, incorrect Course415 hash/height/delta, a missing terminator and a Course411 height regression. A separate read-only review found no issue in the generator/table/verifier diff. `build_stage.py --verify` reports 0 problems for the unchanged two stage files. The layout verifier requires an external build report, so a fresh layout rebuild was verified (0 problems) and compared byte-for-byte with all 115 shipped layout archives; no layouts changed. `check_repo.py` and `git diff --check` pass.
+
+**Status:** built and verified, awaiting the maintainer's first Course415 play-test in Eden. Check full-room token/block visibility, theater coverage and joints, then completion/retry and the Course411 reference. No additional human confirmation, commit or release.
+
+## 26. 2026-11-04: Course415 theater artwork candidate after the camera preview
+
+**Human preview:** the maintainer provided a screenshot from Windows/Eden using the v1.1.3 camera-only trial from §25. The room spans the screen, but the taller view exposes a black strip below the lower backdrop and leaves a plank band above the arch. This is a reproduced artwork problem, not confirmation of full token-sequence visibility, completion or retry.
+
+**Stage candidate (v1.1.4):** applied Course411's framing approach to Course415's own original actors. The arch and both pillars have the same original placements as Course411, so they move together +1.45 in Y (arch to 18.545, pillars to 14.45). The upper wall moves 14.5 -> 14.05. Course415's lower wall starts at 7.0, unlike Course411's 8.0, so it moves only -0.95 to the same final height 6.05. Five `Translate` Y edits; scales stay 1.0, with no gameplay actors moved. These positions target the same ceiling alignment and unstretched backdrop coverage as the confirmed Course411 fix, but Course415's result still needs its own human check.
+
+**Scope:** Course417 remains unchanged. The initial exact-A00 check found different arch/wall placements and no `AshibaHashiraA00` actors, so it must not inherit the Course415 table blindly. A broader check later found A01 pillar variants (see §28). Course411 and Course152 stage outputs rebuild byte-for-byte unchanged. The release configuration now counts 118 RomFS files (115 layouts + 3 stage archives).
+
+**Verification and identity:** `build_stage.py --verify` reports 0 problems across all three courses; Course415 differs from its original by 15 bytes, all within five float edits. Negative checks reject a missing Course415 file and an unchanged original. `verify_pchtxt.py` still passes (267 lines, 11 hooks); every enabled patch word matches the human-previewed camera trial, with only explanatory comments updated. A separate read-only review approved the stage-table and archive-count changes. Current patch SHA-256: `862f90a7e131373eb94c1349b293ae57c606e1407efd5005998be2e5469f7027`; Course415 archive SHA-256: `8bcfee1751a6aed5f74b494d9a09f261413f10002a058133052191cd1b7d79e9`.
+
+**Status:** built and verified; artwork re-test pending in Eden. Keep Course415 open until the frame, moving-token sequence, completion and retry are checked; Course411 remains the regression reference. No commit or release.
+
+## 27. 2026-11-04: Course415 framing approved; Course417 camera-only candidate
+
+**Course415 result:** after testing the v1.1.4 artwork candidate, the maintainer said it looks good and requested the next level. This approves its visual framing in Windows/Eden, not the unreported full moving-token sequence, completion, retry or Course411 regression. The checklist therefore records the approval but keeps Course415 open. Tested identity: v1.1.4 over `6bfcf0d` (uncommitted), patch SHA-256 `862f90a7e131373eb94c1349b293ae57c606e1407efd5005998be2e5469f7027`, Course415 stage SHA-256 `8bcfee1751a6aed5f74b494d9a09f261413f10002a058133052191cd1b7d79e9`.
+
+**Course417 candidate (v1.1.5):** the local original confirms `Course417_Course` RootAreaHash `2579434623`, `CameraArea` at `[14.0, 0.5, 0.0]`, scale `[27.5, 15.5, 1.0]`. Added `(2579434623, 20.6666667, 0.0)` to the existing per-area table, restoring about 27.56 blocks of width at 4:3. Its stage artwork is unchanged for the first preview: arch/wall placements differ from Course415 and there are no A00 pillar actors (A01 variants were subsequently found in §28). This is a candidate, not a reproduced Course417 defect or a confirmed fix.
+
+**Build and verification:** only the new hash/height at `0x02138E48` / `0x02138E4C` and relocated zero terminator at `0x02138E54–0x02138E5F` change; delta at `0x02138E50` stays zero. Every prior patch word, including Course415's override, is unchanged. `verify_pchtxt.py` passes (270 lines, 11 hooks), independently checking seven overrides and termination. Seven negative/regression controls reject the prior patch without Course417, a wrong Course417 hash/height/delta, a missing terminator, and Course415/Course411 height regressions. A separate read-only review found no issue. Stage verification reports 0 problems for the unchanged three archives; all 115 shipped layouts match the externally rebuilt/verified layouts (0 problems). Backups of both repository and installed mod were saved outside the repo before editing. Current patch SHA-256: `a4bf30a5f784d5bbfd08f97f5ef8f1a804f2c6d025c49c290fc20bb05b84c9c9`.
+
+**Status:** Course417 built and verified, awaiting its first human preview in Eden. Check whole-room framing, top/bottom artwork coverage, edge enemy movement/activation, completion and retry. The RomFS count remains 118; no Course417 stage archive is shipped. No commit or release.
+
+## 28. 2026-11-04: Course417 theater artwork candidate with A01 pillars
+
+**Human preview:** the maintainer supplied a Windows/Eden screenshot from the v1.1.5 camera-only trial (§27). The room spans the screen, but there is space above the arch and dark space below the backdrop. The maintainer requested the same framing approach as the earlier theater fixes. This does not establish enemy movement/activation, completion or retry behavior.
+
+**Actor-family correction:** the earlier exact-name search found no A00 pillars, not an absence of side pillars. A broader search found two `MapObjCommonMiniMokkinAshibaHashiraA01` actors. Current instructions and the checklist now name the variant explicitly; the guide recommends checking related actor-name variants instead of relying on exact matches.
+
+**Stage candidate (v1.1.6):** Course417's arch starts at y = 17.25, so reaching the shared target 18.545 needs +1.295, not Course415's +1.45. Both A01 pillars receive that same shift to y = 14.295; the left retains its tiny authored X/Y offsets. The rebuilt floats give all three frame actors the exact same +1.2950000762939453 displacement. Upper/lower wall panels start at y = 14 / 6 and move to the proven final heights 14.05 / 6.05. Five Translate Y edits; no scales, X/Z, note blocks, enemies or rails changed. The wall shifts are small because Course417 already starts near the shared targets; final visual coverage remains a test question, not a claim.
+
+**Build and verification:** `build_stage.py --verify` reports 0 problems across all four stages; Course417 differs by 14 bytes, all inside five float edits. Controls reject a missing Course417 archive, an unchanged original and an incorrectly copied Course415 pillar height. A separate read-only review found no issue with the entries or archive count. All three earlier stage archives rebuild byte-for-byte unchanged. Every enabled camera patch word matches the screenshot-tested trial, and `verify_pchtxt.py` passes (270 lines, 11 hooks); only patch comments changed. RomFS count is now 119 (115 layouts + 4 stages). Repository and installed-mod backups were saved outside the repo before editing.
+
+**Identity:** v1.1.6 over `6bfcf0d` (uncommitted); patch SHA-256 `0e7b9b513ec228bfeb715b66e47ffa6d90ce92d5de7833b637db17c801a0788d`; Course417 archive SHA-256 `c7e89c9646de44aef2d17e86dff3c384700ce133153f8585377cd058b993c726`.
+
+**Status:** built and verified, awaiting artwork re-test in Eden. Check arch/side joints and top/bottom coverage, then enemy movement/activation, completion and retry. Course415 remains visually approved with its separate gameplay checks open. No commit or release.
+
+## 29. 2026-11-04: Course417 pillar bases and a guarded A00 substitution
+
+**Report:** the maintainer's screenshot of v1.1.6 shows both A01 pillar bases ending above the bottom of the screen. The upper frame is aligned, but raising the shorter visible A01 artwork did not extend its bases. Tested identity: patch SHA-256 `0e7b9b513ec228bfeb715b66e47ffa6d90ce92d5de7833b637db17c801a0788d`, Course417 stage `c7e89c9646de44aef2d17e86dff3c384700ce133153f8585377cd058b993c726`; Windows/Eden, over `6bfcf0d` with uncommitted changes.
+
+**Investigation:** the local A00/A01 actor packs have 19 actor/component definitions that compare equal after normalizing variant resource names, including the static-map parent and collision shape. Their matching collision bounds do not establish matching visible mesh coverage. The existing A00 artwork already covers the approved Course411/415 view. Course417's original value-string table contains A01 but no A00 entry; the A01 text is consumed only by the two pillar Gyaml fields.
+
+**Candidate (v1.1.7):** select `MapObjCommonMiniMokkinAshibaHashiraA00` for only the two Course417 pillar hashes and align them at y = 14.45, as in Course411/415, retaining the left actor's tiny authored offsets. The arch, wall panels, camera, scales and every other actor remain unchanged from v1.1.6. No actor/model pack is shipped: the game supplies the referenced A00 resource. This avoids stretching the A01 artwork or lowering the correctly aligned arch.
+
+**Guarded edit:** added `GYAML_EDITS` and a same-length pooled-string helper to `build_stage.py`. It checks unique actor selection, original types/names, string bounds/order/NUL and overlapping storage, then requires the complete parsed tree to differ only in the selected Gyaml fields before mutating the input. The one changed string byte affects exactly the two intended references. The verifier retains same-size, byte-allowlist and exact reconstructed-output checks. Sixteen synthetic unit tests in `tools/test_build_stage.py` cover the successful rename, aliases, overlapping storage, wrong/missing/duplicate actors, UTF-8 lengths, sorting and atomic rejection, without any game data.
+
+**Verification:** all 16 tests pass. Stage verification reports 0 problems across four courses; Course417 differs from its original by 15 bytes across five float edits and one guarded string edit. Independent semantic comparison against v1.1.6 confirms only the two pillar Gyaml values and their Y alignment changed. The previous A01 candidate, A01 at A00 height and an unrelated actor shift are rejected. A separate read-only review found no issue. All earlier stage archives are byte-identical; the camera patch is byte-identical and its verifier passes (270 lines, 11 hooks). RomFS count remains 119. Backups were saved outside the repo before editing.
+
+**Identity/status:** v1.1.7 pillar candidate over `6bfcf0d` (uncommitted); Course417 archive SHA-256 `aaea4bd8d67582658e7f5178ea4f7f8553f605af07ea84b181675be0d4400758`. Built and verified, not yet human-confirmed. Re-test both pillar bases and upper joints, then the remaining enemy/gameplay checks. No commit or release.
+
+## 30. 2026-11-04: Course417 full-height pillar framing approved
+
+**Human result:** after the v1.1.7 test question asking whether both pillars continue below the screen with their upper arch joints flush, the maintainer replied "Looks good" in Windows/Eden. This approves visual framing only. The full enemy sequence, edge movement/activation, completion, retry and current-build Course411 regression were not reported; Course417's checklist row stays open, as does Course415's separate gameplay follow-up.
+
+**Tested identity:** development v1.1.7 over `6bfcf0d` with uncommitted changes. Unchanged patch SHA-256 `0e7b9b513ec228bfeb715b66e47ffa6d90ce92d5de7833b637db17c801a0788d`; Course417 stage SHA-256 `aaea4bd8d67582658e7f5178ea4f7f8553f605af07ea84b181675be0d4400758`. No mod output changed to record this approval. It does not establish full gameplay confirmation or a release.

@@ -6,6 +6,7 @@ Verifies:
 - Original instructions are preserved in each code cave
 - All code caves and tables are disjoint (no overlap) and within [0x02138650, 0x02139000)
 - Cave A stores the current area RootAreaHash in mailbox 0x037D1F04
+- Per-area zoom table preserves every arena/fixed-room override and ends before cave H
 - Cave Y (stock vertical camera centre) gates on Course152_Sub4 (RootAreaHash 1778226157), pins the Y
   limits with the fight zoom (stock half-height >= 8.5) and returns to 0x006C66EC
 - Cave K (CameraBoundBox2f Y bounds) gates on Course152_Sub4 (RootAreaHash 1778226157), replaces minY/maxY
@@ -42,13 +43,38 @@ def verify_patch(path):
     assert not duplicates, f"Duplicate addresses found in patch: {[hex(a) for a in duplicates]}"
 
     # Identify known data addresses in caves
-    DATA_HASHES = {0x02138D84: 1778226157, 0x02138DB4: 1778226157,
-                   0x02138E00: 607466214, 0x02138E0C: 101336182,
-                   0x02138E18: 1778226157, 0x02138E24: 1019598315}
-    DATA_FLOATS = {0x02138788, 0x021388E0, 0x021388E4, 0x021388E8, 0x021388EC, 0x021388F0,
-                   0x02138AE0, 0x02138AE4, 0x02138D34, 0x02138DB8, 0x02138DBC,
-                   0x02138E04, 0x02138E10, 0x02138E1C, 0x02138E28}
-    DATA_ZEROS = {0x02138E08, 0x02138E14, 0x02138E20, 0x02138E2C, 0x02138E30, 0x02138E34, 0x02138E38}
+    expected_areas = [
+        (607466214, 21.0),            # Course150_Sub4
+        (101336182, 20.6666667),      # Course151_Sub2
+        (1778226157, 20.6666667),     # Course152_Sub4
+        (1019598315, 20.6666667),     # Course153_Sub3
+        (1607468536, 20.6666667),     # Course411_Course
+        (3684305666, 20.6666667),     # Course415_Course
+        (2579434623, 20.6666667),     # Course417_Course
+    ]
+    expected_autoscroll_ends = [
+        (885847797, 247.25 + 27.5556 / 2),         # Course002_Main
+        (2740185052, 693.00 + 27.5556 / 2),        # Course022_Main
+        (3839196513, 203.25 + 27.5556 / 2),        # Course062_Sub1
+        (4167497323, 18.50 + 27.5556 / 2),         # Course102_Main
+        (2931365200, 371.00 + 27.5556 / 2),        # Course290_Main
+        (3856421716, 536.25 + 27.5556 / 2),        # Course857_Main
+    ]
+    end = 0x02138E00 + 12 * len(expected_areas)
+    ends_base = end + 12
+    ends_term = ends_base + 8 * len(expected_autoscroll_ends)
+
+    DATA_HASHES = {0x02138D84: 1778226157, 0x02138DB4: 1778226157}
+    for i, (h, _) in enumerate(expected_areas):
+        DATA_HASHES[0x02138E00 + 12 * i] = h
+    for i, (h, _) in enumerate(expected_autoscroll_ends):
+        DATA_HASHES[ends_base + 8 * i] = h
+    DATA_FLOATS = ({0x02138788, 0x021388E0, 0x021388E4, 0x021388E8, 0x021388EC, 0x021388F0,
+                    0x02138984, 0x02138AE0, 0x02138AE4, 0x02138D34, 0x02138DB8, 0x02138DBC}
+                   | {0x02138E04 + 12 * i for i in range(len(expected_areas))}
+                   | {ends_base + 4 + 8 * i for i in range(len(expected_autoscroll_ends))})
+    DATA_ZEROS = ({0x02138E08 + 12 * i for i in range(len(expected_areas))}
+                  | {end, end + 4, end + 8, ends_term, ends_term + 4})
 
     # Print disassembly / data listing
     for addr, word, raw in lines:
@@ -121,6 +147,21 @@ def verify_patch(path):
     assert not any(0x02138D38 <= a < 0x02138D40 for a in patch), "gap between caves F2 and Y is not empty"
     assert max(a for a in cave_addrs if a < 0x02138E00) == 0x02138DBC, "Cave K does not end at its maxy literal"
     assert min(a for a in cave_addrs if a > 0x02138DBC) == 0x02138E00, "TABLE does not start at 0x02138E00"
+
+    # Per-area table and autoscroll ends table: check values independently of the generator, including terminators and cave H boundary.
+    for i, (area_hash, height) in enumerate(expected_areas):
+        addr = 0x02138E00 + 12 * i
+        assert patch.get(addr) == area_hash, f"Area table hash at 0x{addr:08X} != {area_hash}"
+        assert patch.get(addr + 4) == struct.unpack('<I', struct.pack('<f', height))[0], f"Area {area_hash}: wrong G"
+        assert patch.get(addr + 8) == 0, f"Area {area_hash}: delta must be zero"
+    assert all(patch.get(end + off) == 0 for off in (0, 4, 8)), "Area table terminator missing"
+    for i, (area_hash, key) in enumerate(expected_autoscroll_ends):
+        addr = ends_base + 8 * i
+        assert patch.get(addr) == area_hash, f"Autoscroll end hash at 0x{addr:08X} != {area_hash}"
+        assert patch.get(addr + 4) == struct.unpack('<I', struct.pack('<f', key))[0], f"Autoscroll {area_hash}: wrong end key"
+    assert all(patch.get(ends_term + off) == 0 for off in (0, 4)), "Autoscroll ends terminator missing"
+    assert ends_term + 8 <= 0x02138F00, "Area/autoscroll tables overlap cave H"
+    assert {a for a in patch if 0x02138E00 <= a < 0x02138F00} == set(range(0x02138E00, ends_term + 8, 4)), "Unexpected area table words"
 
     # Cave Y: gated on Course152_Sub4, both exits return to 0x006C66EC; with the fight zoom it pins upper = lower
     def dis(a):
