@@ -86,27 +86,38 @@ def simulate_autoscroll(tree):
     return as_actor, rails[0], traj
 
 
-def get_camera_dims(rx, is_mod=False, course_name='Course290_Main'):
+def get_camera_dims(rx, is_mod=False, course_name='Course290_Main', g_profile=None):
     """Return (view_width, view_height) for the autoscroll camera.
 
     For Course290_Main in native 4:3, models A_HELPER:
-    - For fixed_X <= 40.0 (rail_X <= 27.6667): G = 18.5, W = 24.6667
-    - For 40.0 < fixed_X < 55.0 (27.6667 < rail_X < 44.5): linear lerp G = 18.5 -> 15.75
-    - For fixed_X >= 55.0 (rail_X >= 44.5): G = 15.75, W = 21.0
+    - Default profile: fixed_X <= 100.0 (rail_X <= 87.6667): G = 18.5, W = 24.6667
+      100.0 < fixed_X < 112.0 (87.6667 < rail_X < 101.5): linear lerp G = 18.5 -> 15.75
+      fixed_X >= 112.0 (rail_X >= 101.5): G = 15.75, W = 21.0
+    - If g_profile=(x0, x1, g0, g1) is provided, calculates the rail_X thresholds
+      and lerp accordingly.
     """
     if not is_mod or course_name != 'Course290_Main':
         return (WIDTH_4_3 if is_mod else WIDTH_16_9), (15.75 if is_mod else STOCK_HEIGHT)
-    if rx <= 27.666667:
-        g = 18.5
-    elif rx >= 44.5:
-        g = 15.75
+    if g_profile is None:
+        g_profile = (100.0, 112.0, 18.5, 15.75)
+    x0, x1, g0, g1 = g_profile
+    rx0 = x0 - g0 * (2.0 / 3.0)
+    rx1 = x1 - g1 * (2.0 / 3.0)
+    if rx <= rx0:
+        g = g0
+    elif rx >= rx1:
+        g = g1
     else:
-        t = (rx - 27.666667) / (44.5 - 27.666667)
-        g = 18.5 + (15.75 - 18.5) * t
+        span = x1 - x0
+        dg = g1 - g0
+        denom = 1.0 - (dg / span) * (2.0 / 3.0)
+        num = rx + (g0 - (dg * x0 / span)) * (2.0 / 3.0)
+        fx = num / denom
+        g = g0 + dg * (fx - x0) / span
     return g * 4.0 / 3.0, g
 
 
-def compute_switch_activations(tree, trajectory, is_mod=False, course_name='Course290_Main'):
+def compute_switch_activations(tree, trajectory, is_mod=False, course_name='Course290_Main', g_profile=None):
     """Find the first frame where each CourseDisplayBoxSwitch overlaps the camera view in X and Y."""
     switches = [a for a in tree.get('Actors', []) if a.get('Gyaml') == 'CourseDisplayBoxSwitch']
     activations = {}
@@ -119,7 +130,7 @@ def compute_switch_activations(tree, trajectory, is_mod=False, course_name='Cour
         by1, by2 = ty - sy / 2.0, ty + sy / 2.0
         act_frame = None
         for f, rx, ry in trajectory:
-            vw, vh = get_camera_dims(rx, is_mod=is_mod, course_name=course_name)
+            vw, vh = get_camera_dims(rx, is_mod=is_mod, course_name=course_name, g_profile=g_profile)
             cx1, cx2 = rx, rx + vw
             cy1, cy2 = ry - vh, ry
             if bx2 >= cx1 and bx1 <= cx2 and by2 >= cy1 and by1 <= cy2:
@@ -163,7 +174,7 @@ def trace_switch_links(tree):
     return switch_targets
 
 
-def audit_stage(orig_tree, mod_tree, course_name='Course290_Main', tolerance=5.0):
+def audit_stage(orig_tree, mod_tree, course_name='Course290_Main', tolerance=5.0, g_profile=None):
     """Audit switch activation intervals between stock 16:9 and mod 4:3."""
     _, _, traj_stock = simulate_autoscroll(orig_tree)
     _, _, traj_mod = simulate_autoscroll(mod_tree)
@@ -172,12 +183,23 @@ def audit_stage(orig_tree, mod_tree, course_name='Course290_Main', tolerance=5.0
         print(f"[{course_name}] No autoscroll rail found or simulation failed.")
         return 0
 
+    if course_name == 'Course290_Main' and g_profile is None:
+        sw1060 = next((a for a in mod_tree.get('Actors', []) if a.get('Hash') == 1060316225), None)
+        if sw1060 and sw1060.get('Translate', [0])[0] > 68.5:
+            g_profile = (100.0, 112.0, 18.5, 15.75)
+        else:
+            g_profile = (40.0, 55.0, 18.5, 15.75)
+
     acts_stock = compute_switch_activations(orig_tree, traj_stock, is_mod=False, course_name=course_name)
-    acts_mod = compute_switch_activations(mod_tree, traj_mod, is_mod=True, course_name=course_name)
+    acts_mod = compute_switch_activations(mod_tree, traj_mod, is_mod=True, course_name=course_name, g_profile=g_profile)
 
     print(f"=== Autoscroll Relay Audit: {course_name} ===")
     print(f"Trajectory length: stock={len(traj_stock)}f, mod={len(traj_mod)}f")
-    print(f"Audited switches: {len(acts_stock)} total CourseDisplayBoxSwitch actors\n")
+    print(f"Audited switches: {len(acts_stock)} total CourseDisplayBoxSwitch actors")
+    if course_name == 'Course290_Main' and g_profile:
+        print(f"Camera zoom G profile: x0={g_profile[0]}, x1={g_profile[1]}, g0={g_profile[2]}, g1={g_profile[3]}\n")
+    else:
+        print()
 
     # Defined relay chains for Course290_Main
     relay_groups = [
@@ -269,7 +291,7 @@ def audit_stage(orig_tree, mod_tree, course_name='Course290_Main', tolerance=5.0
                     flagged += 1
                     continue
                 rx = traj_mod[check_f][1]
-                vw, _ = get_camera_dims(rx, is_mod=True, course_name=course_name)
+                vw, _ = get_camera_dims(rx, is_mod=True, course_name=course_name, g_profile=g_profile)
                 v_left, v_right = rx, rx + vw
                 print(f"  {label:32s} | Frame {check_f:5d} | View: [{v_left:6.2f}, {v_right:6.2f}]")
                 for th, desc, expected_x in enforced_targets:
@@ -284,7 +306,7 @@ def audit_stage(orig_tree, mod_tree, course_name='Course290_Main', tolerance=5.0
 
         # Target Visibility Scan for all 47 CourseDisplayBoxSwitch actors
         print("--- CourseDisplayBoxSwitch Target Visibility Scan (Course290_Main) ---")
-        SHIFTED_EFFECT_SWITCHES = {1060316225, 663300194, 17459050152995009628, 742103869}
+        SHIFTED_EFFECT_SWITCHES = {1060316225, 663300194, 17459050152995009628, 742103869, 1787195044, 2303338937}
         switch_targets = trace_switch_links(mod_tree)
         switches = [a for a in mod_tree.get('Actors', []) if a.get('Gyaml') == 'CourseDisplayBoxSwitch']
         scan_results = []
@@ -294,7 +316,7 @@ def audit_stage(orig_tree, mod_tree, course_name='Course290_Main', tolerance=5.0
             if f is None:
                 continue
             rx = traj_mod[f][1]
-            vw, _ = get_camera_dims(rx, is_mod=True, course_name=course_name)
+            vw, _ = get_camera_dims(rx, is_mod=True, course_name=course_name, g_profile=g_profile)
             v_left, v_right = rx, rx + vw
             targets = [actors_by_hash[dst] for _, dst, _ in switch_targets.get(sh, set()) if dst in actors_by_hash]
             off_targets = [t for t in targets if t.get('Translate') and (t['Translate'][0] < v_left or t['Translate'][0] > v_right)]
@@ -330,7 +352,18 @@ def main():
                         help="Course name to audit (default: Course290_Main)")
     parser.add_argument('--tolerance', type=float, default=5.0,
                         help="Max allowed frame drift before flagging (default: 5.0f)")
+    parser.add_argument('--g-profile', default=None,
+                        help="Camera zoom G profile as 'x0,x1,g0,g1' (e.g. '100,112,18.5,15.75'). If omitted, auto-detected from stage triggers.")
     args = parser.parse_args()
+
+    g_profile = None
+    if args.g_profile:
+        try:
+            parts = [float(p.strip()) for p in args.g_profile.split(',')]
+            assert len(parts) == 4
+            g_profile = tuple(parts)
+        except Exception:
+            sys.exit("Error: --g-profile must be four comma-separated floats: x0,x1,g0,g1 (e.g. 100,112,18.5,15.75)")
 
     orig_romfs = args.orig_romfs or os.environ.get('SMBW_ORIG_ROMFS')
     if not orig_romfs:
@@ -363,7 +396,7 @@ def main():
     orig_tree = parse(read(orig_path))
     mod_tree = parse(read(mod_path))
 
-    problems = audit_stage(orig_tree, mod_tree, course_name=args.course, tolerance=args.tolerance)
+    problems = audit_stage(orig_tree, mod_tree, course_name=args.course, tolerance=args.tolerance, g_profile=g_profile)
     sys.exit(0 if problems == 0 else 1)
 
 
