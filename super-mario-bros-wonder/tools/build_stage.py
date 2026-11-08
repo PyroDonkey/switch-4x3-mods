@@ -152,6 +152,11 @@ EDITS = [
      (43.0, 35.5, 0.0), (38.03125, 35.5, 0.0)),
     ('Course290_Main', 5602005781468990395, 'LastBossWonderBadSmokeTag', 'Translate',
      (45.5, 35.5, 0.0), (41.53125, 35.5, 0.0)),
+    # Shift Goomba spawns left by 3.5 blocks (Task D3) to align walking Goombas to bolt strikes at tags 38.28125 & 42.28125:
+    ('Course290_Main', 2542738868, 'KuriboWillGrowIntoGiant', 'Translate',
+     (46.0, 23.0, 0.0), (42.5, 23.0, 0.0)),
+    ('Course290_Main', 1405933960, 'KuriboWillGrowIntoGiant', 'Translate',
+     (50.0, 28.5, 0.0), (46.5, 28.5, 0.0)),
     # Course290_Main (Bowser's Rage Stage - Tilt, rolling spiked ball, fossil rings & dragon relay):
     # With the intro zoom G = 18.5 hold extended to fixed_X in [100.0, 112.0] (rail_X in [87.67, 101.50]), the 4:3
     # camera width is 24.67 (2.89 blocks narrower than stock 16:9 27.56, rather than 6.56 blocks narrower at G = 15.75).
