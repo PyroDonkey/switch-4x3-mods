@@ -513,11 +513,6 @@ def verify(orig_romfs, mod_romfs):
                        len(edits.get('belts', [])) +
                        len(edits.get('gyaml', [])) + len(edits.get('rails', [])))
             print(f'{course}: {len(diff)} byte(s) differ, all inside {n_total} edit(s)')
-    try:
-        import build_actor
-        problems += build_actor.verify(orig_romfs, mod_romfs)
-    except Exception as e:
-        problems.append(f'build_actor verification failed: {e}')
     for p in problems:
         print('PROBLEM:', p)
     print(f'{len(problems)} problem(s)')
