@@ -258,10 +258,10 @@ def audit_stage(orig_tree, mod_tree, course_name='Course290_Main', tolerance=5.0
             flagged += 1
         else:
             enforced_targets = [
-                (4814110068085501760, "Kuribo Strike Tag 1 (PositionTag)", 40.28125),
-                (12276017923517845206, "Kuribo Strike Tag 2 (PositionTag)", 44.28125),
-                (2306045187355644410, "Kuribo Smoke Tag 1 (BadSmokeTag)", 40.03125),
-                (5602005781468990395, "Kuribo Smoke Tag 2 (BadSmokeTag)", 43.53125),
+                (4814110068085501760, "Kuribo Strike Tag 1 (PositionTag)", 38.28125),
+                (12276017923517845206, "Kuribo Strike Tag 2 (PositionTag)", 42.28125),
+                (2306045187355644410, "Kuribo Smoke Tag 1 (BadSmokeTag)", 38.03125),
+                (5602005781468990395, "Kuribo Smoke Tag 2 (BadSmokeTag)", 41.53125),
             ]
             for check_f, label in [(f_zap, "Lightning Strike (f_zap)"), (f_zap + 30, "Growth Animation (f_zap + 30)")]:
                 if check_f >= len(traj_mod):

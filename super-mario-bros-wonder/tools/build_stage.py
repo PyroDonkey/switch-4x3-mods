@@ -133,10 +133,11 @@ EDITS = [
     # so they fire at rail X = 23.19 (frame 1127, view [23.19, 47.86]), framing all strike and smoke tags on-screen.
     # Retune spawn switch 578319643 to X = 37.025 so it activates at frame 744 (after the Pt 1 autoscroll pause), preserving
     # the exact stock 383-frame relay interval (frame 1127 - 744 = 383f, drift 0.0f).
-    # With 200f spawn delay (frame 944), Kuribos walk 183f at 1/32 blk/frame (5.71875 blk) before lightning strikes at frame 1127.
-    # Align strike PositionTags and BadSmokeTags to where the Goombas actually are at strike time:
-    # Goomba 1 at X = 46.0 - 5.71875 = 40.28125 (tag 40.28125, smoke 40.03125); Goomba 2 at X = 50.0 - 5.71875 = 44.28125
-    # (tag 44.28125, smoke 43.53125). Growth fires 30f later at frame 1157, fully on-screen in view [24.49, 49.16].
+    # With 200f spawn delay (frame 944), Kuribos walk 183f before lightning strikes at frame 1127.
+    # Calibrated against stock and Eden play-test: Goombas walk faster/further than nominal 1/32 blk/frame (reaching X ~ 38.3 & 42.3).
+    # Align strike PositionTags and BadSmokeTags to where the Goombas actually are in Eden:
+    # Goomba 1 at X = 38.28125 (tag 38.28125, smoke 38.03125); Goomba 2 at X = 42.28125 (tag 42.28125, smoke 41.53125).
+    # Growth fires 30f later at frame 1157, fully on-screen in view [24.49, 49.16].
     ('Course290_Main', 578319643, 'CourseDisplayBoxSwitch', 'Translate',
      (38.5, 20.537498474121094, 0.0), (37.025, 20.537498474121094, 0.0)),
     ('Course290_Main', 1536962149, 'CourseDisplayBoxSwitch', 'Translate',
@@ -144,13 +145,13 @@ EDITS = [
     ('Course290_Main', 14869113733391977869, 'CourseDisplayBoxSwitch', 'Translate',
      (44.0, 33.16312026977539, 0.0), (48.33, 33.16312026977539, 0.0)),
     ('Course290_Main', 4814110068085501760, 'PositionTag', 'Translate',
-     (43.25, 24.0, 0.0), (40.28125, 24.0, 0.0)),
+     (43.25, 24.0, 0.0), (38.28125, 24.0, 0.0)),
     ('Course290_Main', 12276017923517845206, 'PositionTag', 'Translate',
-     (46.25, 28.0, 0.0), (44.28125, 28.0, 0.0)),
+     (46.25, 28.0, 0.0), (42.28125, 28.0, 0.0)),
     ('Course290_Main', 2306045187355644410, 'LastBossWonderBadSmokeTag', 'Translate',
-     (43.0, 35.5, 0.0), (40.03125, 35.5, 0.0)),
+     (43.0, 35.5, 0.0), (38.03125, 35.5, 0.0)),
     ('Course290_Main', 5602005781468990395, 'LastBossWonderBadSmokeTag', 'Translate',
-     (45.5, 35.5, 0.0), (43.53125, 35.5, 0.0)),
+     (45.5, 35.5, 0.0), (41.53125, 35.5, 0.0)),
     # Course290_Main (Bowser's Rage Stage - Tilt, rolling spiked ball, fossil rings & dragon relay):
     # Shift the sequence of environmental zap switches (1060316225, 663300194, 17459050152995009628, 742103869,
     # 2303338937), the screen tilt / gravity slide switch (206918284 that triggers the rolling spiked ball
