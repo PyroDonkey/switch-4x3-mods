@@ -90,19 +90,19 @@ def get_camera_dims(rx, is_mod=False, course_name='Course290_Main'):
     """Return (view_width, view_height) for the autoscroll camera.
 
     For Course290_Main in native 4:3, models A_HELPER:
-    - For fixed_X <= 40.0 (rail_X <= 28.3333): G = 17.5, W = 23.3333
-    - For 40.0 < fixed_X < 55.0 (28.3333 < rail_X < 44.5): linear lerp G = 17.5 -> 15.75
+    - For fixed_X <= 40.0 (rail_X <= 27.6667): G = 18.5, W = 24.6667
+    - For 40.0 < fixed_X < 55.0 (27.6667 < rail_X < 44.5): linear lerp G = 18.5 -> 15.75
     - For fixed_X >= 55.0 (rail_X >= 44.5): G = 15.75, W = 21.0
     """
     if not is_mod or course_name != 'Course290_Main':
         return (WIDTH_4_3 if is_mod else WIDTH_16_9), (15.75 if is_mod else STOCK_HEIGHT)
-    if rx <= 28.333333:
-        g = 17.5
+    if rx <= 27.666667:
+        g = 18.5
     elif rx >= 44.5:
         g = 15.75
     else:
-        t = (rx - 28.333333) / (44.5 - 28.333333)
-        g = 17.5 + (15.75 - 17.5) * t
+        t = (rx - 27.666667) / (44.5 - 27.666667)
+        g = 18.5 + (15.75 - 18.5) * t
     return g * 4.0 / 3.0, g
 
 
@@ -258,10 +258,10 @@ def audit_stage(orig_tree, mod_tree, course_name='Course290_Main', tolerance=5.0
             flagged += 1
         else:
             enforced_targets = [
-                (4814110068085501760, "Kuribo Strike Tag 1 (PositionTag)", 43.25),
-                (12276017923517845206, "Kuribo Strike Tag 2 (PositionTag)", 46.25),
-                (2306045187355644410, "Kuribo Smoke Tag 1 (BadSmokeTag)", 43.0),
-                (5602005781468990395, "Kuribo Smoke Tag 2 (BadSmokeTag)", 45.5),
+                (4814110068085501760, "Kuribo Strike Tag 1 (PositionTag)", 40.28125),
+                (12276017923517845206, "Kuribo Strike Tag 2 (PositionTag)", 44.28125),
+                (2306045187355644410, "Kuribo Smoke Tag 1 (BadSmokeTag)", 40.03125),
+                (5602005781468990395, "Kuribo Smoke Tag 2 (BadSmokeTag)", 43.53125),
             ]
             for check_f, label in [(f_zap, "Lightning Strike (f_zap)"), (f_zap + 30, "Growth Animation (f_zap + 30)")]:
                 if check_f >= len(traj_mod):
