@@ -208,7 +208,7 @@ def verify_patch(path):
     # 5. Check Cave A -> A_HELPER (Course290_Main opening fists zoom-out lerp) invariants
     assert b_target(0x02138894, patch[0x02138894]) == 0x02138988, "Cave A large room does not branch to A_HELPER"
     assert patch[0x021389E4] == 2931365200, f"A_HELPER hash != 2931365200: {patch[0x021389E4]}"
-    assert patch[0x021389F0] == 0x418C0000, f"A_HELPER g_fist != 17.5f (0x418C0000): {patch[0x021389F0]:08X}"
+    assert patch[0x021389F0] == 0x41940000, f"A_HELPER g_fist != 18.5f (0x41940000): {patch[0x021389F0]:08X}"
     assert b_target(0x021389E0, patch[0x021389E0]) == 0x021388A0, "A_HELPER return != 0x021388A0 (Cave A store)"
 
     print(f"\nverify_pchtxt: OK ({len(lines)} patch lines, {len(EXPECTED_HOOKS)} hooks, "

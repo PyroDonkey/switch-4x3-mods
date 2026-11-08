@@ -207,17 +207,17 @@ EDITS = [
     ('Course290_Main', 1044554605811720563, 'EnemySoundRunRunPackun', 'Translate',
      (182.0, 47.0, 0.0), (184.0, 47.0, 0.0)),
     # Course290_Main (Bowser's Rage Stage - Opening fist section smoke coverage):
-    # With G = 17.5 (view height 17.5, vertical range [18.50, 36.00]), expand the vertical coverage of the opening
-    # background smoke planes by shifting the two bottom smoke actors down by -1.0 in Y and the two top smoke actors
-    # up by +1.0 in Y so the smoke edges stay offscreen.
+    # With G = 18.5 (view height 18.5, vertical range [18.00, 36.50]), expand the vertical coverage of the opening
+    # background smoke planes by shifting the two bottom smoke actors down by -1.5 in Y and the two top smoke actors
+    # up by +1.5 in Y so the smoke edges stay offscreen.
     ('Course290_Main', 15192233820085708065, 'DVCommonTorideKemuriB', 'Translate',
-     (5.3074798583984375, 19.16788673400879, -60.0), (5.3074798583984375, 18.16788673400879, -60.0)),
+     (5.3074798583984375, 19.16788673400879, -60.0), (5.3074798583984375, 17.66788673400879, -60.0)),
     ('Course290_Main', 1591783371223145825, 'DVCommonTorideKemuriB', 'Translate',
-     (27.5, 18.5, -60.0), (27.5, 17.5, -60.0)),
+     (27.5, 18.5, -60.0), (27.5, 17.0, -60.0)),
     ('Course290_Main', 5984094973414626142, 'DVCommonTorideKemuriA', 'Translate',
-     (-3.859537124633789, 36.74950408935547, -61.515625), (-3.859537124633789, 37.74950408935547, -61.515625)),
+     (-3.859537124633789, 36.74950408935547, -61.515625), (-3.859537124633789, 38.24950408935547, -61.515625)),
     ('Course290_Main', 10892834247364923251, 'DVCommonTorideKemuriA', 'Translate',
-     (19.93733787536621, 36.85106658935547, -86.515625), (19.93733787536621, 37.85106658935547, -86.515625)),
+     (19.93733787536621, 36.85106658935547, -86.515625), (19.93733787536621, 38.35106658935547, -86.515625)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics
