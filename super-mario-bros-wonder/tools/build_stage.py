@@ -129,21 +129,21 @@ EDITS = [
     ('Course407_Course', 3373664933504165692, 'DVWaKaiganFarIwaA01', 'Scale',
      (0.699999988079071, 0.699999988079071, 0.699999988079071), (0.82, 0.82, 0.82)),
     # Course290_Main (Bowser's Rage Stage - Kuribo grow & zap relay retuning for on-screen visibility & strike alignment):
-    # Under opening camera G = 18.5 (view width 24.67), retune zap switches 1536962149 and 14869113733391977869 to X = 48.33
-    # so they fire at rail X = 23.19 (frame 1127, view [23.19, 47.86]), framing all strike and smoke tags on-screen.
-    # Retune spawn switch 578319643 to X = 37.025 so it activates at frame 744 (after the Pt 1 autoscroll pause), preserving
-    # the exact stock 383-frame relay interval (frame 1127 - 744 = 383f, drift 0.0f).
-    # With 200f spawn delay (frame 944), Kuribos walk 183f before lightning strikes at frame 1127.
+    # Under opening camera G = 18.5 (view width 24.67), retune zap switches 1536962149 and 14869113733391977869 to X = 43.77
+    # so they fire at rail X = 18.63 (frame 1040, view [18.63, 43.30]), framing all strike and smoke tags on-screen.
+    # Retune spawn switch 578319643 to X = 36.48 so it activates at frame 657, preserving
+    # the exact stock 383-frame relay interval (frame 1040 - 657 = 383f, drift 0.0f).
+    # With 200f spawn delay (frame 857), Kuribos walk 183f before lightning strikes at frame 1040.
     # Calibrated against stock and Eden play-test: Goombas walk faster/further than nominal 1/32 blk/frame (reaching X ~ 38.3 & 42.3).
     # Align strike PositionTags and BadSmokeTags to where the Goombas actually are in Eden:
     # Goomba 1 at X = 38.28125 (tag 38.28125, smoke 38.03125); Goomba 2 at X = 42.28125 (tag 42.28125, smoke 41.53125).
-    # Growth fires 30f later at frame 1157, fully on-screen in view [24.49, 49.16].
+    # Growth fires 30f later at frame 1070, fully on-screen in view [20.28, 44.95].
     ('Course290_Main', 578319643, 'CourseDisplayBoxSwitch', 'Translate',
-     (38.5, 20.537498474121094, 0.0), (37.025, 20.537498474121094, 0.0)),
+     (38.5, 20.537498474121094, 0.0), (36.48, 20.537498474121094, 0.0)),
     ('Course290_Main', 1536962149, 'CourseDisplayBoxSwitch', 'Translate',
-     (44.0, 34.051910400390625, 0.0), (48.33, 34.051910400390625, 0.0)),
+     (44.0, 34.051910400390625, 0.0), (43.77, 34.051910400390625, 0.0)),
     ('Course290_Main', 14869113733391977869, 'CourseDisplayBoxSwitch', 'Translate',
-     (44.0, 33.16312026977539, 0.0), (48.33, 33.16312026977539, 0.0)),
+     (44.0, 33.16312026977539, 0.0), (43.77, 33.16312026977539, 0.0)),
     ('Course290_Main', 4814110068085501760, 'PositionTag', 'Translate',
      (43.25, 24.0, 0.0), (38.28125, 24.0, 0.0)),
     ('Course290_Main', 12276017923517845206, 'PositionTag', 'Translate',

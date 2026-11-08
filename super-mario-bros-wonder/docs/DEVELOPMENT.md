@@ -548,3 +548,7 @@ To give players more reaction time during the opening obstacle run, extend the $
 
 - **Lesson learned (cave budgeting for dual piecewise ramps):** Ramping $G$ and $\Delta$ from cutscene values ($15.75, 3.28$) to intro zoom ($18.5, 1.44$) over $fixed\_X \in [6.5, 12.0]$ requires $\ge 32$ words for dual-ramp logic. With `A_HELPER` capped at 30 words (`0x02138988..0x021389FC`, 29 used) and Cave G end padding offering only 3 free words (`0x02138AF4..0x02138AFC`), an entry ramp does not fit without restructuring existing caves; the 1.83-block snap at cutscene end remains as acceptable behavior.
 
+## 47. 2026-11-07: Course290_Main Task D: Kuribo strike and growth re-timing
+
+- **Lesson learned (autoscroll timing limits and platform bounds):** When re-timing autoscroll relays to restore stock pacing, the earliest feasible trigger frame is bounded by the trailing actor's right-edge margin ($V_{\text{right}} \ge X_2 + 1.0$), while leading actors' left positions are bounded by platform geometry ($X_1 \ge 37.0$ through the post-strike growth window). Retuning spawn switch `578319643` to $X = 36.48$ (frame 657) and zap switches `1536962149` / `14869113733391977869` to $X = 43.77$ (frame 1040) cuts the mod's growth delay vs stock from +143f (+2.38 s) down to +56f (+0.93 s) while preserving the exact 383f relay interval, 0 pop-in at spawn (off-screen by >9 blk), and full on-platform alignment.
+
