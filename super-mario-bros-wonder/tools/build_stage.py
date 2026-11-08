@@ -153,29 +153,32 @@ EDITS = [
     ('Course290_Main', 5602005781468990395, 'LastBossWonderBadSmokeTag', 'Translate',
      (45.5, 35.5, 0.0), (41.53125, 35.5, 0.0)),
     # Course290_Main (Bowser's Rage Stage - Tilt, rolling spiked ball, fossil rings & dragon relay):
-    # Shift the sequence of environmental zap switches (1060316225, 663300194, 17459050152995009628, 742103869,
-    # 2303338937), the screen tilt / gravity slide switch (206918284 that triggers the rolling spiked ball
-    # EnemyIronBallBigForLastStage 910706480), fossil ring 1 spawn (999420502), fossil ring 2 spawn (1755951341),
-    # and dragon transform (1787195044) left by 6.56 blocks in X. This eliminates relative timing drift across the
-    # entire rolling obstacle and zap obstacle course, ensuring Ring 1 completes its roll before Ring 2 spawns.
+    # With the intro zoom G = 18.5 hold extended to fixed_X in [100.0, 112.0] (rail_X in [87.67, 101.50]), the 4:3
+    # camera width is 24.67 (2.89 blocks narrower than stock 16:9 27.56, rather than 6.56 blocks narrower at G = 15.75).
+    # Shift triggers firing during the G = 18.5 hold (1060316225, 206918284, 663300194, 17459050152995009628, 999420502,
+    # 742103869, 1755951341) left by -2.89 blocks in X.
+    # Shift triggers firing during the return lerp according to view width at activation:
+    # - 1787195044 (dragon transform, frame 3031, W = 23.99) shifted by -3.57 blocks (X: 136.0 -> 132.43).
+    # - 2303338937 (fossil palette, frame 3282, W = 23.27) shifted by -4.29 blocks (X: 121.0 -> 116.71).
+    # This preserves 0-drift relative timing across the entire rolling obstacle and zap obstacle course.
     ('Course290_Main', 1060316225, 'CourseDisplayBoxSwitch', 'Translate',
-     (73.5, 34.513580322265625, 0.0), (66.94, 34.513580322265625, 0.0)),
+     (73.5, 34.513580322265625, 0.0), (70.61111450195312, 34.513580322265625, 0.0)),
     ('Course290_Main', 206918284, 'CourseDisplayBoxSwitch', 'Translate',
-     (81.5, 20.342161178588867, 0.0), (74.94, 20.342161178588867, 0.0)),
+     (81.5, 20.342161178588867, 0.0), (78.61111450195312, 20.342161178588867, 0.0)),
     ('Course290_Main', 663300194, 'CourseDisplayBoxSwitch', 'Translate',
-     (88.5, 35.5, 0.0), (81.94, 35.5, 0.0)),
+     (88.5, 35.5, 0.0), (85.61111450195312, 35.5, 0.0)),
     ('Course290_Main', 17459050152995009628, 'CourseDisplayBoxSwitch', 'Translate',
-     (89.5, 35.5, 0.0), (82.94, 35.5, 0.0)),
+     (89.5, 35.5, 0.0), (86.61111450195312, 35.5, 0.0)),
     ('Course290_Main', 999420502, 'CourseDisplayBoxSwitch', 'Translate',
-     (90.5, 21.96936798095703, 0.0), (83.94, 21.96936798095703, 0.0)),
+     (90.5, 21.96936798095703, 0.0), (87.61111450195312, 21.96936798095703, 0.0)),
     ('Course290_Main', 742103869, 'CourseDisplayBoxSwitch', 'Translate',
-     (98.52086639404297, 35.10392761230469, 0.0), (91.96086639404297, 35.10392761230469, 0.0)),
+     (98.52086639404297, 35.10392761230469, 0.0), (95.6319808959961, 35.10392761230469, 0.0)),
     ('Course290_Main', 1755951341, 'CourseDisplayBoxSwitch', 'Translate',
-     (106.0, 19.168628692626953, 0.0), (99.44, 19.168628692626953, 0.0)),
+     (106.0, 19.168628692626953, 0.0), (103.11111450195312, 19.168628692626953, 0.0)),
     ('Course290_Main', 2303338937, 'CourseDisplayBoxSwitch', 'Translate',
-     (121.0, 34.49203872680664, 0.0), (114.44, 34.49203872680664, 0.0)),
+     (121.0, 34.49203872680664, 0.0), (116.70992279052734, 34.49203872680664, 0.0)),
     ('Course290_Main', 1787195044, 'CourseDisplayBoxSwitch', 'Translate',
-     (136.0, 26.0, 0.0), (129.44, 26.0, 0.0)),
+     (136.0, 26.0, 0.0), (132.43197631835938, 26.0, 0.0)),
     # Course290_Main (Bowser's Rage Stage - Vertical shaft ground & guide coins):
     # Switch 4273434636 (stock min_x = 146.50, missed by 4:3 right edge at 146.0) fires to spawn the bottom
     # horizontal snake-block ground (ObjectBlockSnakePole 34729090 at Y = 27.5..31.5) and guide coins before
@@ -218,10 +221,10 @@ EDITS = [
      (180.0, 47.0, 0.0), (182.0, 47.0, 0.0)),
     ('Course290_Main', 1044554605811720563, 'EnemySoundRunRunPackun', 'Translate',
      (182.0, 47.0, 0.0), (184.0, 47.0, 0.0)),
-    # Course290_Main (Bowser's Rage Stage - Opening fist section smoke coverage):
-    # With G = 18.5 (view height 18.5, vertical range [18.00, 36.50]), expand the vertical coverage of the opening
-    # background smoke planes by shifting the two bottom smoke actors down by -1.5 in Y and the two top smoke actors
-    # up by +1.5 in Y so the smoke edges stay offscreen.
+    # Course290_Main (Bowser's Rage Stage - Fist & fossil section smoke coverage):
+    # With G = 18.5 (view height 18.5, vertical range [18.00, 36.50]), expand the vertical coverage of the
+    # background smoke planes by shifting bottom smoke actors down by -1.5 in Y and top smoke actors up by +1.5 in Y
+    # so the smoke edges stay offscreen across both the opening fist and fossil sections.
     ('Course290_Main', 15192233820085708065, 'DVCommonTorideKemuriB', 'Translate',
      (5.3074798583984375, 19.16788673400879, -60.0), (5.3074798583984375, 17.66788673400879, -60.0)),
     ('Course290_Main', 1591783371223145825, 'DVCommonTorideKemuriB', 'Translate',
@@ -230,6 +233,12 @@ EDITS = [
      (-3.859537124633789, 36.74950408935547, -61.515625), (-3.859537124633789, 38.24950408935547, -61.515625)),
     ('Course290_Main', 10892834247364923251, 'DVCommonTorideKemuriA', 'Translate',
      (19.93733787536621, 36.85106658935547, -86.515625), (19.93733787536621, 38.35106658935547, -86.515625)),
+    ('Course290_Main', 13067625065345285749, 'DVCommonTorideKemuriA', 'Translate',
+     (56.0, 35.5, -60.0), (56.0, 37.0, -60.0)),
+    ('Course290_Main', 7396728262115999967, 'DVCommonTorideKemuriB', 'Translate',
+     (78.09263610839844, 20.79288673400879, -60.0), (78.09263610839844, 19.29288673400879, -60.0)),
+    ('Course290_Main', 10206074945194904884, 'DVCommonTorideKemuriA', 'Translate',
+     (99.5, 32.5, -60.0), (99.5, 34.0, -60.0)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics
