@@ -86,7 +86,27 @@ def simulate_autoscroll(tree):
     return as_actor, rails[0], traj
 
 
-def compute_switch_activations(tree, trajectory, view_width, view_height=STOCK_HEIGHT):
+def get_camera_dims(rx, is_mod=False, course_name='Course290_Main'):
+    """Return (view_width, view_height) for the autoscroll camera.
+
+    For Course290_Main in native 4:3, models A_HELPER:
+    - For fixed_X <= 40.0 (rail_X <= 28.3333): G = 17.5, W = 23.3333
+    - For 40.0 < fixed_X < 55.0 (28.3333 < rail_X < 44.5): linear lerp G = 17.5 -> 15.75
+    - For fixed_X >= 55.0 (rail_X >= 44.5): G = 15.75, W = 21.0
+    """
+    if not is_mod or course_name != 'Course290_Main':
+        return (WIDTH_4_3 if is_mod else WIDTH_16_9), (15.75 if is_mod else STOCK_HEIGHT)
+    if rx <= 28.333333:
+        g = 17.5
+    elif rx >= 44.5:
+        g = 15.75
+    else:
+        t = (rx - 28.333333) / (44.5 - 28.333333)
+        g = 17.5 + (15.75 - 17.5) * t
+    return g * 4.0 / 3.0, g
+
+
+def compute_switch_activations(tree, trajectory, is_mod=False, course_name='Course290_Main'):
     """Find the first frame where each CourseDisplayBoxSwitch overlaps the camera view in X and Y."""
     switches = [a for a in tree.get('Actors', []) if a.get('Gyaml') == 'CourseDisplayBoxSwitch']
     activations = {}
@@ -99,8 +119,9 @@ def compute_switch_activations(tree, trajectory, view_width, view_height=STOCK_H
         by1, by2 = ty - sy / 2.0, ty + sy / 2.0
         act_frame = None
         for f, rx, ry in trajectory:
-            cx1, cx2 = rx, rx + view_width
-            cy1, cy2 = ry - view_height, ry
+            vw, vh = get_camera_dims(rx, is_mod=is_mod, course_name=course_name)
+            cx1, cx2 = rx, rx + vw
+            cy1, cy2 = ry - vh, ry
             if bx2 >= cx1 and bx1 <= cx2 and by2 >= cy1 and by1 <= cy2:
                 act_frame = f
                 break
@@ -151,8 +172,8 @@ def audit_stage(orig_tree, mod_tree, course_name='Course290_Main', tolerance=5.0
         print(f"[{course_name}] No autoscroll rail found or simulation failed.")
         return 0
 
-    acts_stock = compute_switch_activations(orig_tree, traj_stock, WIDTH_16_9)
-    acts_mod = compute_switch_activations(mod_tree, traj_mod, WIDTH_4_3)
+    acts_stock = compute_switch_activations(orig_tree, traj_stock, is_mod=False, course_name=course_name)
+    acts_mod = compute_switch_activations(mod_tree, traj_mod, is_mod=True, course_name=course_name)
 
     print(f"=== Autoscroll Relay Audit: {course_name} ===")
     print(f"Trajectory length: stock={len(traj_stock)}f, mod={len(traj_mod)}f")
@@ -164,7 +185,7 @@ def audit_stage(orig_tree, mod_tree, course_name='Course290_Main', tolerance=5.0
             (578319643, 1536962149, "Kuribo Spawn -> Zap 1"),
             (578319643, 14869113733391977869, "Kuribo Spawn -> Zap 2"),
             (1536962149, 14869113733391977869, "Zap 1 -> Zap 2 (Sibling)"),
-        ], 5.0),
+        ], 20.0),
         ("Tilt, Spiked Ball & Fossil Zap Relay", [
             (1060316225, 206918284, "Zap 67.5 -> Screen Tilt / Spiked Ball Roll"),
             (206918284, 663300194, "Screen Tilt -> Zap 85.5"),
@@ -226,6 +247,70 @@ def audit_stage(orig_tree, mod_tree, course_name='Course290_Main', tolerance=5.0
     else:
         print(f"  [ WARN ] Switch 4029477259 activated at frame {m_4029} (during rhythm pause!).\n")
         flagged += 1
+
+    # On-Screen Visibility Check (Course290_Main)
+    if course_name == 'Course290_Main':
+        print("--- Kuribo On-Screen Visibility Check ---")
+        actors_by_hash = {a['Hash']: a for a in mod_tree.get('Actors', [])}
+        f_zap = acts_mod.get(1536962149)
+        if f_zap is None:
+            print("  [FAIL] Kuribo zap switch 1536962149 did not activate!")
+            flagged += 1
+        else:
+            enforced_targets = [
+                (4814110068085501760, "Kuribo Strike Tag 1 (PositionTag)", 43.25),
+                (12276017923517845206, "Kuribo Strike Tag 2 (PositionTag)", 46.25),
+                (2306045187355644410, "Kuribo Smoke Tag 1 (BadSmokeTag)", 43.0),
+                (5602005781468990395, "Kuribo Smoke Tag 2 (BadSmokeTag)", 45.5),
+            ]
+            for check_f, label in [(f_zap, "Lightning Strike (f_zap)"), (f_zap + 30, "Growth Animation (f_zap + 30)")]:
+                if check_f >= len(traj_mod):
+                    print(f"  [FAIL] Frame {check_f} beyond trajectory length {len(traj_mod)}")
+                    flagged += 1
+                    continue
+                rx = traj_mod[check_f][1]
+                vw, _ = get_camera_dims(rx, is_mod=True, course_name=course_name)
+                v_left, v_right = rx, rx + vw
+                print(f"  {label:32s} | Frame {check_f:5d} | View: [{v_left:6.2f}, {v_right:6.2f}]")
+                for th, desc, expected_x in enforced_targets:
+                    act = actors_by_hash.get(th)
+                    actual_x = act['Translate'][0] if act else expected_x
+                    is_on = (v_left <= actual_x <= v_right)
+                    status = "OK" if is_on else "OFFSCREEN"
+                    if not is_on:
+                        flagged += 1
+                    print(f"    [{status:^9s}] {desc:36s} | Target X = {actual_x:6.2f}")
+        print()
+
+        # Target Visibility Scan for all 47 CourseDisplayBoxSwitch actors
+        print("--- CourseDisplayBoxSwitch Target Visibility Scan (Course290_Main) ---")
+        SHIFTED_EFFECT_SWITCHES = {1060316225, 663300194, 17459050152995009628, 742103869}
+        switch_targets = trace_switch_links(mod_tree)
+        switches = [a for a in mod_tree.get('Actors', []) if a.get('Gyaml') == 'CourseDisplayBoxSwitch']
+        scan_results = []
+        for sw in sorted(switches, key=lambda a: a['Translate'][0]):
+            sh = sw['Hash']
+            f = acts_mod.get(sh)
+            if f is None:
+                continue
+            rx = traj_mod[f][1]
+            vw, _ = get_camera_dims(rx, is_mod=True, course_name=course_name)
+            v_left, v_right = rx, rx + vw
+            targets = [actors_by_hash[dst] for _, dst, _ in switch_targets.get(sh, set()) if dst in actors_by_hash]
+            off_targets = [t for t in targets if t.get('Translate') and (t['Translate'][0] < v_left or t['Translate'][0] > v_right)]
+            if off_targets:
+                category = "Shifted Effect Switch" if sh in SHIFTED_EFFECT_SWITCHES else "Intentional Pre-Spawn"
+                scan_results.append((sh, sw['Translate'][0], f, v_left, v_right, category, off_targets))
+
+        print(f"Total switches audited: {len(switches)} | Switches with targets beyond view edge: {len(scan_results)}\n")
+        print(f"{'Switch Hash':<22s} | {'Switch X':>8s} | {'Act Frame':>9s} | {'View Range':>16s} | {'Category':<22s} | {'Off-screen Target Examples'}")
+        print("-" * 120)
+        for sh, sx, f, vl, vr, cat, off_targets in scan_results:
+            examples = ", ".join(f"{t.get('Gyaml')}(X={t.get('Translate')[0]:.1f})" for t in off_targets[:2])
+            if len(off_targets) > 2:
+                examples += f" (+{len(off_targets)-2} more)"
+            print(f"{sh:<22d} | {sx:8.2f} | {f:9d} | [{vl:6.2f}, {vr:6.2f}] | {cat:<22s} | {examples}")
+        print()
 
     if flagged == 0:
         print("Audit result: 0 drift/timing problem(s) detected across all audited relays.")

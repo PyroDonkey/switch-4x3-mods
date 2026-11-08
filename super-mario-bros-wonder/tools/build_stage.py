@@ -128,15 +128,18 @@ EDITS = [
      (23.5, 48.0, -167.5), (23.5, 49.5, -167.5)),
     ('Course407_Course', 3373664933504165692, 'DVWaKaiganFarIwaA01', 'Scale',
      (0.699999988079071, 0.699999988079071, 0.699999988079071), (0.82, 0.82, 0.82)),
-    # Course290_Main (Bowser's Rage Stage - Kuribo grow & zap relay): shift the Kuribo spawn switch (578319643)
-    # and both subsequent zap/smoke switches (1536962149, 14869113733391977869) left by 6.56 blocks in X.
-    # This preserves the ~383-frame growth interval before the lightning strikes, matching stock 16:9 timing.
+    # Course290_Main (Bowser's Rage Stage - Kuribo grow & zap relay retuning for on-screen visibility):
+    # Under opening camera G = 17.5 (view width 23.33), shifting zap switches left by 6.56 to X = 37.44 fired them
+    # while the camera was at rail X = 14.11 (view [14.11, 37.44]), leaving the lightning strikes at X = 43.0..46.25
+    # off-screen. Retune zap switches 1536962149 and 14869113733391977869 to X = 48.33 so they fire at rail X = 24.50
+    # (view [24.50, 47.83]), framing all strike and smoke tags on-screen. Retune spawn switch 578319643 to X = 35.85
+    # so Kuribos spawn at rail X = 11.16 and walk into view with the stock growth interval before being zapped.
     ('Course290_Main', 578319643, 'CourseDisplayBoxSwitch', 'Translate',
-     (38.5, 20.537498474121094, 0.0), (31.94, 20.537498474121094, 0.0)),
+     (38.5, 20.537498474121094, 0.0), (35.85, 20.537498474121094, 0.0)),
     ('Course290_Main', 1536962149, 'CourseDisplayBoxSwitch', 'Translate',
-     (44.0, 34.051910400390625, 0.0), (37.44, 34.051910400390625, 0.0)),
+     (44.0, 34.051910400390625, 0.0), (48.33, 34.051910400390625, 0.0)),
     ('Course290_Main', 14869113733391977869, 'CourseDisplayBoxSwitch', 'Translate',
-     (44.0, 33.16312026977539, 0.0), (37.44, 33.16312026977539, 0.0)),
+     (44.0, 33.16312026977539, 0.0), (48.33, 33.16312026977539, 0.0)),
     # Course290_Main (Bowser's Rage Stage - Tilt, rolling spiked ball, fossil rings & dragon relay):
     # Shift the sequence of environmental zap switches (1060316225, 663300194, 17459050152995009628, 742103869,
     # 2303338937), the screen tilt / gravity slide switch (206918284 that triggers the rolling spiked ball
