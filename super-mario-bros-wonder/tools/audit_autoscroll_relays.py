@@ -298,10 +298,11 @@ def audit_stage(orig_tree, mod_tree, course_name='Course290_Main', tolerance=5.0
                     act = actors_by_hash.get(th)
                     actual_x = act['Translate'][0] if act else expected_x
                     is_on = (v_left <= actual_x <= v_right)
-                    status = "OK" if is_on else "OFFSCREEN"
-                    if not is_on:
+                    matches_expected = (act is not None and abs(actual_x - expected_x) <= 0.001)
+                    status = "OK" if (is_on and matches_expected) else ("MISMATCH" if not matches_expected else "OFFSCREEN")
+                    if not is_on or not matches_expected:
                         flagged += 1
-                    print(f"    [{status:^9s}] {desc:36s} | Target X = {actual_x:6.2f}")
+                    print(f"    [{status:^9s}] {desc:36s} | Target X = {actual_x:6.2f} (expected {expected_x:.5f})")
         print()
 
         # Target Visibility Scan for all 47 CourseDisplayBoxSwitch actors
