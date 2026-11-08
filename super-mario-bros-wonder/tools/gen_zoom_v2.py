@@ -230,7 +230,7 @@ seq_a = [
 A_HELPER = 0x2138988
 A_HASH_290 = 2931365200
 G_FIST_290 = 18.5
-X0_FIST_290, X1_FIST_290 = 40.0, 55.0
+X0_FIST_290, X1_FIST_290 = 100.0, 112.0
 ahlab = {}
 A_HELPER_ITEMS = [
     'entry',
@@ -241,15 +241,15 @@ A_HELPER_ITEMS = [
     lambda pc: ldr_w_lit(15, pc, L_G17),                                    # restore w15 = f32(G_LARGE) (flags preserved)
     lambda pc: bcond(NE, pc, lab['store']),                                 # not Course290_Main -> store (15.75, 3.2778)
     lambda pc: ldr_s(16, 20, 0x194),                                        # s16 = fixed X (subject+0x194)
-    lambda pc: ldr_s_lit(31, pc, ahlab['x0']),                              # s31 = 40.0f
-    lambda pc: fsub_s(16, 16, 31),                                          # s16 = fixed X - 40.0f
-    lambda pc: fmov_imm(31, 0x2E),                                          # s31 = 15.0f (55.0 - 40.0)
+    lambda pc: ldr_s_lit(31, pc, ahlab['x0']),                              # s31 = 100.0f
+    lambda pc: fsub_s(16, 16, 31),                                          # s16 = fixed X - 100.0f
+    lambda pc: fmov_imm(31, 0x28),                                          # s31 = 12.0f (112.0 - 100.0)
     lambda pc: fcmp_s(16, 31),
-    lambda pc: bcond(GE, pc, lab['store']),                                 # fixed X >= 55.0 -> store (15.75, 3.2778)
+    lambda pc: bcond(GE, pc, lab['store']),                                 # fixed X >= 112.0 -> store (15.75, 3.2778)
     lambda pc: fmov_s_w(31, 31),                                            # s31 = 0.0f (wzr)
-    lambda pc: fmax_s(16, 16, 31),                                          # s16 = max(fixed X - 40.0f, 0.0f)
-    lambda pc: ldr_s_lit(31, pc, ahlab['slope_g']),                         # s31 = (15.75 - 17.5) / 15.0
-    lambda pc: ldr_s_lit(30, pc, ahlab['g_fist']),                          # s30 = 17.5f
+    lambda pc: fmax_s(16, 16, 31),                                          # s16 = max(fixed X - 100.0f, 0.0f)
+    lambda pc: ldr_s_lit(31, pc, ahlab['slope_g']),                         # s31 = (15.75 - 18.5) / 12.0
+    lambda pc: ldr_s_lit(30, pc, ahlab['g_fist']),                          # s30 = 18.5f
     lambda pc: fmadd_s(16, 16, 31, 30),                                     # s16 = G = 17.5 + slope * t
     lambda pc: fmov_w_s(15, 16),                                            # w15 = f32(G)
     lambda pc: ldr_s_lit(31, pc, ahlab['neg_2_3']),                         # s31 = -2.0 / 3.0
