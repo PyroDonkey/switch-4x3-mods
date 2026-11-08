@@ -45,6 +45,9 @@
 // Pinning camera Y to 3.25 expands the frustum's vertical extents to [-8.42, 14.92]; Bowser Jr.'s swim AI computes
 // targets as minY + 3.0 = -5.42 (under the floor). Hook 0x01781B70 -> cave K (0x02138D88) in GetCameraBoundBox2f replaces
 // minY with stock -5.50 and maxY with 12.00 so Jr.'s AI targets y = -2.50 above the floor and never gets corner-stuck.
+// Bowser's Rage Stage (Course290_Main): the intro cutscene clamps to a 15.5-tall area, so the 18.5-tall view was centred
+// (y 27.25) and then snapped up to the autoscroll's bottom-rest height (28.75). Cave Y's other-area exit, cave P
+// (0x02138B60), sets the upper Y limit to max(upper, lower) in that course only, so a too-tall view rests on the bottom.
 // Debug words: 037D1F04 current area hash, 037D1F10/14 pipe-box markers, 037D1F18 delta bits,
 // 037D1F1C measured area width, 037D1F20 camera controller pointer, 037D1F28 camera subject pointer. Area table at 02138E00.
 002E2B30 74577914
@@ -266,6 +269,12 @@
 02138B54 8B02261E
 02138B58 697D60B3
 02138B5C EAEB9B17
+02138B60 B0000018
+02138B64 3F02106B
+02138B68 41000054
+02138B6C 4248201E
+02138B70 DF369617
+02138B74 5015B9AE
 02138C00 E8A740A9
 02138C04 D0B400B0
 02138C08 10024FBD
@@ -307,7 +316,7 @@
 02138D4C 1F024FBD
 02138D50 B0010018
 02138D54 3F02106B
-02138D58 41010054
+02138D58 41F0FF54
 02138D5C 10F0251E
 02138D60 101A3F1E
 02138D64 9008301E

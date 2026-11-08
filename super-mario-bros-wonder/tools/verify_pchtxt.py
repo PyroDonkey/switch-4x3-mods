@@ -9,6 +9,8 @@ Verifies:
 - Per-area zoom table preserves every arena/fixed-room override and ends before cave H
 - Cave Y (stock vertical camera centre) gates on Course152_Sub4 (RootAreaHash 1778226157), pins the Y
   limits with the fight zoom (stock half-height >= 8.5) and returns to 0x006C66EC
+- Cave P (cave Y's other-area exit) gates on Course290_Main (RootAreaHash 2931365200) and sets the upper Y limit
+  to max(upper, lower), so a view taller than the bounds rests on the bottom limit; returns to 0x006C66EC
 - Cave K (CameraBoundBox2f Y bounds) gates on Course152_Sub4 (RootAreaHash 1778226157), replaces minY/maxY
   with stock -5.50 / 12.00 so Bowser Jr.'s swim AI navigation targets points above the floor and returns to 0x01781B74
 
@@ -71,7 +73,7 @@ def verify_patch(path):
     ends_base = end + 12
     ends_term = ends_base + 8 * len(expected_autoscroll_ends)
 
-    DATA_HASHES = {0x021389E4: 2931365200, 0x02138D84: 1778226157, 0x02138DB4: 1778226157}
+    DATA_HASHES = {0x021389E4: 2931365200, 0x02138B74: 2931365200, 0x02138D84: 1778226157, 0x02138DB4: 1778226157}
     for i, (h, _) in enumerate(expected_areas):
         DATA_HASHES[0x02138E00 + 12 * i] = h
     for i, (h, _) in enumerate(expected_autoscroll_ends):
@@ -178,10 +180,20 @@ def verify_patch(path):
     assert patch[0x02138D84] == 1778226157, f"Cave Y hash != 1778226157: {patch[0x02138D84]}"
     assert b_target(0x02138D80, patch[0x02138D80]) == 0x006C66EC, "Cave Y return != 0x006C66EC"
     mn, op = dis(0x02138D58)
-    assert mn == 'b.ne' and int(op.lstrip('#'), 16) == 0x02138D80, f"Cave Y gate check failed: {mn} {op}"
+    assert mn == 'b.ne' and int(op.lstrip('#'), 16) == 0x02138B60, f"Cave Y gate check failed (other areas -> cave P): {mn} {op}"
     assert dis(0x02138D68) == ('fmov', 's31, #8.50000000'), f"Cave Y pin threshold: {dis(0x02138D68)}"
     assert dis(0x02138D6C) == ('fcmp', 's16, s31'), f"Cave Y pin compare: {dis(0x02138D6C)}"
     assert dis(0x02138D7C) == ('fcsel', 's2, s0, s2, ge'), f"Cave Y pin select: {dis(0x02138D7C)}"
+
+    # Cave P: cave Y's exit for other areas. Course290_Main only: upper Y limit = max(upper, lower), so a view taller than
+    # the bounds rests on the bottom limit instead of being centred; every path returns to 0x006C66EC.
+    P_EXPECT = [(0x02138B60, 'ldr', 'w16, #0x2138b74'), (0x02138B64, 'cmp', 'w17, w16'),
+                (0x02138B68, 'b.ne', '#0x2138b70'), (0x02138B6C, 'fmax', 's2, s2, s0')]
+    for a, mn_p, op_p in P_EXPECT:
+        assert dis(a) == (mn_p, op_p), f"Cave P at 0x{a:08X}: {dis(a)}, expected {mn_p} {op_p}"
+    assert b_target(0x02138B70, patch[0x02138B70]) == 0x006C66EC, "Cave P return != 0x006C66EC"
+    assert patch[0x02138B74] == 2931365200, f"Cave P hash != 2931365200: {patch[0x02138B74]}"
+    assert {a for a in patch if 0x02138B60 <= a < 0x02138C00} == set(range(0x02138B60, 0x02138B78, 4)), "Unexpected cave P words"
 
     # Cave K: gated on Course152_Sub4, replaces minY with -5.50 and maxY with 12.00, returns to 0x01781B74
     assert patch[0x02138DB4] == 1778226157, f"Cave K hash != 1778226157: {patch[0x02138DB4]}"
