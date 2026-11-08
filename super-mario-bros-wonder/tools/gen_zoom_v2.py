@@ -229,8 +229,7 @@ seq_a = [
 ]
 A_HELPER = 0x2138988
 A_HASH_290 = 2931365200
-G_FIST_290 = 18.5
-X0_FIST_290, X1_FIST_290 = 100.0, 112.0
+R_CAVE = 0x2138B60
 ahlab = {}
 A_HELPER_ITEMS = [
     'entry',
@@ -239,32 +238,47 @@ A_HELPER_ITEMS = [
     lambda pc: ldr_w_lit(15, pc, ahlab['hash']),                            # w15 = 2931365200
     lambda pc: cmp_w(16, 15),
     lambda pc: ldr_w_lit(15, pc, L_G17),                                    # restore w15 = f32(G_LARGE) (flags preserved)
-    lambda pc: bcond(NE, pc, lab['store']),                                 # not Course290_Main -> store (15.75, 3.2778)
+    lambda pc: bcond(EQ, pc, R_CAVE),                                       # Course290_Main -> branch to R_CAVE
+    lambda pc: b_(pc, lab['store']),                                        # not Course290_Main -> store (15.75, 3.2778)
+    'hash', lambda pc: A_HASH_290,
+]
+pre_labels(A_HELPER, A_HELPER_ITEMS, ahlab)
+
+rlab = {}
+R_ITEMS = [
+    'entry',
     lambda pc: ldr_s(16, 20, 0x194),                                        # s16 = fixed X (subject+0x194)
-    lambda pc: ldr_s_lit(31, pc, ahlab['x0']),                              # s31 = 100.0f
-    lambda pc: fsub_s(16, 16, 31),                                          # s16 = fixed X - 100.0f
-    lambda pc: fmov_imm(31, 0x28),                                          # s31 = 12.0f (112.0 - 100.0)
-    lambda pc: fcmp_s(16, 31),
-    lambda pc: bcond(GE, pc, lab['store']),                                 # fixed X >= 112.0 -> store (15.75, 3.2778)
+    lambda pc: ldr_s_lit(31, pc, rlab['a']),                                # s31 = 6.5f
+    lambda pc: fsub_s(31, 16, 31),                                          # s31 = fixed X - 6.5f
+    lambda pc: ldr_s_lit(30, pc, rlab['k1']),                               # s30 = 1.0f / 5.5f
+    lambda pc: fmul_s(31, 31, 30),                                          # s31 = t1 = (fixed X - 6.5) * k1
+    lambda pc: ldr_s_lit(30, pc, rlab['b']),                                # s30 = 112.0f
+    lambda pc: fsub_s(30, 30, 16),                                          # s30 = 112.0 - fixed X
+    lambda pc: ldr_s_lit(16, pc, rlab['k2']),                               # s16 = 1.0f / 12.0f
+    lambda pc: fmul_s(30, 30, 16),                                          # s30 = t2 = (112.0 - fixed X) * k2
+    lambda pc: fmin_s(16, 31, 30),                                          # s16 = min(t1, t2)
+    lambda pc: fmov_imm(31, 0x70),                                          # s31 = 1.0f
+    lambda pc: fmin_s(16, 16, 31),                                          # s16 = min(min, 1.0f)
     lambda pc: fmov_s_w(31, 31),                                            # s31 = 0.0f (wzr)
-    lambda pc: fmax_s(16, 16, 31),                                          # s16 = max(fixed X - 100.0f, 0.0f)
-    lambda pc: ldr_s_lit(31, pc, ahlab['slope_g']),                         # s31 = (15.75 - 18.5) / 12.0
-    lambda pc: ldr_s_lit(30, pc, ahlab['g_fist']),                          # s30 = 18.5f
-    lambda pc: fmadd_s(16, 16, 31, 30),                                     # s16 = G = 17.5 + slope * t
+    lambda pc: fmax_s(16, 16, 31),                                          # s16 = t = clamp(min, 0.0f, 1.0f)
+    lambda pc: ldr_s_lit(31, pc, rlab['span_g']),                           # s31 = 2.75f
+    lambda pc: ldr_s_lit(30, pc, L_G17),                                    # s30 = 15.75f (reused from Cave A)
+    lambda pc: fmadd_s(16, 16, 31, 30),                                     # s16 = G = 15.75 + 2.75 * t
     lambda pc: fmov_w_s(15, 16),                                            # w15 = f32(G)
-    lambda pc: ldr_s_lit(31, pc, ahlab['neg_2_3']),                         # s31 = -2.0 / 3.0
-    lambda pc: ldr_s_lit(30, pc, ahlab['half_16_9']),                       # s30 = 27.5556 / 2.0
+    lambda pc: ldr_s_lit(31, pc, rlab['neg_2_3']),                          # s31 = -2.0 / 3.0
+    lambda pc: ldr_s_lit(30, pc, rlab['half_16_9']),                        # s30 = 27.5556 / 2.0
     lambda pc: fmadd_s(16, 16, 31, 30),                                     # s16 = delta = half_16_9 + neg_2_3 * G
     lambda pc: fmov_w_s(17, 16),                                            # w17 = f32(delta)
-    lambda pc: b_(pc, lab['store']),
-    'hash', lambda pc: A_HASH_290,
-    'x0', lambda pc: f32(X0_FIST_290),
-    'slope_g', lambda pc: f32((G_LARGE - G_FIST_290) / (X1_FIST_290 - X0_FIST_290)),
-    'g_fist', lambda pc: f32(G_FIST_290),
+    lambda pc: b_(pc, lab['store']),                                        # branch to Cave A store
+    'a', lambda pc: f32(6.5),
+    'k1', lambda pc: f32(1.0 / 5.5),
+    'b', lambda pc: f32(112.0),
+    'k2', lambda pc: f32(1.0 / 12.0),
+    'span_g', lambda pc: f32(2.75),
     'neg_2_3', lambda pc: f32(-2.0 / 3.0),
     'half_16_9', lambda pc: f32(27.5556 / 2.0),
 ]
-pre_labels(A_HELPER, A_HELPER_ITEMS, ahlab)
+pre_labels(R_CAVE, R_ITEMS, rlab)
 
 assert len(seq_a) == N_CODE, len(seq_a)
 lab.update({'small': A + 4 * 38, 'loop': A + 4 * 23, 'found': A + 4 * 29, 'notab': A + 4 * 32, 'store': A + 4 * 40})
@@ -464,7 +478,10 @@ G_HELPER_END = assemble(G_HELPER, G_HELPER_ITEMS, ghlab)
 assert G_HELPER_END <= A_HELPER, hex(G_HELPER_END)
 A_HELPER_END = assemble(A_HELPER, A_HELPER_ITEMS, ahlab)
 assert A_HELPER_END <= 0x2138A00, hex(A_HELPER_END)
-A_HELPER_DATA = {ahlab['hash'], ahlab['x0'], ahlab['slope_g'], ahlab['g_fist'], ahlab['neg_2_3'], ahlab['half_16_9']}
+A_HELPER_DATA = {ahlab['hash']}
+R_END = assemble(R_CAVE, R_ITEMS, rlab)
+assert R_END <= 0x2138C00, hex(R_END)
+R_DATA = {rlab['a'], rlab['k1'], rlab['b'], rlab['k2'], rlab['span_g'], rlab['neg_2_3'], rlab['half_16_9']}
 G_END = assemble(G_CAVE, G_ITEMS, glab)
 assert G_END <= 0x2138B00, hex(G_END)
 G_DATA = {glab['eps'], glab['stepv']}
@@ -566,7 +583,7 @@ for a, w in allw:
     seen.add(a)
 ENDS_DATA = {TABLE_ENDS + 4 * i for i in range(2 * (len(AUTOSCROLL_ENDS) + 1))}
 G_HELPER_DATA = {ghlab['thresh']}
-data_addrs = {L_THR, L_G17, L_D17, L_G155, L_D155, F2 + 20} | {TABLE + 4 * i for i in range(3 * (len(BOSS) + 1))} | ENDS_DATA | G_HELPER_DATA | A_HELPER_DATA | G_DATA | Y_DATA | K_DATA
+data_addrs = {L_THR, L_G17, L_D17, L_G155, L_D155, F2 + 20} | {TABLE + 4 * i for i in range(3 * (len(BOSS) + 1))} | ENDS_DATA | G_HELPER_DATA | A_HELPER_DATA | R_DATA | G_DATA | Y_DATA | K_DATA
 if __name__ == '__main__':
     for a, w in allw:
         dis = list(md.disasm(struct.pack('<I', w), a))

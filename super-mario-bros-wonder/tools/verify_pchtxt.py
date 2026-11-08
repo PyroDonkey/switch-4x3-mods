@@ -71,13 +71,14 @@ def verify_patch(path):
     ends_base = end + 12
     ends_term = ends_base + 8 * len(expected_autoscroll_ends)
 
-    DATA_HASHES = {0x021389E4: 2931365200, 0x02138D84: 1778226157, 0x02138DB4: 1778226157}
+    DATA_HASHES = {0x021389A4: 2931365200, 0x02138D84: 1778226157, 0x02138DB4: 1778226157}
     for i, (h, _) in enumerate(expected_areas):
         DATA_HASHES[0x02138E00 + 12 * i] = h
     for i, (h, _) in enumerate(expected_autoscroll_ends):
         DATA_HASHES[ends_base + 8 * i] = h
     DATA_FLOATS = ({0x02138788, 0x021388E0, 0x021388E4, 0x021388E8, 0x021388EC, 0x021388F0,
-                    0x02138984, 0x021389E8, 0x021389EC, 0x021389F0, 0x021389F4, 0x021389F8,
+                    0x02138984, 0x02138BBC, 0x02138BC0, 0x02138BC4, 0x02138BC8, 0x02138BCC,
+                    0x02138BD0, 0x02138BD4,
                     0x02138AE0, 0x02138AE4, 0x02138D34, 0x02138DB8, 0x02138DBC}
                    | {0x02138E04 + 12 * i for i in range(len(expected_areas))}
                    | {ends_base + 4 + 8 * i for i in range(len(expected_autoscroll_ends))})
@@ -205,11 +206,16 @@ def verify_patch(path):
         f"Cave A mailbox store check failed: {ins_store.mnemonic} {ins_store.op_str}"
     )
 
-    # 5. Check Cave A -> A_HELPER (Course290_Main opening fists zoom-out lerp) invariants
+    # 5. Check Cave A -> A_HELPER -> R_CAVE (Course290_Main entry ramp & zoom-out lerp) invariants
     assert b_target(0x02138894, patch[0x02138894]) == 0x02138988, "Cave A large room does not branch to A_HELPER"
-    assert patch[0x021389E4] == 2931365200, f"A_HELPER hash != 2931365200: {patch[0x021389E4]}"
-    assert patch[0x021389F0] == 0x41940000, f"A_HELPER g_fist != 18.5f (0x41940000): {patch[0x021389F0]:08X}"
-    assert b_target(0x021389E0, patch[0x021389E0]) == 0x021388A0, "A_HELPER return != 0x021388A0 (Cave A store)"
+    assert patch[0x021389A4] == 2931365200, f"A_HELPER hash != 2931365200: {patch[0x021389A4]}"
+    mn_ah, op_ah = dis(0x0213899C)
+    assert mn_ah == 'b.eq' and int(op_ah.lstrip('#'), 16) == 0x02138B60, f"A_HELPER match branch failed: {mn_ah} {op_ah}"
+    assert b_target(0x021389A0, patch[0x021389A0]) == 0x021388A0, "A_HELPER non-match return != 0x021388A0 (Cave A store)"
+    assert patch[0x02138BBC] == 0x40D00000, f"R_CAVE a != 6.5f (0x40D00000): {patch[0x02138BBC]:08X}"
+    assert patch[0x02138BC4] == 0x42E00000, f"R_CAVE b != 112.0f (0x42E00000): {patch[0x02138BC4]:08X}"
+    assert patch[0x02138BCC] == 0x40300000, f"R_CAVE span_g != 2.75f (0x40300000): {patch[0x02138BCC]:08X}"
+    assert b_target(0x02138BB8, patch[0x02138BB8]) == 0x021388A0, "R_CAVE return != 0x021388A0 (Cave A store)"
 
     print(f"\nverify_pchtxt: OK ({len(lines)} patch lines, {len(EXPECTED_HOOKS)} hooks, "
           f"all invariants verified, 0 errors)")
