@@ -21,8 +21,6 @@ cave F1/F2 @0x02138D00/0x02138D20  hooked at 0x006C6358/0x006C6364 (controller v
         max(15.5, G); width base = [0x2AEE9E8] * s9 / 15.5.
 cave Y  @0x02138D40  hooked at 0x006C66E8 (controller Y limits): in Course152_Sub4 only, the limits use the stock
         half-height (x 15.5 / G), so the camera centre matches stock (3.25) and pins during the fight zoom.
-cave P  @0x02138B60  cave Y's exit for other areas: in Course290_Main only, a view taller than the clamp bounds rests on
-        the bottom limit (upper = max(upper, lower)) instead of being centred, so the intro cutscene matches the autoscroll.
 cave K  @0x02138D88  hooked at 0x01781B70 (GetCameraBoundBox2f): in Course152_Sub4 only, replaces minY/maxY with
         stock -5.50 / 12.00 so Bowser Jr.'s swim AI navigation targets points above the floor and never corners.
 cave G  @0x02138A00  hooked at 0x006C6FD0 (fixed-position camera target, written only by SetAutoScrollPos): X = fixed X +
@@ -496,7 +494,6 @@ emit(H_CAVE, [lambda pc: ldr_s(9, 19, 0x1A0),                                   
 # (written at 0x006C6714 before any read) and s31 are used. With the fight zoom (stock half-height 8.75) the upper limit
 # is set to the lower one, pinning the camera at stock 3.25; the opening cutscene (stock half-height 7.75) keeps both limits.
 Y_CAVE = 0x2138D40
-P_CAVE = 0x2138B60                         # cave P: zero RX words after cave D (0x02138B00..0x02138B5C), before cave E
 Y_HASH = 1778226157                        # Course152_Sub4
 Y_PIN_IMM8 = 0x21                          # fmov #8.5: between the cutscene (7.75) and fight (8.75) stock half-heights
 ylab = {}
@@ -507,7 +504,7 @@ Y_ITEMS = [
     lambda pc: ldr_s(31, 16, 0xF00),                                                    # G
     lambda pc: ldr_w_lit(16, pc, ylab['hash']),
     lambda pc: cmp_w(17, 16),
-    lambda pc: bcond(NE, pc, P_CAVE),                                                   # other areas -> cave P
+    lambda pc: bcond(NE, pc, ylab['ret']),
     lambda pc: FMOV_155(16),
     lambda pc: fdiv_s(16, 16, 31),                                                      # 15.5 / G
     lambda pc: fmul_s(16, 4, 16),                                                       # stock half-height
@@ -524,29 +521,6 @@ Y_ITEMS = [
 Y_END = assemble(Y_CAVE, Y_ITEMS, ylab)
 assert Y_END <= 0x2138D88, hex(Y_END)
 Y_DATA = {ylab['hash']}
-
-# ------------------------------------------------------------------ cave P (Course290_Main: bottom-rest when the view is taller)
-# Cave Y's non-Course152 exit. When the view is taller than the clamp bounds (lower limit s0 > upper limit s2), the stock
-# code at 0x006C66F4 centres the camera in the bounds. Course290_Main's intro cutscene clamps to CameraArea 2220801104
-# (y 19.5..35.0, 15.5 tall), so at G = 18.5 it was centred at 27.25; once the autoscroll starts the bounds are taller and
-# the camera rests on the bottom limit (19.5 + 9.25 = 28.75), so it snapped up 1.25-1.5 blocks (measured in Eden), and the
-# cutscene's lower view edge (18.0) showed Bowser Jr. parked at y ~19.5 that stock hides. Here, in Course290_Main only,
-# upper = max(upper, lower): a too-tall view rests on the bottom limit like the autoscroll camera; bounds taller than the
-# view are unchanged. Uses only x16 and x17 (area hash, loaded by cave Y).
-P_HASH = 2931365200                        # Course290_Main (P_CAVE is defined with cave Y, which branches to it)
-plab = {}
-P_ITEMS = [
-    lambda pc: ldr_w_lit(16, pc, plab['hash']),
-    lambda pc: cmp_w(17, 16),
-    lambda pc: bcond(NE, pc, plab['ret']),                                              # other areas: unchanged
-    lambda pc: fmax_s(2, 2, 0),                                                         # upper = max(upper, lower)
-    'ret',
-    lambda pc: b_(pc, 0x6C66EC),
-    'hash', lambda pc: P_HASH,
-]
-P_END = assemble(P_CAVE, P_ITEMS, plab)
-assert P_END <= 0x2138C00, hex(P_END)
-P_DATA = {plab['hash']}
 
 # ------------------------------------------------------------------ cave K (Course152_Sub4 CameraBoundBox2f Y bounds for Bowser Jr. AI)
 # In Course152_Sub4, pinning the 4:3 camera to y = 3.25 expands the camera frustum's vertical extents to [-8.417, 14.917].
@@ -592,12 +566,12 @@ for a, w in allw:
     seen.add(a)
 ENDS_DATA = {TABLE_ENDS + 4 * i for i in range(2 * (len(AUTOSCROLL_ENDS) + 1))}
 G_HELPER_DATA = {ghlab['thresh']}
-data_addrs = {L_THR, L_G17, L_D17, L_G155, L_D155, F2 + 20} | {TABLE + 4 * i for i in range(3 * (len(BOSS) + 1))} | ENDS_DATA | G_HELPER_DATA | A_HELPER_DATA | G_DATA | Y_DATA | P_DATA | K_DATA
+data_addrs = {L_THR, L_G17, L_D17, L_G155, L_D155, F2 + 20} | {TABLE + 4 * i for i in range(3 * (len(BOSS) + 1))} | ENDS_DATA | G_HELPER_DATA | A_HELPER_DATA | G_DATA | Y_DATA | K_DATA
 if __name__ == '__main__':
     for a, w in allw:
         dis = list(md.disasm(struct.pack('<I', w), a))
         if a in data_addrs or not dis:
-            if a in {TABLE + 12 * i for i in range(len(BOSS))} | {ylab['hash'], plab['hash'], klab['hash'], ahlab['hash']} | {TABLE_ENDS + 8 * i for i in range(len(AUTOSCROLL_ENDS) + 1)}:
+            if a in {TABLE + 12 * i for i in range(len(BOSS))} | {ylab['hash'], klab['hash'], ahlab['hash']} | {TABLE_ENDS + 8 * i for i in range(len(AUTOSCROLL_ENDS) + 1)}:
                 text = f"(data) 0x{w:08X} = hash {w}"
             else:
                 text = f"(data) 0x{w:08X} = {struct.unpack('<f', struct.pack('<I', w))[0]:.6g}"
