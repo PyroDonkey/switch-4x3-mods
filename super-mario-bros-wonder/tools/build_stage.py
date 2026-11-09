@@ -128,16 +128,6 @@ EDITS = [
      (23.5, 48.0, -167.5), (23.5, 49.5, -167.5)),
     ('Course407_Course', 3373664933504165692, 'DVWaKaiganFarIwaA01', 'Scale',
      (0.699999988079071, 0.699999988079071, 0.699999988079071), (0.82, 0.82, 0.82)),
-    # Course853_Main (Sunbaked Desert Special: Pole Block Allure - Wonder finish balloon killer cannon framing):
-    # In 16:9, ObjectBalloonKillerHodaiLeft was placed at X = 251.5 on Wall 5 [247.0, 252.0], framing it 2.75 blocks
-    # inside the 16:9 screen right edge (254.25) when Mario stands on the lower pole at X = 240.5.
-    # In 4:3 (width 21.0), the right edge of the screen reaches only X = 251.0 when Mario is at X = 240.5.
-    # Because ObjectBalloonKillerHodaiLeft requires 'IsFirstInCamera': True to begin firing, being off-screen
-    # prevented it from ever shooting the purple balloon creature, trapping Mario on the pole.
-    # Shifting the cannon left by 3.0 blocks (X = 251.5 -> 248.5) keeps it firmly on Wall 5 while placing it 2.50 blocks
-    # inside the 4:3 screen, matching stock framing and ensuring it fires immediately upon approach.
-    ('Course853_Main', 15389084515446315917, 'ObjectBalloonKillerHodaiLeft', 'Translate',
-     (251.5, 134.0, 0.0), (248.5, 134.0, 0.0)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics
@@ -174,11 +164,23 @@ BG_EDITS = [
 # - Pt 3: (63.0, 41.0, 0.0) -> (63.0, 36.0, 0.0)  (-5.0)
 # This keeps the Wonder Flower (Y = 25.5) +4.00 blocks above the bottom edge while preserving plenty of upper
 # headroom for climbing Snake Pole 1 (Y = 29.5) and Snake Pole 2 (Y = 21.5).
+# Pt 12 (final stop): rail X is the view's LEFT edge (docs/DEVELOPMENT.md section 22, SetAutoScrollPos adds the current
+# half-width), so the stock stop (226.75) frames [226.75, 247.75] in 4:3 versus [226.75, 254.31] in 16:9. The finale
+# cannon ObjectBalloonKillerHodaiLeft (X = 251.5, body 251..252, IsFirstInCamera) was therefore 3.75 blocks past the
+# 4:3 right edge and never started firing. The camera-margin value it tests is not stored in its AI graph, so the stop
+# is taken from an Eden capture of a build with the cannon at X = 248.5 (body 248..249): there the cannon sat 0.335
+# blocks inside the right edge (view [228.34, 249.34], measured from screenshots calibrated on the pole end block at
+# 240.5) and had fired. The stock cannon body ends at 252.0, so stop X = 252.0 + 0.335 - 21.0 = 231.335 frames
+# [231.335, 252.335]: whole cannon and Wall 5 (247..252) in view, pole end (X = 240.5) and Wonder Seed
+# (240.5, 144.24) in view. The pole's first 0.8 blocks (ball at X 230.5) fall off the left edge: pole start to
+# cannon centre is exactly 21.0, the 4:3 width, so both cannot be fully framed with the stock cannon.
+# Y = 147.0 is untouched (rail Y is the view's top edge, so the pole at 133.5 and the cannon at 134.0 stay in frame).
 RAIL_EDITS = [
     ('Course853_Main', 1776580222928036096, 0, (0.0, 17.0, 0.0), (0.0, 14.5, 0.0)),
     ('Course853_Main', 1776580222928036096, 1, (13.0, 17.0, 0.0), (13.0, 14.5, 0.0)),
     ('Course853_Main', 1776580222928036096, 2, (38.0, 25.5, 0.0), (38.0, 22.75, 0.0)),
     ('Course853_Main', 1776580222928036096, 3, (63.0, 41.0, 0.0), (63.0, 36.0, 0.0)),
+    ('Course853_Main', 1776580222928036096, 12, (226.75, 147.0, 0.0), (231.335, 147.0, 0.0)),
 ]
 
 
