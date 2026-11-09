@@ -1,13 +1,14 @@
-"""Stage (BancMapUnit) edits for the 4:3 mod: same-size float and guarded actor-type edits from the 1.2.1 originals.
+"""Stage (BancMapUnit) and Event (EventFlow) edits for the 4:3 mod: same-size float and guarded actor-type edits from the 1.2.1 originals.
 
 usage:
   python build_stage.py <orig_romfs> <out_dir>
-      Writes <out_dir>/romfs/BancMapUnit/<course>.bcett.byml.zs for every course in EDITS.
+      Writes <out_dir>/romfs/BancMapUnit/<course>.bcett.byml.zs for every course in EDITS and
+      <out_dir>/romfs/Event/EventFlow/<flow>.bfevfl.zs for every flow in EVENT_EDITS.
   python build_stage.py --verify <orig_romfs> <mod_romfs>
-      Checks the shipped files in <mod_romfs>/BancMapUnit: exactly the declared courses, each differing from its
-      original only in the declared float/string edits. Exits 1 on any problem.
+      Checks the shipped files in <mod_romfs>: exactly the declared courses/events, each differing from its
+      original only in the declared edits. Exits 1 on any problem.
 
-<orig_romfs> is the extracted 1.2.1 romfs (needs BancMapUnit/).
+<orig_romfs> is the extracted 1.2.1 romfs (needs BancMapUnit/ and Event/EventFlow/).
 """
 import os, struct, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -309,6 +310,20 @@ RAIL_EDITS = [
 ]
 
 
+# (flow, event_name, param_name, byte_offset, orig_val, new_val)
+# CourseDemo_PreFinalBattle (Course290 intro cutscene):
+# Event50 is the final cutscene camera pose before gameplay handoff.
+# Raise TargetYpos 27.5 -> 28.75 to match gameplay camera resting height (19.5 + 9.25 = 28.75)
+# and hide Bowser Jr. parked at y ~19.5..20.1 behind the bottom letterbox bar (covers up to y 20.20).
+EVENT_EDITS = [
+    ('CourseDemo_PreFinalBattle', 'Event50', 'TargetYpos', 0x2D90, 27.5, 28.75),
+]
+
+
+def bfevfl(romfs, flow):
+    return os.path.join(romfs, 'Event', 'EventFlow', f'{flow}.bfevfl.zs')
+
+
 def bcett(romfs, course):
     return os.path.join(romfs, 'BancMapUnit', f'{course}.bcett.byml.zs')
 
@@ -480,6 +495,17 @@ def build(orig_romfs, out_dir):
         assert bytes(d) != bytes(read(src)), f'{course}: no change'
         write(bcett(os.path.join(out_dir, 'romfs'), course), d)
         print('wrote', bcett(os.path.join(out_dir, 'romfs'), course))
+    for flow, ev_name, param, offset, orig_val, new_val in EVENT_EDITS:
+        dst_event_dir = os.path.join(out_dir, 'romfs', 'Event', 'EventFlow')
+        os.makedirs(dst_event_dir, exist_ok=True)
+        src = bfevfl(orig_romfs, flow)
+        d = read(src)
+        assert struct.unpack_from('<f', d, offset)[0] == orig_val, f'{flow} {ev_name} {param}: expected {orig_val}'
+        struct.pack_into('<f', d, offset, new_val)
+        assert struct.unpack_from('<f', d, offset)[0] == new_val, f'{flow} {ev_name} {param}: expected {new_val}'
+        out_path = bfevfl(os.path.join(out_dir, 'romfs'), flow)
+        write(out_path, d)
+        print('wrote', out_path)
 
 
 def verify(orig_romfs, mod_romfs):
@@ -513,6 +539,26 @@ def verify(orig_romfs, mod_romfs):
                        len(edits.get('belts', [])) +
                        len(edits.get('gyaml', [])) + len(edits.get('rails', [])))
             print(f'{course}: {len(diff)} byte(s) differ, all inside {n_total} edit(s)')
+    for flow, ev_name, param, offset, orig_val, new_val in EVENT_EDITS:
+        path = bfevfl(mod_romfs, flow)
+        if not os.path.exists(path):
+            problems.append(f'missing {path}')
+            continue
+        orig = read(bfevfl(orig_romfs, flow))
+        ship = read(path)
+        if len(ship) != len(orig):
+            problems.append(f'{flow}: size {len(ship)} != original {len(orig)}')
+            continue
+        diff = {i for i in range(len(orig)) if orig[i] != ship[i]}
+        allowed = set(range(offset, offset + 4))
+        if not diff:
+            problems.append(f'{flow}: identical to the original')
+        elif diff - allowed:
+            problems.append(f'{flow}: {len(diff - allowed)} byte(s) changed outside the declared edits')
+        elif struct.unpack_from('<f', ship, offset)[0] != new_val:
+            problems.append(f'{flow}: edited value {struct.unpack_from("<f", ship, offset)[0]} != {new_val}')
+        else:
+            print(f'{flow}: {len(diff)} byte(s) differ, exactly {ev_name} {param} {orig_val} -> {new_val}')
     for p in problems:
         print('PROBLEM:', p)
     print(f'{len(problems)} problem(s)')

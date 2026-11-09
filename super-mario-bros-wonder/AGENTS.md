@@ -6,9 +6,9 @@ Read the root [`../AGENTS.md`](../AGENTS.md) first. This file is the **source of
 
 - Title ID `010015100B514000`, **version 1.2.1 only**, build ID `FF773E90972D544EB79406EAA65396D53C43EFB9`.
 - Tested on Eden (yuzu family) with Graphics > Aspect Ratio > **Force 4:3**, on Windows (where agents can probe memory and take screenshots) and on the tester's Retroid Pocket Nova (Android). Other emulators and console are untested.
-- Mod folder: `mod/Native 4x3 Aspect Ratio/` = `exefs/1.2.1.pchtxt` + `romfs/Layout/*.Nin_NX_NVN.blarc.zs` (115 changed archives) + `romfs/BancMapUnit/*.bcett.byml.zs` (10 stage edits: Course152_Sub4, Course411_Course, Course415_Course, Course417_Course, Course403_Course, Course400_Course, Course401_Course, Course408_Course, Course407_Course, Course290_Main) + `README.txt` (ships with the mod; holds no install steps, only the link to `README.md#install`, the one install guide). Named "Nova Aspect Ratio 4x3 Native" before v1.0.0; don't rename it again.
+- Mod folder: `mod/Native 4x3 Aspect Ratio/` = `exefs/1.2.1.pchtxt` + `romfs/Layout/*.Nin_NX_NVN.blarc.zs` (115 changed archives) + `romfs/BancMapUnit/*.bcett.byml.zs` (10 stage edits: Course152_Sub4, Course411_Course, Course415_Course, Course417_Course, Course403_Course, Course400_Course, Course401_Course, Course408_Course, Course407_Course, Course290_Main) + `romfs/Event/EventFlow/CourseDemo_PreFinalBattle.bfevfl.zs` (Course290 cutscene camera) + `README.txt` (ships with the mod; holds no install steps, only the link to `README.md#install`, the one install guide). Named "Nova Aspect Ratio 4x3 Native" before v1.0.0; don't rename it again.
 - Installed for testing at `%APPDATA%\eden\load\010015100B514000\Native 4x3 Aspect Ratio`. Sync with the game closed: `robocopy "mod\Native 4x3 Aspect Ratio" "%APPDATA%\eden\load\010015100B514000\Native 4x3 Aspect Ratio" /MIR` (mirror: deletes archives the build no longer ships).
-- Releases: tag prefix `smbw` (`.github/release-games.json`); procedure in the root AGENTS.md "Releasing". `layout_count` there counts every file under `romfs/` (115 layouts + 10 stage files = 125); bump it when that number changes.
+- Releases: tag prefix `smbw` (`.github/release-games.json`); procedure in the root AGENTS.md "Releasing". `layout_count` there counts every file under `romfs/` (115 layouts + 10 stage files + 1 event file = 126); bump it when that number changes.
 
 ## Local inputs (outside the repo)
 
@@ -30,11 +30,11 @@ python tools/verify.py tools <orig_layout_dir> <out_dir>/romfs/Layout   # must r
 # then replace mod/Native 4x3 Aspect Ratio/romfs/Layout/ with <out_dir>/romfs/Layout/* (delete first: the build
 # leaves unchanged archives out, so a stale file would otherwise stay); update layout_count in release-games.json
 
-# Stage edits (BancMapUnit): rebuild from the originals, then check the shipped files
-python tools/build_stage.py <orig_romfs> <out_dir>                # writes <out_dir>/romfs/BancMapUnit/*.bcett.byml.zs
+# Stage and event edits (BancMapUnit, EventFlow): rebuild from the originals, then check the shipped files
+python tools/build_stage.py <orig_romfs> <out_dir>                # writes BancMapUnit/ and Event/EventFlow/
 python tools/build_stage.py --verify <orig_romfs> "mod/Native 4x3 Aspect Ratio/romfs"   # must report 0 problem(s)
 python -B -m unittest discover -s tools -p test_build_stage.py -v # synthetic float/string-edit safety tests; no originals needed
-# then replace mod/Native 4x3 Aspect Ratio/romfs/BancMapUnit/ with <out_dir>/romfs/BancMapUnit/*
+# then copy <out_dir>/romfs/ into mod/Native 4x3 Aspect Ratio/romfs/
 
 # Code patch: regenerate patch lines, then disassemble the shipped file
 $env:SMBW_MAIN_BIN = '<path>\main-1.2.1.bin'      # PowerShell (bash: export SMBW_MAIN_BIN=...)

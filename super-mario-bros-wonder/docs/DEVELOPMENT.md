@@ -558,3 +558,9 @@ To give players more reaction time during the opening obstacle run, extend the $
 
 - `FinalCourseDemoKoopaJr.pack.zs` `KoopaJrJumpFrame` 45 -> 70 (f432b93) did not hide Bowser Jr. A probe build with 150 looked identical in Eden: he lands at about (25.6, 19.5), just below the floor, and stays until the cutscene ends. The parameter does not control what is seen, so the pack edit (and `build_actor.py`) is reverted.
 - **Lesson:** the predicted fall to y 5.22 was free-fall arithmetic, never measured. Run an exaggerated probe before shipping an actor parameter edit.
+
+
+## 49. 2026-11-09: Course290_Main intro cutscene: final camera pose Y raised to match gameplay
+
+- **Cutscene camera Y vs gameplay camera Y:** `CourseDemo_PreFinalBattle.bfevfl` Event50 (the final cutscene camera pose before gameplay handoff) had `TargetYpos` 27.5 (stock 16:9 bottom rest was 27.25). In 4:3 with $G = 18.5$, gameplay rests at $y = 28.75$ (bottom 19.5 + half-height 9.25), causing a 1.25-block vertical snap at cutscene end.
+- Raising Event50 `TargetYpos` 27.5 -> 28.75 lifts the cutscene bottom edge from 18.25 to 19.50. With the letterbox bar covering ~0.7 block (up to $y = 20.20$), Bowser Jr. parked at $y \sim 19.5..20.1$ is fully concealed, eliminating Bug B and removing the handoff snap (Bug A) with zero gameplay impact.
