@@ -457,7 +457,8 @@ In Course408 (Break Time! Floating Wonder Tokens), the maintainer requested zoom
 **Build and verification:**
 - Stage build wrote mod/Native 4x3 Aspect Ratio/romfs/BancMapUnit/Course408_Course.bcett.byml.zs.
 - uild_stage.py --verify reports 0 problems (7 bytes differ, all inside 3 edits).
-- Verified with erify_pchtxt.py (291 lines, 11 hooks, 0 errors).
+- Verified with 
+erify_pchtxt.py (291 lines, 11 hooks, 0 errors).
 
 ## 39. 2026-11-06: Course407 top-right background void coverage
 
@@ -545,4 +546,8 @@ Lowered Rail `1776580222928036096` points 0–3 in Y to an intermediate vertical
 - Snake Pole 2 ($Y = 21.5$): $+2.65\text{ blk}$ above bottom.
 - Wonder Flower ($Y = 25.5$): $+4.00\text{ blk}$ above bottom, $+11.75\text{ blk}$ below top (solid margin with ample upper headroom).
 - Balloon Killer carrier ($Y = 28.5$): $+5.94\text{ blk}$ above bottom ($+9.81\text{ blk}$ below top).
-Stage verification passes with 0 problems (4 bytes modified, passes all BYML invariants).
+- **Wonder Finish Balloon Killer Cannon Framing (`ObjectBalloonKillerHodaiLeft`):**
+  At the Wonder sequence finale, Mario arrives on the lower snake pole ($X \in [230.5, 240.5], Y = 133.5$) beneath the Wonder Seed (`ItemWonderFinishWonderSead` at $X = 240.5, Y = 144.24$). The green cannon (`ObjectBalloonKillerHodaiLeft` 15389084515446315917) sits atop the sand platform Wall 5 ($X \in [247.0, 252.0]$) at $X = 251.5, Y = 134.0$, firing a purple balloon creature to the left for Mario to bounce up to the Wonder Seed and upper pole.
+  In stock 16:9 ($W = 27.56$), the cannon sat $+2.75\text{ blk}$ inside the right screen edge ($X = 254.25$). In 4:3 ($W = 21.0$), when Mario stands at the end of the pole ($X = 240.5$), the right screen edge only reaches $X = 251.0$. Because `ObjectBalloonKillerHodaiLeft` has `'IsFirstInCamera': True`, sitting off-screen at $X = 251.5$ prevented it from ever triggering its firing cycle, softlocking the player with no balloon creature spawned.
+  Shifted the cannon left by $3.0$ blocks in X via `EDITS` ($X = 251.5 \to 248.5$). The cannon remains securely planted on Wall 5 ($[247.0, 252.0]$) and enters the 4:3 viewport with $+2.50\text{ blk}$ of margin when Mario is at $X = 240.5$, triggering its shot immediately upon approach.
+Stage verification passes with 0 problems (5 bytes modified, passes all BYML invariants).

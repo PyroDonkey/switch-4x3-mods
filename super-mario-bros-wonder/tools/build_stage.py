@@ -128,6 +128,16 @@ EDITS = [
      (23.5, 48.0, -167.5), (23.5, 49.5, -167.5)),
     ('Course407_Course', 3373664933504165692, 'DVWaKaiganFarIwaA01', 'Scale',
      (0.699999988079071, 0.699999988079071, 0.699999988079071), (0.82, 0.82, 0.82)),
+    # Course853_Main (Sunbaked Desert Special: Pole Block Allure - Wonder finish balloon killer cannon framing):
+    # In 16:9, ObjectBalloonKillerHodaiLeft was placed at X = 251.5 on Wall 5 [247.0, 252.0], framing it 2.75 blocks
+    # inside the 16:9 screen right edge (254.25) when Mario stands on the lower pole at X = 240.5.
+    # In 4:3 (width 21.0), the right edge of the screen reaches only X = 251.0 when Mario is at X = 240.5.
+    # Because ObjectBalloonKillerHodaiLeft requires 'IsFirstInCamera': True to begin firing, being off-screen
+    # prevented it from ever shooting the purple balloon creature, trapping Mario on the pole.
+    # Shifting the cannon left by 3.0 blocks (X = 251.5 -> 248.5) keeps it firmly on Wall 5 while placing it 2.50 blocks
+    # inside the 4:3 screen, matching stock framing and ensuring it fires immediately upon approach.
+    ('Course853_Main', 15389084515446315917, 'ObjectBalloonKillerHodaiLeft', 'Translate',
+     (251.5, 134.0, 0.0), (248.5, 134.0, 0.0)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics
