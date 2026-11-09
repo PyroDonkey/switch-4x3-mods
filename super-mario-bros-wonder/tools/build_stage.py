@@ -316,6 +316,7 @@ RAIL_EDITS = [
 # Raise TargetYpos 27.5 -> 28.75 to match gameplay camera resting height (19.5 + 9.25 = 28.75)
 # and hide Bowser Jr. parked at y ~19.5..20.1 behind the bottom letterbox bar (covers up to y 20.20).
 EVENT_EDITS = [
+    ('CourseDemo_PreFinalBattle', 'Event26', 'TargetYpos', 0x2A80, 27.5, 28.75),
     ('CourseDemo_PreFinalBattle', 'Event50', 'TargetYpos', 0x2D90, 27.5, 28.75),
 ]
 
@@ -326,6 +327,13 @@ def bfevfl(romfs, flow):
 
 def bcett(romfs, course):
     return os.path.join(romfs, 'BancMapUnit', f'{course}.bcett.byml.zs')
+
+
+def edits_by_flow():
+    out = {}
+    for e in EVENT_EDITS:
+        out.setdefault(e[0], []).append(e[1:])
+    return out
 
 
 def edits_by_course():
@@ -495,14 +503,15 @@ def build(orig_romfs, out_dir):
         assert bytes(d) != bytes(read(src)), f'{course}: no change'
         write(bcett(os.path.join(out_dir, 'romfs'), course), d)
         print('wrote', bcett(os.path.join(out_dir, 'romfs'), course))
-    for flow, ev_name, param, offset, orig_val, new_val in EVENT_EDITS:
+    for flow, edits in edits_by_flow().items():
         dst_event_dir = os.path.join(out_dir, 'romfs', 'Event', 'EventFlow')
         os.makedirs(dst_event_dir, exist_ok=True)
         src = bfevfl(orig_romfs, flow)
         d = read(src)
-        assert struct.unpack_from('<f', d, offset)[0] == orig_val, f'{flow} {ev_name} {param}: expected {orig_val}'
-        struct.pack_into('<f', d, offset, new_val)
-        assert struct.unpack_from('<f', d, offset)[0] == new_val, f'{flow} {ev_name} {param}: expected {new_val}'
+        for ev_name, param, offset, orig_val, new_val in edits:
+            assert struct.unpack_from('<f', d, offset)[0] == orig_val, f'{flow} {ev_name} {param}: expected {orig_val}'
+            struct.pack_into('<f', d, offset, new_val)
+            assert struct.unpack_from('<f', d, offset)[0] == new_val, f'{flow} {ev_name} {param}: expected {new_val}'
         out_path = bfevfl(os.path.join(out_dir, 'romfs'), flow)
         write(out_path, d)
         print('wrote', out_path)
@@ -539,7 +548,7 @@ def verify(orig_romfs, mod_romfs):
                        len(edits.get('belts', [])) +
                        len(edits.get('gyaml', [])) + len(edits.get('rails', [])))
             print(f'{course}: {len(diff)} byte(s) differ, all inside {n_total} edit(s)')
-    for flow, ev_name, param, offset, orig_val, new_val in EVENT_EDITS:
+    for flow, edits in edits_by_flow().items():
         path = bfevfl(mod_romfs, flow)
         if not os.path.exists(path):
             problems.append(f'missing {path}')
@@ -549,16 +558,19 @@ def verify(orig_romfs, mod_romfs):
         if len(ship) != len(orig):
             problems.append(f'{flow}: size {len(ship)} != original {len(orig)}')
             continue
+        allowed = set()
+        for ev_name, param, offset, orig_val, new_val in edits:
+            if struct.unpack_from('<f', ship, offset)[0] != new_val:
+                problems.append(f'{flow}: edited value {struct.unpack_from("<f", ship, offset)[0]} != {new_val}')
+            allowed.update(range(offset, offset + 4))
         diff = {i for i in range(len(orig)) if orig[i] != ship[i]}
-        allowed = set(range(offset, offset + 4))
         if not diff:
             problems.append(f'{flow}: identical to the original')
         elif diff - allowed:
             problems.append(f'{flow}: {len(diff - allowed)} byte(s) changed outside the declared edits')
-        elif struct.unpack_from('<f', ship, offset)[0] != new_val:
-            problems.append(f'{flow}: edited value {struct.unpack_from("<f", ship, offset)[0]} != {new_val}')
         else:
-            print(f'{flow}: {len(diff)} byte(s) differ, exactly {ev_name} {param} {orig_val} -> {new_val}')
+            names = ', '.join(f'{ev} {param} {old} -> {new}' for ev, param, _, old, new in edits)
+            print(f'{flow}: {len(diff)} byte(s) differ, exactly {names}')
     for p in problems:
         print('PROBLEM:', p)
     print(f'{len(problems)} problem(s)')

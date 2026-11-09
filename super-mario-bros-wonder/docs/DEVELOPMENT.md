@@ -564,3 +564,10 @@ To give players more reaction time during the opening obstacle run, extend the $
 
 - **Cutscene camera Y vs gameplay camera Y:** `CourseDemo_PreFinalBattle.bfevfl` Event50 (the final cutscene camera pose before gameplay handoff) had `TargetYpos` 27.5 (stock 16:9 bottom rest was 27.25). In 4:3 with $G = 18.5$, gameplay rests at $y = 28.75$ (bottom 19.5 + half-height 9.25), causing a 1.25-block vertical snap at cutscene end.
 - Raising Event50 `TargetYpos` 27.5 -> 28.75 lifts the cutscene bottom edge from 18.25 to 19.50. With the letterbox bar covering ~0.7 block (up to $y = 20.20$), Bowser Jr. parked at $y \sim 19.5..20.1$ is fully concealed, eliminating Bug B and removing the handoff snap (Bug A) with zero gameplay impact.
+
+## 50. 2026-11-09: Course290_Main intro cutscene: Event26 knuckle-slam camera pose Y raised to match Event50
+
+- **Knuckle slam cutscene camera Y:** `CourseDemo_PreFinalBattle.bfevfl` Event26 holds the camera pose across all 4 knuckle slams while Bowser Jr. sits in the pit. It still had stock `TargetYpos` 27.5 (view $Y \in [18.25, 36.75]$). In Eden screenshots, Bowser Jr. parked at $(X \approx 25.6, Y \approx 19.5)$ protruded 29 px ($y \in [1006, 1034]$) above the lower letterbox bar ($y \ge 1035$).
+- Raising Event26 `TargetYpos` 27.5 -> 28.75 lifts the letterbox bar by ~73 px (view bottom $18.25 \to 19.50$), placing Bowser Jr.'s peak at $y = 1079$ (44 px inside the letterbox bar) and fully concealing him throughout the knuckle slams with zero actor or timing edits.
+- **Camera path flattening:** Preceding Event233 uses $Y = 29.0$. With Event26 and Event50 both at $Y = 28.75$, the camera trajectory across the entire latter half of the cutscene is nearly flat ($29.0 \to 28.75 \to 28.75$), completely eliminating the sharp dip down to 27.5 and the subsequent rise back to 28.75.
+- **Top void clearance:** At $Y = 28.75$, view top is $38.00$, leaving $0.25$ blocks ($15$ px) clearance below the background smoke planes at $38.25$ and $38.35$ with zero top void exposure.
