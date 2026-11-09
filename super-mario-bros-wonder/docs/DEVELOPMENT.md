@@ -519,3 +519,30 @@ This supersedes §§38 and 41 for Course408. Rebuild and verification: `build_st
 The maintainer play-tested the current build in Windows/Eden and approved Course401, Course404, Course407 and Course408. Course409 remains stock on the TODO list. Course408 is described in §42; Course401 keeps its 14 ice-block Y moves, Course407 keeps the A01 pillar translate/scale, and Course404 keeps its `Course404_Main` BOSS entry. Completion and retry were not separately reported for these four courses.
 
 The mod now ships 124 romfs files (115 layouts + 9 stage archives). Patch SHA-256: `636492eb2b6a2bac8098d70f409aaf4b38ca1109d4ff3e842791e83e5962aadf`. Stage verification covers all nine stage files with 0 problems; `scripts/check_repo.py` passes.
+
+## 44. 2026-11-09: Course853_Main (Pole Block Allure) autoscroll rail repositioning
+
+**Context & Findings:**
+In *Sunbaked Desert Special: Pole Block Allure* (`Course853_Main`, RootAreaHash `2118979906`), the camera autoscroll is driven by `AutoScrollControlSignalFrame` (`6045299945089365584`) bound to Rail `1776580222928036096` with `setYfree = False`. The stock rail points were authored to climb rapidly: Pt 0 `(0.0, 17.0)` -> Pt 1 `(13.0, 17.0)` -> Pt 2 `(38.0, 25.5)` -> Pt 3 `(63.0, 41.0)` -> Pt 4 `(96.0, 55.0)`.
+In 4:3 (height 15.75, width 21.0), this climb lifts the camera far above Mario and the gameplay poles (which sit at $Y \in [4.5, 15.5]$):
+- At Pt 3 ($X = 63.0, Y = 41.0$), the camera bottom edge reaches $Y = 33.12$. The Wonder Flower (`ItemWonderHole` 4542071052577928248) sits at $X = 71.50, Y = 25.50$ inside `EnemyBalloonKiller` at $Y = 28.50$, placing it **7.62 blocks below the bottom edge of the screen**, completely off-screen and nearly impossible to hit.
+- Lower poles (Pole 1 at $Y = 8.5$, Pole 2 at $Y = 14.5$, Pole 3 at $Y = 15.5$, Snake Pole 2 at $Y = 21.5$) suffer severe bottom clipping and poor tracking.
+- An initial experiment with global zoom override ($G = 20.67$) was evaluated and rejected: zooming out only expands the view around the high rail center, failing to bring the camera down to Mario's eye level.
+
+**Solution (`RAIL_EDITS` in `tools/build_stage.py`):**
+Lowered Rail `1776580222928036096` points 0–3 in Y to an intermediate vertical profile:
+- Pt 0: `(0.0, 17.0, 0.0)` -> `(0.0, 14.5, 0.0)` ($-2.5$)
+- Pt 1: `(13.0, 17.0, 0.0)` -> `(13.0, 14.5, 0.0)` ($-2.5$)
+- Pt 2: `(38.0, 25.5, 0.0)` -> `(38.0, 22.75, 0.0)` ($-2.75$)
+- Pt 3: `(63.0, 41.0, 0.0)` -> `(63.0, 36.0, 0.0)` ($-5.0$)
+- Pt 4+: Kept at stock `(96.0, 55.0, 0.0)` for the upper post-wonder platform.
+
+**Verified Framing Results in Native 4:3 ($G = 15.75$):**
+- Start Platform ($Y = 4.5$): ground clearance $-2.12\text{ blk}$ from camera bottom (centered view).
+- Pole 1 ($Y = 8.5$): $+1.88\text{ blk}$ above bottom.
+- Pole 2 ($Y = 14.5$): $+5.40\text{ blk}$ above bottom, $+10.35\text{ blk}$ below top.
+- Pole 3 ($Y = 15.5$): $+1.78\text{ blk}$ above bottom.
+- Snake Pole 2 ($Y = 21.5$): $+2.65\text{ blk}$ above bottom.
+- Wonder Flower ($Y = 25.5$): $+4.00\text{ blk}$ above bottom, $+11.75\text{ blk}$ below top (solid margin with ample upper headroom).
+- Balloon Killer carrier ($Y = 28.5$): $+5.94\text{ blk}$ above bottom ($+9.81\text{ blk}$ below top).
+Stage verification passes with 0 problems (4 bytes modified, passes all BYML invariants).
