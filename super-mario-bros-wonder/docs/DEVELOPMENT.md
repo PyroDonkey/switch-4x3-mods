@@ -457,7 +457,8 @@ In Course408 (Break Time! Floating Wonder Tokens), the maintainer requested zoom
 **Build and verification:**
 - Stage build wrote mod/Native 4x3 Aspect Ratio/romfs/BancMapUnit/Course408_Course.bcett.byml.zs.
 - uild_stage.py --verify reports 0 problems (7 bytes differ, all inside 3 edits).
-- Verified with erify_pchtxt.py (291 lines, 11 hooks, 0 errors).
+- Verified with 
+erify_pchtxt.py (291 lines, 11 hooks, 0 errors).
 
 ## 39. 2026-11-06: Course407 top-right background void coverage
 
@@ -519,6 +520,47 @@ This supersedes §§38 and 41 for Course408. Rebuild and verification: `build_st
 The maintainer play-tested the current build in Windows/Eden and approved Course401, Course404, Course407 and Course408. Course409 remains stock on the TODO list. Course408 is described in §42; Course401 keeps its 14 ice-block Y moves, Course407 keeps the A01 pillar translate/scale, and Course404 keeps its `Course404_Main` BOSS entry. Completion and retry were not separately reported for these four courses.
 
 The mod now ships 124 romfs files (115 layouts + 9 stage archives). Patch SHA-256: `636492eb2b6a2bac8098d70f409aaf4b38ca1109d4ff3e842791e83e5962aadf`. Stage verification covers all nine stage files with 0 problems; `scripts/check_repo.py` passes.
+
+## 44. 2026-11-09: Course853_Main (Pole Block Allure) autoscroll rail repositioning
+
+**Context & Findings:**
+In *Sunbaked Desert Special: Pole Block Allure* (`Course853_Main`, RootAreaHash `2118979906`), the camera autoscroll is driven by `AutoScrollControlSignalFrame` (`6045299945089365584`) bound to Rail `1776580222928036096` with `setYfree = False`. The stock rail points were authored to climb rapidly: Pt 0 `(0.0, 17.0)` -> Pt 1 `(13.0, 17.0)` -> Pt 2 `(38.0, 25.5)` -> Pt 3 `(63.0, 41.0)` -> Pt 4 `(96.0, 55.0)`.
+In 4:3 (height 15.75, width 21.0), this climb lifts the camera far above Mario and the gameplay poles (which sit at $Y \in [4.5, 15.5]$):
+- At Pt 3 ($X = 63.0, Y = 41.0$), the camera bottom edge reaches $Y = 33.12$. The Wonder Flower (`ItemWonderHole` 4542071052577928248) sits at $X = 71.50, Y = 25.50$ inside `EnemyBalloonKiller` at $Y = 28.50$, placing it **7.62 blocks below the bottom edge of the screen**, completely off-screen and nearly impossible to hit.
+- Lower poles (Pole 1 at $Y = 8.5$, Pole 2 at $Y = 14.5$, Pole 3 at $Y = 15.5$, Snake Pole 2 at $Y = 21.5$) suffer severe bottom clipping and poor tracking.
+- An initial experiment with global zoom override ($G = 20.67$) was evaluated and rejected: zooming out only expands the view around the high rail center, failing to bring the camera down to Mario's eye level.
+
+**Solution (`RAIL_EDITS` in `tools/build_stage.py`):**
+Lowered Rail `1776580222928036096` points 0–3 in Y to an intermediate vertical profile:
+- Pt 0: `(0.0, 17.0, 0.0)` -> `(0.0, 14.5, 0.0)` ($-2.5$)
+- Pt 1: `(13.0, 17.0, 0.0)` -> `(13.0, 14.5, 0.0)` ($-2.5$)
+- Pt 2: `(38.0, 25.5, 0.0)` -> `(38.0, 22.75, 0.0)` ($-2.75$)
+- Pt 3: `(63.0, 41.0, 0.0)` -> `(63.0, 36.0, 0.0)` ($-5.0$)
+- Pt 4+: Kept at stock `(96.0, 55.0, 0.0)` for the upper post-wonder platform.
+
+**Verified Framing Results in Native 4:3 ($G = 15.75$):**
+- Start Platform ($Y = 4.5$): ground clearance $-2.12\text{ blk}$ from camera bottom (centered view).
+- Pole 1 ($Y = 8.5$): $+1.88\text{ blk}$ above bottom.
+- Pole 2 ($Y = 14.5$): $+5.40\text{ blk}$ above bottom, $+10.35\text{ blk}$ below top.
+- Pole 3 ($Y = 15.5$): $+1.78\text{ blk}$ above bottom.
+- Snake Pole 2 ($Y = 21.5$): $+2.65\text{ blk}$ above bottom.
+- Wonder Flower ($Y = 25.5$): $+4.00\text{ blk}$ above bottom, $+11.75\text{ blk}$ below top (solid margin with ample upper headroom).
+- Balloon Killer carrier ($Y = 28.5$): $+5.94\text{ blk}$ above bottom ($+9.81\text{ blk}$ below top).
+- **Wonder Finish Balloon Killer Cannon Framing (`ObjectBalloonKillerHodaiLeft`):**
+  At the Wonder sequence finale, Mario arrives on the lower snake pole ($X \in [230.5, 240.5], Y = 133.5$) beneath the Wonder Seed (`ItemWonderFinishWonderSead` at $X = 240.5, Y = 144.24$). The green cannon (`ObjectBalloonKillerHodaiLeft` 15389084515446315917) sits atop the sand platform Wall 5 ($X \in [247.0, 252.0]$) at $X = 251.5, Y = 134.0$, firing a purple balloon creature to the left for Mario to bounce up to the Wonder Seed and upper pole.
+  In stock 16:9 ($W = 27.56$), the cannon sat $+2.75\text{ blk}$ inside the right screen edge ($X = 254.25$). In 4:3 ($W = 21.0$), when Mario stands at the end of the pole ($X = 240.5$), the right screen edge only reaches $X = 251.0$. Because `ObjectBalloonKillerHodaiLeft` has `'IsFirstInCamera': True`, sitting off-screen at $X = 251.5$ prevented it from ever triggering its firing cycle, softlocking the player with no balloon creature spawned.
+  Shifted the cannon left by $3.0$ blocks in X via `EDITS` ($X = 251.5 \to 248.5$). The cannon remains securely planted on Wall 5 ($[247.0, 252.0]$) and enters the 4:3 viewport with $+2.50\text{ blk}$ of margin when Mario is at $X = 240.5$, triggering its shot immediately upon approach.
+Stage verification passes with 0 problems (5 bytes modified, passes all BYML invariants).
+
+## 45. 2026-11-09: Course853_Main finale camera stop moved right (corrects section 44's cannon cause)
+
+**Correction to section 44:** the camera model there (rail point = view centre) is wrong for SMBW autoscrolls. As in section 22, rail X is the view's left edge (the game adds the current half-width) and rail Y is the view's top edge (section 22: fixed Y = rail Y - half-height). The finale confirms it: the last rail point (226.75, 147.0) is the left edge of the authored room (`CameraArea` 12037923009706981632 spans X 226.75..254.25), and with Y as the top edge the pole (133.5), cannon (134.0) and Wonder Seed (144.24) all fit between 147.0 and 131.25; Y as the centre would put the pole off-screen in stock 16:9. The Y numbers quoted in section 44 ("camera bottom 33.12", "+4.00 blk above bottom") therefore do not hold; the Y retune itself was play-tested and stays.
+
+**Cause of the dead cannon:** the stock stop leaves the 4:3 view left-aligned at [226.75, 247.75]. After 2 s still, cave G pans towards Mario inside [0, 2 delta], but Mario at the pole end (X 240.5) only pulls the view to [230.0, 251.0], so `ObjectBalloonKillerHodaiLeft` (X 251.5, `IsFirstInCamera: True`) is never inside the camera and never starts firing. A cannon-only shift (section 44, 251.5 -> 248.5) would still leave it 0.75 blocks outside the left-aligned view, so it was dropped.
+
+**Fix (`RAIL_EDITS`):** final point 12 of rail `1776580222928036096`, `(226.75, 147.0, 0.0)` -> `(231.335, 147.0, 0.0)`. Earlier candidates 232.0 and 233.3056 were derived from the stock 16:9 offsets and were never loaded in Eden (it still held the section 44 build, SHA-256 prefix 121bbf30...). The final value comes from two Eden captures of that build (1440x1080, 21.0 blocks wide = 68.571 px per block): capture 1 shows the stock stop, with the pole end block at pixel 942 = X 240.49, so the view is [226.75, 247.75] and the shifted cannon (248.5) is off-screen; capture 2 shows the view 1.59 blocks further right, [228.34, 249.34], with the cannon body 0.335 blocks inside the right edge, already fired. `InsideCameraMarginX` is not stored in the cannon's AI graph, so that observed margin is the reference. With the stock cannon (body right edge 252.0) the same margin gives 252.0 + 0.335 - 21.0 = 231.335, view [231.335, 252.335]. Y is unchanged (bottom 131.25, pole 133.5, cannon 134..136, seed 144.24). Trade-off: pole start to cannon centre is exactly 21.0 blocks, the 4:3 width, so the pole's first 0.8 blocks (ball at X 230.5) fall off the left edge; the capture-2 framing (pole ball visible) is only possible with the cannon shifted left 3.0. Other effects to watch: the last segment (pt 11 -> 12, 180 frames) now covers 11.3 blocks in X instead of 6.75, and cave G's stopped-scroll pan can reach a right edge up to about 258.9.
+
+**Status:** built; `build_stage.py --verify` 0 problems (Course853_Main 5 rail edits, no actor edits), 16 unit tests, `verify_pchtxt.py` and `check_repo.py` OK. **Confirmed in Eden on 2026-11-09:** at the new stop the cannon fires and the Wonder Seed is reachable; the maintainer also play-tested the section 44 Y retune. The section 44 cannon shift (`EDITS`) was removed at the maintainer's request, so the cannon is back at its stock position (251.5, 134.0); the camera stop is the only finale change.
 
 ## 46. 2026-11-09: World 1 map, hidden warp pipe off-screen (World001 subregion 22 look-at moved)
 

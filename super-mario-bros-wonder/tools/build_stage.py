@@ -172,6 +172,38 @@ BG_EDITS = [
     ('Course152_Sub4', 1, 2, 0, (79.0, -7.0, 0.0), (79.0, -10.0, 0.0)),
     ('Course152_Sub4', 1, 2, 21, (92.0, -7.0, 0.0), (92.0, -10.0, 0.0)),
 ]
+# (course, rail_hash, point_idx, orig_xyz, new_xyz)
+# Course853_Main (Sunbaked Desert Special: Pole Block Allure - Autoscroll rail intermediate vertical centering):
+# In 4:3 (height 15.75, width 21.0), the authored autoscroll rail 1776580222928036096 climb (Y = 17 -> 25.5 -> 41)
+# lifts the camera far above Mario and the poles (which sit at Y = 4.5..15.5). At pt 3 (X = 63, Y = 41), the camera
+# bottom reaches Y = 33.12, causing the Wonder Flower (ItemWonderHole at Y = 25.5) and lower poles to be cut off
+# below the screen by 7.62 blocks.
+# Lower points 0-3 vertically to an intermediate 50% position between stock and the low-profile tuning:
+# - Pt 0: (0.0, 17.0, 0.0) -> (0.0, 14.5, 0.0)   (-2.5)
+# - Pt 1: (13.0, 17.0, 0.0) -> (13.0, 14.5, 0.0) (-2.5)
+# - Pt 2: (38.0, 25.5, 0.0) -> (38.0, 22.75, 0.0)(-2.75)
+# - Pt 3: (63.0, 41.0, 0.0) -> (63.0, 36.0, 0.0)  (-5.0)
+# This keeps the Wonder Flower (Y = 25.5) +4.00 blocks above the bottom edge while preserving plenty of upper
+# headroom for climbing Snake Pole 1 (Y = 29.5) and Snake Pole 2 (Y = 21.5).
+# Pt 12 (final stop): rail X is the view's LEFT edge (docs/DEVELOPMENT.md section 22, SetAutoScrollPos adds the current
+# half-width), so the stock stop (226.75) frames [226.75, 247.75] in 4:3 versus [226.75, 254.31] in 16:9. The finale
+# cannon ObjectBalloonKillerHodaiLeft (X = 251.5, body 251..252, IsFirstInCamera) was therefore 3.75 blocks past the
+# 4:3 right edge and never started firing. The camera-margin value it tests is not stored in its AI graph, so the stop
+# is taken from an Eden capture of a build with the cannon at X = 248.5 (body 248..249): there the cannon sat 0.335
+# blocks inside the right edge (view [228.34, 249.34], measured from screenshots calibrated on the pole end block at
+# 240.5) and had fired. The stock cannon body ends at 252.0, so stop X = 252.0 + 0.335 - 21.0 = 231.335 frames
+# [231.335, 252.335]: whole cannon and Wall 5 (247..252) in view, pole end (X = 240.5) and Wonder Seed
+# (240.5, 144.24) in view. The pole's first 0.8 blocks (ball at X 230.5) fall off the left edge: pole start to
+# cannon centre is exactly 21.0, the 4:3 width, so both cannot be fully framed with the stock cannon.
+# Y = 147.0 is untouched (rail Y is the view's top edge, so the pole at 133.5 and the cannon at 134.0 stay in frame).
+RAIL_EDITS = [
+    ('Course853_Main', 1776580222928036096, 0, (0.0, 17.0, 0.0), (0.0, 14.5, 0.0)),
+    ('Course853_Main', 1776580222928036096, 1, (13.0, 17.0, 0.0), (13.0, 14.5, 0.0)),
+    ('Course853_Main', 1776580222928036096, 2, (38.0, 25.5, 0.0), (38.0, 22.75, 0.0)),
+    ('Course853_Main', 1776580222928036096, 3, (63.0, 41.0, 0.0), (63.0, 36.0, 0.0)),
+    ('Course853_Main', 1776580222928036096, 12, (226.75, 147.0, 0.0), (231.335, 147.0, 0.0)),
+]
+
 
 
 def bcett(romfs, course):
@@ -181,11 +213,13 @@ def bcett(romfs, course):
 def edits_by_course():
     out = {}
     for e in EDITS:
-        out.setdefault(e[0], {'actors': [], 'bg': [], 'gyaml': []})['actors'].append(e)
+        out.setdefault(e[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['actors'].append(e)
     for b_edit in BG_EDITS:
-        out.setdefault(b_edit[0], {'actors': [], 'bg': [], 'gyaml': []})['bg'].append(b_edit)
+        out.setdefault(b_edit[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['bg'].append(b_edit)
     for g_edit in GYAML_EDITS:
-        out.setdefault(g_edit[0], {'actors': [], 'bg': [], 'gyaml': []})['gyaml'].append(g_edit)
+        out.setdefault(g_edit[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['gyaml'].append(g_edit)
+    for r_edit in RAIL_EDITS:
+        out.setdefault(r_edit[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['rails'].append(r_edit)
     return out
 
 
@@ -280,6 +314,28 @@ def apply(d, course_edits):
         for eslot, _ in b.vec3(p, 'Translate'):
             allowed.update(range(eslot, eslot + 4))
 
+    rails_slots = b.array_slots(root['Rails'][2]) if 'Rails' in root else []
+    all_rpts = []
+    for s in rails_slots:
+        rdict = b.hash_entries(s[2])
+        if 'Points' in rdict:
+            for ps in b.array_slots(rdict['Points'][2]):
+                all_rpts.append(b.hash_entries(ps[2]))
+    for course, rhash, pidx, orig, new in course_edits.get('rails', []):
+        matching_rails = [b.hash_entries(s[2]) for s in rails_slots if b.hash_of(b.hash_entries(s[2])) == rhash]
+        assert len(matching_rails) == 1, f'{course} rail {rhash}: {len(matching_rails)} matches'
+        rdict = matching_rails[0]
+        pts = b.array_slots(rdict['Points'][2])
+        p = b.hash_entries(pts[pidx][2])
+        node = p['Translate'][2]
+        sharers = [pt for pt in all_rpts if pt['Translate'][2] == node]
+        assert len(sharers) == 1, f'{course} Rail {rhash} Pt {pidx}: Translate shared by {len(sharers)} points'
+        cur = [v for _, v in b.vec3(p, 'Translate')]
+        assert cur == list(orig), f'{course} Rail {rhash} Pt {pidx}: {cur}, expected {orig}'
+        b.set_vec3(p, 'Translate', new)
+        for eslot, _ in b.vec3(p, 'Translate'):
+            allowed.update(range(eslot, eslot + 4))
+
     for course, hashes, original, replacement in course_edits.get('gyaml', []):
         allowed.update(replace_actor_gyaml(d, hashes, original, replacement))
     return allowed
@@ -324,7 +380,7 @@ def verify(orig_romfs, mod_romfs):
         elif bytes(ship) != bytes(ref):
             problems.append(f'{course}: edited values differ from the edit tables')
         elif diff:
-            n_total = len(edits.get('actors', [])) + len(edits.get('bg', [])) + len(edits.get('gyaml', []))
+            n_total = len(edits.get('actors', [])) + len(edits.get('bg', [])) + len(edits.get('gyaml', [])) + len(edits.get('rails', []))
             print(f'{course}: {len(diff)} byte(s) differ, all inside {n_total} edit(s)')
     for p in problems:
         print('PROBLEM:', p)
