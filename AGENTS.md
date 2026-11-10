@@ -59,8 +59,8 @@ Players get mods only through GitHub Releases: one zip per game version, linked 
 
 1. Make the player docs true for this build: the game README's Known limits ("played and checked" vs "not yet played") and the `## v<version>` section of `<game-folder>/CHANGELOG.md` (it becomes the release notes). Commit everything and push.
 2. `python scripts/release.py package <prefix> <version>` builds `dist/<zip>` and `dist/notes.md` from HEAD. The tester installs that zip, following only the README's Install section, before any mod change is released.
-3. `python scripts/release.py publish <prefix> <version>`: re-checks, tags HEAD `<prefix>-v<version>`, pushes, waits until the workflow has published the release with its zip (`--latest=false`, since "Latest" is repo-wide), then rewrites the `<!-- download:<prefix> -->` links in the root and game READMEs, commits and pushes them. The links never point at a zip that doesn't exist.
-4. A suffixed version (`1.1.0-rc.1`) is a pre-release: the links are left alone.
+3. `python scripts/release.py publish <prefix> <version>`: re-checks, tags HEAD `<prefix>-v<version>`, pushes, waits until the workflow has published the release with its zip (`--latest=false`, since "Latest" is repo-wide), then rewrites the `<!-- download:<prefix> -->` links in the root and game READMEs, commits and pushes them. The links never point at a zip that doesn't exist. Last, it folds the notes of that game's older releases into `<details>` so only the current release's notes are open on the releases page (`release.py collapse <prefix> <version> [--dry-run]` does just this step; already-folded notes are skipped).
+4. A suffixed version (`1.1.0-rc.1`) is a pre-release: the links are left alone and no notes are folded.
 
 If `publish` stops waiting (20 min): check the Actions tab.
 - **Transient failure** (runner, network): re-run the job; then `python scripts/release.py links <prefix> <version>`.

@@ -5,13 +5,18 @@ usage:
   python scripts/release.py package <game> <version>     checks + dist/<zip> + dist/notes.md, built from HEAD
   python scripts/release.py publish <game> <version>     tag HEAD and push it, wait for the workflow's release,
                                                          then commit and push the README Download links
-  python scripts/release.py links   <game> <version>     only the last step (if publish stopped waiting)
+  python scripts/release.py links   <game> <version>     only the last step (if publish stopped waiting); it also
+                                                         collapses the older releases' notes
+  python scripts/release.py collapse <game> <version> [--dry-run]
+                                                         fold the notes of every release older than <version>
   python scripts/release.py ci <tag>                     used by .github/workflows/release.yml
 
 The Download links change only after the release and its zip exist, so a failed workflow never leaves a dead link.
-A version with a suffix (1.1.0-rc.1) is a pre-release: the links are left alone.
+A version with a suffix (1.1.0-rc.1) is a pre-release: the links are left alone and no notes are collapsed.
+Collapsing wraps an older release's notes in <details> so the releases page shows them folded; the zip, tag and
+title are untouched, and notes that are already folded are skipped.
 """
-import io, json, os, re, shutil, subprocess, sys, tarfile, time, zipfile
+import io, json, os, re, shutil, subprocess, sys, tarfile, tempfile, time, zipfile
 
 import check_repo
 
@@ -216,18 +221,65 @@ def wait_for_release(tag, zip_name, timeout=1200):
                        f'{tag.split("-v", 1)[1]}')
 
 
+COLLAPSED = '<details>'
+
+
+def version_key(version):
+    """Sort key: 1.2.0-rc.1 comes before 1.2.0."""
+    m = SEMVER.match(version)
+    return tuple(int(x) for x in m.group(1, 2, 3)) + (0 if m.group(4) else 1,)
+
+
+def gh_run(*args):
+    r = subprocess.run([gh(), *args, '--repo', REPO], capture_output=True, text=True, encoding='utf-8')
+    if r.returncode:
+        raise ReleaseError(f"gh {' '.join(args)} failed: {r.stderr.strip()}")
+    return r.stdout
+
+
+def collapse(game, version, dry_run=False):
+    """Wrap the notes of every <game> release older than <version> in <details>, so only the current one is open."""
+    game_cfg(game)
+    if not SEMVER.match(version):
+        raise ReleaseError(f"version '{version}' is not SemVer")
+    current = f'{game}-v{version}'
+    releases = json.loads(gh_run('release', 'list', '--limit', '200', '--json', 'tagName,isDraft'))
+    tags = {r['tagName'] for r in releases if not r['isDraft']}
+    if current not in tags:
+        raise ReleaseError(f'no published release {current}; nothing collapsed')
+    older = sorted((t for t in tags if t.startswith(f'{game}-v') and SEMVER.match(t[len(game) + 2:])
+                    and version_key(t[len(game) + 2:]) < version_key(version)),
+                   key=lambda t: version_key(t[len(game) + 2:]))
+    for tag in older:
+        body = json.loads(gh_run('release', 'view', tag, '--json', 'body'))['body'] or ''
+        if body.lstrip().startswith(COLLAPSED):
+            continue
+        if dry_run:
+            print(f'would collapse {tag}')
+            continue
+        folded = f'{COLLAPSED}<summary>Release notes</summary>\n\n{body.strip()}\n\n</details>\n'
+        with tempfile.NamedTemporaryFile('w', suffix='.md', encoding='utf-8', newline='\n', delete=False) as f:
+            f.write(folded)
+        try:
+            gh_run('release', 'edit', tag, '--notes-file', f.name)
+        finally:
+            os.unlink(f.name)
+        print(f'collapsed the notes of {tag}')
+
+
 def links(game, version):
-    """Point the README Download links at a published release, commit and push."""
+    """Point the README Download links at a published release, commit and push; then fold older release notes."""
     tag, zip_name, url, title = names(game, version)
     require_clean_main()
     changed = update_links(game, version)
     if not git('status', '--porcelain').strip():
         print('Download links already point at this release')
-        return
-    git('add', *changed)
-    git('commit', '-m', f'Point Download links at {game} v{version}')
-    git('push', 'origin', 'main')
-    print(f'Download links updated: {url}')
+    else:
+        git('add', *changed)
+        git('commit', '-m', f'Point Download links at {game} v{version}')
+        git('push', 'origin', 'main')
+        print(f'Download links updated: {url}')
+    collapse(game, version)
 
 
 def publish(game, version):
@@ -256,12 +308,14 @@ def ci(tag, out=DIST):
 
 
 def main(argv):
-    if len(argv) < 2 or argv[0] not in ('check', 'package', 'publish', 'links', 'ci'):
+    if len(argv) < 2 or argv[0] not in ('check', 'package', 'publish', 'links', 'collapse', 'ci'):
         sys.exit(__doc__)
     cmd = argv[0]
     try:
         if cmd == 'ci':
             ci(argv[1])
+        elif cmd == 'collapse' and len(argv) in (3, 4) and argv[3:] in ([], ['--dry-run']):
+            collapse(argv[1], argv[2], dry_run=argv[3:] == ['--dry-run'])
         elif len(argv) != 3:
             sys.exit(__doc__)
         elif cmd == 'check':
