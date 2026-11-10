@@ -136,6 +136,19 @@ EDITS = [
     # Confirmed in Eden 2026-11-09.
     ('World001', 2929358336, 'WorldMapCameraLookAtTag', 'Translate',
      (87.25, -11.0, 24.5), (91.25, -11.0, 24.5)),
+    # Course022_Main (W2 Outmaway Valley), Wonder autoscroll (rail x 445.25 -> 693.0, the rail point is the view's
+    # left edge): the rolling snow hill knocks the goal pole down and carries it round, and the finish Wonder Seed
+    # (obj8927, GravityOn at x 693.5) drops when CourseDisplayBoxSwitch obj8878 enters the view, timed to land on
+    # the pole's tip. The 4:3 view is 21.0 wide (G 15.75) against 27.5556, so the box entered 6.5556 blocks of
+    # scroll late and the seed missed the pole and fell out of the course. Moving each display-box switch of the
+    # section left by 6.5556 makes it fire at the stock scroll position; the other two create the Mini Lucky
+    # Coins bound to the rolling hill.
+    ('Course022_Main', 3802668973, 'CourseDisplayBoxSwitch', 'Translate',
+     (715.5, 9.0, 0.0), (708.9444, 9.0, 0.0)),
+    ('Course022_Main', 14721847139351791685, 'CourseDisplayBoxSwitch', 'Translate',
+     (574.5, 14.5, 0.0), (567.9444, 14.5, 0.0)),
+    ('Course022_Main', 16130168003287809964, 'CourseDisplayBoxSwitch', 'Translate',
+     (596.5, 13.5, 0.0), (589.9444, 13.5, 0.0)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics
