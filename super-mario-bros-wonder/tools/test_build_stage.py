@@ -194,5 +194,29 @@ class ReplaceActorGyamlTests(unittest.TestCase):
         self.assert_rejected(fixture)
 
 
+class EventEditsTests(unittest.TestCase):
+    def test_edits_by_flow_groups_multiple_edits_on_same_flow(self):
+        from build_stage import edits_by_flow, EVENT_EDITS
+        grouped = edits_by_flow()
+        self.assertIn('CourseDemo_PreFinalBattle', grouped)
+        edits = grouped['CourseDemo_PreFinalBattle']
+        self.assertEqual(len(edits), 2)
+        names = [e[0] for e in edits]
+        self.assertEqual(names, ['Event26', 'Event50'])
+        self.assertEqual(edits[0], ('Event26', 'TargetYpos', 0x2A80, 27.5, 28.75))
+        self.assertEqual(edits[1], ('Event50', 'TargetYpos', 0x2D90, 27.5, 28.75))
+
+    def test_event_edits_float_packing(self):
+        buf = bytearray(0x3000)
+        struct.pack_into('<f', buf, 0x2A80, 27.5)
+        struct.pack_into('<f', buf, 0x2D90, 27.5)
+        self.assertEqual(struct.unpack_from('<f', buf, 0x2A80)[0], 27.5)
+        self.assertEqual(struct.unpack_from('<f', buf, 0x2D90)[0], 27.5)
+        struct.pack_into('<f', buf, 0x2A80, 28.75)
+        struct.pack_into('<f', buf, 0x2D90, 28.75)
+        self.assertEqual(struct.unpack_from('<f', buf, 0x2A80)[0], 28.75)
+        self.assertEqual(struct.unpack_from('<f', buf, 0x2D90)[0], 28.75)
+
+
 if __name__ == '__main__':
     unittest.main()

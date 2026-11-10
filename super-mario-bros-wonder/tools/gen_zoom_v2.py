@@ -142,6 +142,26 @@ def emit(base, seq):
     return base + 4 * len(seq)
 
 
+def pre_labels(base, items, ldict):
+    pc = base
+    for it in items:
+        if isinstance(it, str):
+            ldict[it] = pc
+        else:
+            pc += 4
+
+
+def assemble(base, items, ldict=None):
+    """items: label strings or lambdas pc -> word (labels resolved through ldict, default glab)."""
+    if ldict is None:
+        ldict = glab
+    pre_labels(base, items, ldict)
+    seq = [it for it in items if not isinstance(it, str)]
+    return emit(base, seq)
+
+
+
+
 # ------------------------------------------------------------------ cave A
 A = 0x2138800
 N_CODE = 56
@@ -187,7 +207,7 @@ seq_a = [
     lambda pc: bcond(MI, pc, lab['small']),                              # 34
     lambda pc: ldr_w_lit(15, pc, L_G17),                                 # 35  large world area
     lambda pc: ldr_w_lit(17, pc, L_D17),                                 # 36
-    lambda pc: b_(pc, lab['store']),                                     # 37
+    lambda pc: b_(pc, ahlab['entry']),                                   # 37
     lambda pc: ldr_w_lit(15, pc, L_G155),                                # 38  SMALL room (or no area record)
     lambda pc: ldr_w_lit(17, pc, L_D155),                                # 39
     lambda pc: adrp(16, pc, BSS),                                        # 40  STORE
@@ -207,6 +227,45 @@ seq_a = [
     lambda pc: LDR_X15_POP,                                              # 54
     lambda pc: b_(pc, 0x6C66E0),                                         # 55
 ]
+A_HELPER = 0x2138988
+A_HASH_290 = 2931365200
+G_FIST_290 = 18.5
+X0_FIST_290, X1_FIST_290 = 100.0, 112.0
+ahlab = {}
+A_HELPER_ITEMS = [
+    'entry',
+    lambda pc: adrp(16, pc, BSS),
+    lambda pc: ldr_w(16, 16, 0xF04),                                        # w16 = current area RootAreaHash
+    lambda pc: ldr_w_lit(15, pc, ahlab['hash']),                            # w15 = 2931365200
+    lambda pc: cmp_w(16, 15),
+    lambda pc: ldr_w_lit(15, pc, L_G17),                                    # restore w15 = f32(G_LARGE) (flags preserved)
+    lambda pc: bcond(NE, pc, lab['store']),                                 # not Course290_Main -> store (15.75, 3.2778)
+    lambda pc: ldr_s(16, 20, 0x194),                                        # s16 = fixed X (subject+0x194)
+    lambda pc: ldr_s_lit(31, pc, ahlab['x0']),                              # s31 = 100.0f
+    lambda pc: fsub_s(16, 16, 31),                                          # s16 = fixed X - 100.0f
+    lambda pc: fmov_imm(31, 0x28),                                          # s31 = 12.0f (112.0 - 100.0)
+    lambda pc: fcmp_s(16, 31),
+    lambda pc: bcond(GE, pc, lab['store']),                                 # fixed X >= 112.0 -> store (15.75, 3.2778)
+    lambda pc: fmov_s_w(31, 31),                                            # s31 = 0.0f (wzr)
+    lambda pc: fmax_s(16, 16, 31),                                          # s16 = max(fixed X - 100.0f, 0.0f)
+    lambda pc: ldr_s_lit(31, pc, ahlab['slope_g']),                         # s31 = (15.75 - 18.5) / 12.0
+    lambda pc: ldr_s_lit(30, pc, ahlab['g_fist']),                          # s30 = 18.5f
+    lambda pc: fmadd_s(16, 16, 31, 30),                                     # s16 = G = 17.5 + slope * t
+    lambda pc: fmov_w_s(15, 16),                                            # w15 = f32(G)
+    lambda pc: ldr_s_lit(31, pc, ahlab['neg_2_3']),                         # s31 = -2.0 / 3.0
+    lambda pc: ldr_s_lit(30, pc, ahlab['half_16_9']),                       # s30 = 27.5556 / 2.0
+    lambda pc: fmadd_s(16, 16, 31, 30),                                     # s16 = delta = half_16_9 + neg_2_3 * G
+    lambda pc: fmov_w_s(17, 16),                                            # w17 = f32(delta)
+    lambda pc: b_(pc, lab['store']),
+    'hash', lambda pc: A_HASH_290,
+    'x0', lambda pc: f32(X0_FIST_290),
+    'slope_g', lambda pc: f32((G_LARGE - G_FIST_290) / (X1_FIST_290 - X0_FIST_290)),
+    'g_fist', lambda pc: f32(G_FIST_290),
+    'neg_2_3', lambda pc: f32(-2.0 / 3.0),
+    'half_16_9', lambda pc: f32(27.5556 / 2.0),
+]
+pre_labels(A_HELPER, A_HELPER_ITEMS, ahlab)
+
 assert len(seq_a) == N_CODE, len(seq_a)
 lab.update({'small': A + 4 * 38, 'loop': A + 4 * 23, 'found': A + 4 * 29, 'notab': A + 4 * 32, 'store': A + 4 * 40})
 emit(A, seq_a)
@@ -306,22 +365,6 @@ def follow():                         # s0 = clamp(focus X - fixed X - delta, -d
             lambda pc: fneg_s(31, 31), lambda pc: fmax_s(0, 0, 31), lambda pc: fsub_s(0, 0, 31)]
 
 
-def pre_labels(base, items, ldict):
-    pc = base
-    for it in items:
-        if isinstance(it, str):
-            ldict[it] = pc
-        else:
-            pc += 4
-
-
-def assemble(base, items, ldict=None):
-    """items: label strings or lambdas pc -> word (labels resolved through ldict, default glab)."""
-    if ldict is None:
-        ldict = glab
-    pre_labels(base, items, ldict)
-    seq = [it for it in items if not isinstance(it, str)]
-    return emit(base, seq)
 
 
 # Cave G helper (0x02138914..0x02138988): when hold counter expires, check autoscroll end stops table.
@@ -418,7 +461,10 @@ G_ITEMS = [
 pre_labels(G_HELPER, G_HELPER_ITEMS, ghlab)
 pre_labels(G_CAVE, G_ITEMS, glab)
 G_HELPER_END = assemble(G_HELPER, G_HELPER_ITEMS, ghlab)
-assert G_HELPER_END <= 0x2138A00, hex(G_HELPER_END)
+assert G_HELPER_END <= A_HELPER, hex(G_HELPER_END)
+A_HELPER_END = assemble(A_HELPER, A_HELPER_ITEMS, ahlab)
+assert A_HELPER_END <= 0x2138A00, hex(A_HELPER_END)
+A_HELPER_DATA = {ahlab['hash'], ahlab['x0'], ahlab['slope_g'], ahlab['g_fist'], ahlab['neg_2_3'], ahlab['half_16_9']}
 G_END = assemble(G_CAVE, G_ITEMS, glab)
 assert G_END <= 0x2138B00, hex(G_END)
 G_DATA = {glab['eps'], glab['stepv']}
@@ -520,12 +566,12 @@ for a, w in allw:
     seen.add(a)
 ENDS_DATA = {TABLE_ENDS + 4 * i for i in range(2 * (len(AUTOSCROLL_ENDS) + 1))}
 G_HELPER_DATA = {ghlab['thresh']}
-data_addrs = {L_THR, L_G17, L_D17, L_G155, L_D155, F2 + 20} | {TABLE + 4 * i for i in range(3 * (len(BOSS) + 1))} | ENDS_DATA | G_HELPER_DATA | G_DATA | Y_DATA | K_DATA
+data_addrs = {L_THR, L_G17, L_D17, L_G155, L_D155, F2 + 20} | {TABLE + 4 * i for i in range(3 * (len(BOSS) + 1))} | ENDS_DATA | G_HELPER_DATA | A_HELPER_DATA | G_DATA | Y_DATA | K_DATA
 if __name__ == '__main__':
     for a, w in allw:
         dis = list(md.disasm(struct.pack('<I', w), a))
         if a in data_addrs or not dis:
-            if a in {TABLE + 12 * i for i in range(len(BOSS))} | {ylab['hash'], klab['hash']} | {TABLE_ENDS + 8 * i for i in range(len(AUTOSCROLL_ENDS) + 1)}:
+            if a in {TABLE + 12 * i for i in range(len(BOSS))} | {ylab['hash'], klab['hash'], ahlab['hash']} | {TABLE_ENDS + 8 * i for i in range(len(AUTOSCROLL_ENDS) + 1)}:
                 text = f"(data) 0x{w:08X} = hash {w}"
             else:
                 text = f"(data) 0x{w:08X} = {struct.unpack('<f', struct.pack('<I', w))[0]:.6g}"
@@ -533,5 +579,19 @@ if __name__ == '__main__':
             text = f"{dis[0].mnemonic} {dis[0].op_str}"
         print(f"{a:08X} {struct.pack('<I', w).hex().upper()}   {text}")
     if len(sys.argv) > 1:
-        open(sys.argv[1], 'w').write('\n'.join(f"{a:08X} {struct.pack('<I', w).hex().upper()}" for a, w in allw) + '\n')
-        print('wrote', sys.argv[1])
+        out_path = sys.argv[1]
+        allw_lines = '\n'.join(f"{a:08X} {struct.pack('<I', w).hex().upper()}" for a, w in allw)
+        if os.path.exists(out_path):
+            existing = open(out_path, 'r', encoding='utf-8').read()
+            if '@stop' in existing:
+                header_part = existing.split('002E2B30', 1)[0]
+                footer_part = '@stop' + existing.split('@stop', 1)[1]
+                new_content = header_part + allw_lines + '\n\n' + footer_part
+                open(out_path, 'w', encoding='utf-8', newline='\n').write(new_content)
+                print('updated', out_path)
+            else:
+                open(out_path, 'w', encoding='utf-8', newline='\n').write(allw_lines + '\n')
+                print('wrote', out_path)
+        else:
+            open(out_path, 'w', encoding='utf-8', newline='\n').write(allw_lines + '\n')
+            print('wrote', out_path)

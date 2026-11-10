@@ -1,13 +1,14 @@
-"""Stage (BancMapUnit) edits for the 4:3 mod: same-size float and guarded actor-type edits from the 1.2.1 originals.
+"""Stage (BancMapUnit) and Event (EventFlow) edits for the 4:3 mod: same-size float and guarded actor-type edits from the 1.2.1 originals.
 
 usage:
   python build_stage.py <orig_romfs> <out_dir>
-      Writes <out_dir>/romfs/BancMapUnit/<course>.bcett.byml.zs for every course in EDITS.
+      Writes <out_dir>/romfs/BancMapUnit/<course>.bcett.byml.zs for every course in EDITS and
+      <out_dir>/romfs/Event/EventFlow/<flow>.bfevfl.zs for every flow in EVENT_EDITS.
   python build_stage.py --verify <orig_romfs> <mod_romfs>
-      Checks the shipped files in <mod_romfs>/BancMapUnit: exactly the declared courses, each differing from its
-      original only in the declared float/string edits. Exits 1 on any problem.
+      Checks the shipped files in <mod_romfs>: exactly the declared courses/events, each differing from its
+      original only in the declared edits. Exits 1 on any problem.
 
-<orig_romfs> is the extracted 1.2.1 romfs (needs BancMapUnit/).
+<orig_romfs> is the extracted 1.2.1 romfs (needs BancMapUnit/ and Event/EventFlow/).
 """
 import os, struct, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -128,6 +129,122 @@ EDITS = [
      (23.5, 48.0, -167.5), (23.5, 49.5, -167.5)),
     ('Course407_Course', 3373664933504165692, 'DVWaKaiganFarIwaA01', 'Scale',
      (0.699999988079071, 0.699999988079071, 0.699999988079071), (0.82, 0.82, 0.82)),
+    # Course290_Main (Bowser's Rage Stage - Kuribo grow & zap relay retuning for on-screen visibility & strike alignment):
+    # Under opening camera G = 18.5 (view width 24.67), retune zap switches 1536962149 and 14869113733391977869 to X = 43.77
+    # so they fire at rail X = 18.63 (frame 1040, view [18.63, 43.30]), framing all strike and smoke tags on-screen.
+    # Retune spawn switch 578319643 to X = 36.48 so it activates at frame 657, preserving
+    # the exact stock 383-frame relay interval (frame 1040 - 657 = 383f, drift 0.0f).
+    # With 200f spawn delay (frame 857), Kuribos walk 183f before lightning strikes at frame 1040.
+    # Calibrated against stock and Eden play-test: Goombas walk faster/further than nominal 1/32 blk/frame (reaching X ~ 38.3 & 42.3).
+    # Align strike PositionTags and BadSmokeTags to where the Goombas actually are in Eden:
+    # Goomba 1 at X = 38.28125 (tag 38.28125, smoke 38.03125); Goomba 2 at X = 42.28125 (tag 42.28125, smoke 41.53125).
+    # Growth fires 30f later at frame 1070, fully on-screen in view [20.28, 44.95].
+    ('Course290_Main', 578319643, 'CourseDisplayBoxSwitch', 'Translate',
+     (38.5, 20.537498474121094, 0.0), (36.48, 20.537498474121094, 0.0)),
+    ('Course290_Main', 1536962149, 'CourseDisplayBoxSwitch', 'Translate',
+     (44.0, 34.051910400390625, 0.0), (43.77, 34.051910400390625, 0.0)),
+    ('Course290_Main', 14869113733391977869, 'CourseDisplayBoxSwitch', 'Translate',
+     (44.0, 33.16312026977539, 0.0), (43.77, 33.16312026977539, 0.0)),
+    ('Course290_Main', 4814110068085501760, 'PositionTag', 'Translate',
+     (43.25, 24.0, 0.0), (38.28125, 24.0, 0.0)),
+    ('Course290_Main', 12276017923517845206, 'PositionTag', 'Translate',
+     (46.25, 28.0, 0.0), (42.28125, 28.0, 0.0)),
+    ('Course290_Main', 2306045187355644410, 'LastBossWonderBadSmokeTag', 'Translate',
+     (43.0, 35.5, 0.0), (38.03125, 35.5, 0.0)),
+    ('Course290_Main', 5602005781468990395, 'LastBossWonderBadSmokeTag', 'Translate',
+     (45.5, 35.5, 0.0), (41.53125, 35.5, 0.0)),
+    # Shift Goomba spawns left by 3.5 blocks (Task D3) to align walking Goombas to bolt strikes at tags 38.28125 & 42.28125:
+    ('Course290_Main', 2542738868, 'KuriboWillGrowIntoGiant', 'Translate',
+     (46.0, 23.0, 0.0), (42.5, 23.0, 0.0)),
+    ('Course290_Main', 1405933960, 'KuriboWillGrowIntoGiant', 'Translate',
+     (50.0, 28.5, 0.0), (46.5, 28.5, 0.0)),
+    # Course290_Main (Bowser's Rage Stage - Tilt, rolling spiked ball, fossil rings & dragon relay):
+    # With the intro zoom G = 18.5 hold extended to fixed_X in [100.0, 112.0] (rail_X in [87.67, 101.50]), the 4:3
+    # camera width is 24.67 (2.89 blocks narrower than stock 16:9 27.56, rather than 6.56 blocks narrower at G = 15.75).
+    # Shift triggers firing during the G = 18.5 hold (1060316225, 206918284, 663300194, 17459050152995009628, 999420502,
+    # 742103869, 1755951341) left by -2.89 blocks in X.
+    # Shift triggers firing during the return lerp according to view width at activation:
+    # - 1787195044 (dragon transform, frame 3031, W = 23.99) shifted by -3.57 blocks (X: 136.0 -> 132.43).
+    # - 2303338937 (fossil palette, frame 3282, W = 23.27) shifted by -4.29 blocks (X: 121.0 -> 116.71).
+    # This preserves 0-drift relative timing across the entire rolling obstacle and zap obstacle course.
+    ('Course290_Main', 1060316225, 'CourseDisplayBoxSwitch', 'Translate',
+     (73.5, 34.513580322265625, 0.0), (70.61111450195312, 34.513580322265625, 0.0)),
+    ('Course290_Main', 206918284, 'CourseDisplayBoxSwitch', 'Translate',
+     (81.5, 20.342161178588867, 0.0), (78.61111450195312, 20.342161178588867, 0.0)),
+    ('Course290_Main', 663300194, 'CourseDisplayBoxSwitch', 'Translate',
+     (88.5, 35.5, 0.0), (85.61111450195312, 35.5, 0.0)),
+    ('Course290_Main', 17459050152995009628, 'CourseDisplayBoxSwitch', 'Translate',
+     (89.5, 35.5, 0.0), (86.61111450195312, 35.5, 0.0)),
+    ('Course290_Main', 999420502, 'CourseDisplayBoxSwitch', 'Translate',
+     (90.5, 21.96936798095703, 0.0), (87.61111450195312, 21.96936798095703, 0.0)),
+    ('Course290_Main', 742103869, 'CourseDisplayBoxSwitch', 'Translate',
+     (98.52086639404297, 35.10392761230469, 0.0), (95.6319808959961, 35.10392761230469, 0.0)),
+    ('Course290_Main', 1755951341, 'CourseDisplayBoxSwitch', 'Translate',
+     (106.0, 19.168628692626953, 0.0), (103.11111450195312, 19.168628692626953, 0.0)),
+    ('Course290_Main', 2303338937, 'CourseDisplayBoxSwitch', 'Translate',
+     (121.0, 34.49203872680664, 0.0), (116.70992279052734, 34.49203872680664, 0.0)),
+    ('Course290_Main', 1787195044, 'CourseDisplayBoxSwitch', 'Translate',
+     (136.0, 26.0, 0.0), (132.43197631835938, 26.0, 0.0)),
+    # Course290_Main (Bowser's Rage Stage - Vertical shaft ground & guide coins):
+    # Switch 4273434636 (stock min_x = 146.50, missed by 4:3 right edge at 146.0) fires to spawn the bottom
+    # horizontal snake-block ground (ObjectBlockSnakePole 34729090 at Y = 27.5..31.5) and guide coins before
+    # the vertical shaft climb. Switches 1117151842, 3717095890, and 1344248650 spawn intermediate snake poles.
+    ('Course290_Main', 1117151842, 'CourseDisplayBoxSwitch', 'Translate',
+     (146.0, 32.5, 0.0), (139.44, 32.5, 0.0)),
+    ('Course290_Main', 4273434636, 'CourseDisplayBoxSwitch', 'Translate',
+     (152.5449676513672, 25.0, 0.0), (145.9849676513672, 25.0, 0.0)),
+    ('Course290_Main', 3717095890, 'CourseDisplayBoxSwitch', 'Translate',
+     (155.3033447265625, 47.0, 0.0), (148.7433447265625, 47.0, 0.0)),
+    ('Course290_Main', 1344248650, 'CourseDisplayBoxSwitch', 'Translate',
+     (155.8292236328125, 58.66417694091797, 0.0), (149.2692236328125, 58.66417694091797, 0.0)),
+    # Course290_Main (Bowser's Rage Stage - Bowser statue section): SetAutoScrollPos left-aligns the 21.0-wide
+    # 4:3 view to the autoscroll rail, cutting 6.56 blocks off the right edge vs stock 16:9 (27.56). Shift the
+    # statue-section CourseDisplayBoxSwitch triggers left by 6.56 blocks in X so EnemyTossinGroup spawns during
+    # the slow approach (pt 13->14, rail X 147.94) before the scroll reaches the statue at X = 156.5, and the
+    # post-statue pause/Packun switch (12855344573256944945) enters the 4:3 view (max X 195.0) at rail X = 174.0.
+    # Note: switch 4029477259 is intentionally kept at stock X = 206.00457763671875 (min_x = 202.82) so it fires
+    # after the rhythm pause (pt 17 -> pt 18) instead of prematurely during the pause.
+    ('Course290_Main', 777445035, 'CourseDisplayBoxSwitch', 'Translate',
+     (198.0, 52.0, 0.0), (191.44, 52.0, 0.0)),
+    ('Course290_Main', 212790001, 'CourseDisplayBoxSwitch', 'Translate',
+     (223.04513549804688, 51.73638153076172, 0.0), (216.48513549804688, 51.73638153076172, 0.0)),
+    ('Course290_Main', 12855344573256944945, 'CourseDisplayBoxSwitch', 'Translate',
+     (199.5, 52.0, 0.0), (192.94, 52.0, 0.0)),
+    # Course290_Main (Bowser's Rage Stage - Post-statue rhythm pause singing plants & pipes):
+    # In 4:3 (width 21.0), with the rhythm pause plateau at rail X = 179.0, the camera frames X = [179.0, 200.0].
+    # Shift the 3 left rising pipes (SoundRhythmObjectUpDownDokan) and 3 singing Piranha Plants (EnemySoundRunRunPackun)
+    # right by +2.0 blocks (X = 178, 180, 182 -> 180, 182, 184) to pull them away from the left screen edge and frame
+    # both the left singing group and the right Spike thrower (X = 199.0) simultaneously with 1.0 block margin.
+    ('Course290_Main', 14018291091925094241, 'SoundRhythmObjectUpDownDokan', 'Translate',
+     (178.0, 39.0, 0.0), (180.0, 39.0, 0.0)),
+    ('Course290_Main', 18409431755698402034, 'SoundRhythmObjectUpDownDokan', 'Translate',
+     (180.0, 39.0, 0.0), (182.0, 39.0, 0.0)),
+    ('Course290_Main', 4568669752595535956, 'SoundRhythmObjectUpDownDokan', 'Translate',
+     (182.0, 39.0, 0.0), (184.0, 39.0, 0.0)),
+    ('Course290_Main', 1451404568616177091, 'EnemySoundRunRunPackun', 'Translate',
+     (178.0, 47.0, 0.0), (180.0, 47.0, 0.0)),
+    ('Course290_Main', 16407013882060977642, 'EnemySoundRunRunPackun', 'Translate',
+     (180.0, 47.0, 0.0), (182.0, 47.0, 0.0)),
+    ('Course290_Main', 1044554605811720563, 'EnemySoundRunRunPackun', 'Translate',
+     (182.0, 47.0, 0.0), (184.0, 47.0, 0.0)),
+    # Course290_Main (Bowser's Rage Stage - Fist & fossil section smoke coverage):
+    # With G = 18.5 (view height 18.5, vertical range [18.00, 36.50]), expand the vertical coverage of the
+    # background smoke planes by shifting bottom smoke actors down by -1.5 in Y and top smoke actors up by +1.5 in Y
+    # so the smoke edges stay offscreen across both the opening fist and fossil sections.
+    ('Course290_Main', 15192233820085708065, 'DVCommonTorideKemuriB', 'Translate',
+     (5.3074798583984375, 19.16788673400879, -60.0), (5.3074798583984375, 17.66788673400879, -60.0)),
+    ('Course290_Main', 1591783371223145825, 'DVCommonTorideKemuriB', 'Translate',
+     (27.5, 18.5, -60.0), (27.5, 17.0, -60.0)),
+    ('Course290_Main', 5984094973414626142, 'DVCommonTorideKemuriA', 'Translate',
+     (-3.859537124633789, 36.74950408935547, -61.515625), (-3.859537124633789, 38.24950408935547, -61.515625)),
+    ('Course290_Main', 10892834247364923251, 'DVCommonTorideKemuriA', 'Translate',
+     (19.93733787536621, 36.85106658935547, -86.515625), (19.93733787536621, 38.35106658935547, -86.515625)),
+    ('Course290_Main', 13067625065345285749, 'DVCommonTorideKemuriA', 'Translate',
+     (56.0, 35.5, -60.0), (56.0, 37.0, -60.0)),
+    ('Course290_Main', 7396728262115999967, 'DVCommonTorideKemuriB', 'Translate',
+     (78.09263610839844, 20.79288673400879, -60.0), (78.09263610839844, 19.29288673400879, -60.0)),
+    ('Course290_Main', 10206074945194904884, 'DVCommonTorideKemuriA', 'Translate',
+     (99.5, 32.5, -60.0), (99.5, 34.0, -60.0)),
     # World001 (Pipe-Rock Plateau map), subregion 22 (underground area: sign, ? block, courses 9 and 10, KO arena):
     # the camera is fixed on WorldMapCameraLookAtTag obj479 at x 87.25 and never follows Mario. At that depth the
     # view is ~48 px per unit at ~1060 rows: 16:9 shows x ~67.6-106.9, 4:3 only ~72.5-102.0, so the hidden warp
@@ -171,6 +288,13 @@ BG_EDITS = [
     ('Course152_Sub4', 1, 1, 5, (50.0, -7.0, 0.0), (50.0, -10.0, 0.0)),
     ('Course152_Sub4', 1, 2, 0, (79.0, -7.0, 0.0), (79.0, -10.0, 0.0)),
     ('Course152_Sub4', 1, 2, 21, (92.0, -7.0, 0.0), (92.0, -10.0, 0.0)),
+    # Course290_Main (Bowser's Rage Stage - Post-statue rhythm pause pipe gap):
+    # Shift Wall 2 right boundary (pts 2-3) and Wall 5 left boundary (pts 0-1) right by +2.0 blocks in X so the gap
+    # beneath the rising rhythm pipes moves from X = [177, 183] to [179, 185].
+    ('Course290_Main', 0, 2, 2, (177.0, 47.0, 0.0), (179.0, 47.0, 0.0)),
+    ('Course290_Main', 0, 2, 3, (177.0, 8.0, 0.0), (179.0, 8.0, 0.0)),
+    ('Course290_Main', 0, 5, 0, (183.0, 42.0, 0.0), (185.0, 42.0, 0.0)),
+    ('Course290_Main', 0, 5, 1, (183.0, 47.0, 0.0), (185.0, 47.0, 0.0)),
 ]
 # (course, rail_hash, point_idx, orig_xyz, new_xyz)
 # Course853_Main (Sunbaked Desert Special: Pole Block Allure - Autoscroll rail intermediate vertical centering):
@@ -202,24 +326,78 @@ RAIL_EDITS = [
     ('Course853_Main', 1776580222928036096, 2, (38.0, 25.5, 0.0), (38.0, 22.75, 0.0)),
     ('Course853_Main', 1776580222928036096, 3, (63.0, 41.0, 0.0), (63.0, 36.0, 0.0)),
     ('Course853_Main', 1776580222928036096, 12, (226.75, 147.0, 0.0), (231.335, 147.0, 0.0)),
+    # In Course290_Main, AutoScrollControlSignalFrame (4286093022) on Rail 185828596 passes rail_X + current_half_width
+    # to SetAutoScrollPos, left-aligning the 21.0-wide 4:3 view to rail_X and cutting 6.56 blocks off the right edge vs
+    # stock 16:9 (27.56):
+    # - Dragon & vertical shaft section (pts 8-11): pt 6 is kept at stock 92.0 to maintain the fossil relay timing.
+    #   Shift pt 8 right to frame Wall 1 [113, 122] without pushing the player off Wall 0 (ends at X = 104), and shift
+    #   pts 9-11 right by +3.28 so the 840-frame vertical shaft climb (CameraArea 3010860670, X = [124.75, 152.25])
+    #   is centered at X = 138.78.
+    # - Post-statue rhythm pause (pts 16-17): shift the rhythm pause plateau from 174.0 to 179.0 to frame
+    #   X = [179.0, 200.0] in 4:3, fitting all 3 shifted singing plants/pipes ([179.0, 185.0]) and the Spike thrower
+    #   (15920962010745316511 at X = 199.0) + right pipe (9780181108041827457 at X = 199.0) simultaneously with
+    #   1.0 block of margin from both actor centers (180.0 and 199.0) to the screen edges.
+    ('Course290_Main', 185828596, 8, (101.0, 35.0, 0.0), (102.0, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 9, (112.0, 35.0, 0.0), (115.28, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 10, (125.0, 35.0, 0.0), (128.28, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 11, (125.0, 60.0, 0.0), (128.28, 60.0, 0.0)),
+    ('Course290_Main', 185828596, 16, (174.0, 60.0, 0.0), (179.0, 60.0, 0.0)),
+    ('Course290_Main', 185828596, 17, (174.0, 60.0, 0.0), (179.0, 60.0, 0.0)),
 ]
 
+
+
+# (course, unit_idx, belt_idx, point_idx, orig_xyz, new_xyz)
+# In Course290_Main, BgUnits[0] has matching conveyor belt collision rails (BeltRails) that define the top surface
+# of Wall 2 and Wall 5. Both Walls and BeltRails must be shifted together to keep the visual geometry and collision aligned.
+BELT_EDITS = [
+    ('Course290_Main', 0, 2, 2, (177.0, 47.0, 0.0), (179.0, 47.0, 0.0)),
+    ('Course290_Main', 0, 2, 3, (177.0, 8.0, 0.0), (179.0, 8.0, 0.0)),
+    ('Course290_Main', 0, 5, 0, (183.0, 42.0, 0.0), (185.0, 42.0, 0.0)),
+    ('Course290_Main', 0, 5, 1, (183.0, 47.0, 0.0), (185.0, 47.0, 0.0)),
+]
+
+
+
+
+# (flow, event_name, param_name, byte_offset, orig_val, new_val)
+# CourseDemo_PreFinalBattle (Course290 intro cutscene):
+# Event50 is the final cutscene camera pose before gameplay handoff.
+# Raise TargetYpos 27.5 -> 28.75 to match gameplay camera resting height (19.5 + 9.25 = 28.75)
+# and hide Bowser Jr. parked at y ~19.5..20.1 behind the bottom letterbox bar (covers up to y 20.20).
+EVENT_EDITS = [
+    ('CourseDemo_PreFinalBattle', 'Event26', 'TargetYpos', 0x2A80, 27.5, 28.75),
+    ('CourseDemo_PreFinalBattle', 'Event50', 'TargetYpos', 0x2D90, 27.5, 28.75),
+]
+
+
+def bfevfl(romfs, flow):
+    return os.path.join(romfs, 'Event', 'EventFlow', f'{flow}.bfevfl.zs')
 
 
 def bcett(romfs, course):
     return os.path.join(romfs, 'BancMapUnit', f'{course}.bcett.byml.zs')
 
 
+def edits_by_flow():
+    out = {}
+    for e in EVENT_EDITS:
+        out.setdefault(e[0], []).append(e[1:])
+    return out
+
+
 def edits_by_course():
     out = {}
     for e in EDITS:
-        out.setdefault(e[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['actors'].append(e)
+        out.setdefault(e[0], {'actors': [], 'bg': [], 'belts': [], 'gyaml': [], 'rails': []})['actors'].append(e)
     for b_edit in BG_EDITS:
-        out.setdefault(b_edit[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['bg'].append(b_edit)
+        out.setdefault(b_edit[0], {'actors': [], 'bg': [], 'belts': [], 'gyaml': [], 'rails': []})['bg'].append(b_edit)
+    for belt_edit in BELT_EDITS:
+        out.setdefault(belt_edit[0], {'actors': [], 'bg': [], 'belts': [], 'gyaml': [], 'rails': []})['belts'].append(belt_edit)
     for g_edit in GYAML_EDITS:
-        out.setdefault(g_edit[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['gyaml'].append(g_edit)
+        out.setdefault(g_edit[0], {'actors': [], 'bg': [], 'belts': [], 'gyaml': [], 'rails': []})['gyaml'].append(g_edit)
     for r_edit in RAIL_EDITS:
-        out.setdefault(r_edit[0], {'actors': [], 'bg': [], 'gyaml': [], 'rails': []})['rails'].append(r_edit)
+        out.setdefault(r_edit[0], {'actors': [], 'bg': [], 'belts': [], 'gyaml': [], 'rails': []})['rails'].append(r_edit)
     return out
 
 
@@ -314,6 +492,30 @@ def apply(d, course_edits):
         for eslot, _ in b.vec3(p, 'Translate'):
             allowed.update(range(eslot, eslot + 4))
 
+    for course, uidx, bidx, pidx, orig, new in course_edits.get('belts', []):
+        unit = b.hash_entries(slots[uidx][2])
+        belts = b.array_slots(unit['BeltRails'][2])
+        belt = b.hash_entries(belts[bidx][2])
+        pts = b.array_slots(belt['Points'][2])
+        p = b.hash_entries(pts[pidx][2])
+        node = p['Translate'][2]
+        all_bpts = []
+        for u in slots:
+            unit_dict = b.hash_entries(u[2])
+            if 'BeltRails' in unit_dict:
+                for _, _, braw in b.array_slots(unit_dict['BeltRails'][2]):
+                    belt_dict = b.hash_entries(braw)
+                    if 'Points' in belt_dict:
+                        for _, _, praw in b.array_slots(belt_dict['Points'][2]):
+                            all_bpts.append(b.hash_entries(praw))
+        sharers = [pt for pt in all_bpts if pt['Translate'][2] == node]
+        assert len(sharers) == 1, f'{course} Unit {uidx} BeltRail {bidx} Pt {pidx}: Translate shared by {len(sharers)} points'
+        cur = [v for _, v in b.vec3(p, 'Translate')]
+        assert cur == list(orig), f'{course} Unit {uidx} BeltRail {bidx} Pt {pidx}: {cur}, expected {orig}'
+        b.set_vec3(p, 'Translate', new)
+        for eslot, _ in b.vec3(p, 'Translate'):
+            allowed.update(range(eslot, eslot + 4))
+
     rails_slots = b.array_slots(root['Rails'][2]) if 'Rails' in root else []
     all_rpts = []
     for s in rails_slots:
@@ -351,6 +553,18 @@ def build(orig_romfs, out_dir):
         assert bytes(d) != bytes(read(src)), f'{course}: no change'
         write(bcett(os.path.join(out_dir, 'romfs'), course), d)
         print('wrote', bcett(os.path.join(out_dir, 'romfs'), course))
+    for flow, edits in edits_by_flow().items():
+        dst_event_dir = os.path.join(out_dir, 'romfs', 'Event', 'EventFlow')
+        os.makedirs(dst_event_dir, exist_ok=True)
+        src = bfevfl(orig_romfs, flow)
+        d = read(src)
+        for ev_name, param, offset, orig_val, new_val in edits:
+            assert struct.unpack_from('<f', d, offset)[0] == orig_val, f'{flow} {ev_name} {param}: expected {orig_val}'
+            struct.pack_into('<f', d, offset, new_val)
+            assert struct.unpack_from('<f', d, offset)[0] == new_val, f'{flow} {ev_name} {param}: expected {new_val}'
+        out_path = bfevfl(os.path.join(out_dir, 'romfs'), flow)
+        write(out_path, d)
+        print('wrote', out_path)
 
 
 def verify(orig_romfs, mod_romfs):
@@ -380,8 +594,33 @@ def verify(orig_romfs, mod_romfs):
         elif bytes(ship) != bytes(ref):
             problems.append(f'{course}: edited values differ from the edit tables')
         elif diff:
-            n_total = len(edits.get('actors', [])) + len(edits.get('bg', [])) + len(edits.get('gyaml', [])) + len(edits.get('rails', []))
+            n_total = (len(edits.get('actors', [])) + len(edits.get('bg', [])) +
+                       len(edits.get('belts', [])) +
+                       len(edits.get('gyaml', [])) + len(edits.get('rails', [])))
             print(f'{course}: {len(diff)} byte(s) differ, all inside {n_total} edit(s)')
+    for flow, edits in edits_by_flow().items():
+        path = bfevfl(mod_romfs, flow)
+        if not os.path.exists(path):
+            problems.append(f'missing {path}')
+            continue
+        orig = read(bfevfl(orig_romfs, flow))
+        ship = read(path)
+        if len(ship) != len(orig):
+            problems.append(f'{flow}: size {len(ship)} != original {len(orig)}')
+            continue
+        allowed = set()
+        for ev_name, param, offset, orig_val, new_val in edits:
+            if struct.unpack_from('<f', ship, offset)[0] != new_val:
+                problems.append(f'{flow}: edited value {struct.unpack_from("<f", ship, offset)[0]} != {new_val}')
+            allowed.update(range(offset, offset + 4))
+        diff = {i for i in range(len(orig)) if orig[i] != ship[i]}
+        if not diff:
+            problems.append(f'{flow}: identical to the original')
+        elif diff - allowed:
+            problems.append(f'{flow}: {len(diff - allowed)} byte(s) changed outside the declared edits')
+        else:
+            names = ', '.join(f'{ev} {param} {old} -> {new}' for ev, param, _, old, new in edits)
+            print(f'{flow}: {len(diff)} byte(s) differ, exactly {names}')
     for p in problems:
         print('PROBLEM:', p)
     print(f'{len(problems)} problem(s)')
