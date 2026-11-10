@@ -128,6 +128,14 @@ EDITS = [
      (23.5, 48.0, -167.5), (23.5, 49.5, -167.5)),
     ('Course407_Course', 3373664933504165692, 'DVWaKaiganFarIwaA01', 'Scale',
      (0.699999988079071, 0.699999988079071, 0.699999988079071), (0.82, 0.82, 0.82)),
+    # World001 (Pipe-Rock Plateau map), subregion 22 (underground area: sign, ? block, courses 9 and 10, KO arena):
+    # the camera is fixed on WorldMapCameraLookAtTag obj479 at x 87.25 and never follows Mario. At that depth the
+    # view is ~48 px per unit at ~1060 rows: 16:9 shows x ~67.6-106.9, 4:3 only ~72.5-102.0, so the hidden warp
+    # pipe obj513 (x 103, to the lost-Toad room) and Mario's silhouette beside it (~104.5) were off the right edge.
+    # Look-at x +4.0 -> 91.25 shows ~76.5-106.0: pipe and Mario on screen, entry pipe obj29 (opening ~78.5) kept.
+    # Confirmed in Eden 2026-11-09.
+    ('World001', 2929358336, 'WorldMapCameraLookAtTag', 'Translate',
+     (87.25, -11.0, 24.5), (91.25, -11.0, 24.5)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics
