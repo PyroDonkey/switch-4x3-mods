@@ -2,6 +2,21 @@
 
 Newest first. Each release's section becomes its GitHub release notes.
 
+## v1.2.0
+
+For game v1.2.1.
+
+### Fixed
+
+- Bowser's Rage Stage (`Course290_Main`, [#9](https://github.com/PyroDonkey/switch-4x3-mods/pull/9)): the opening fists and fossil section are zoomed out so the full width is visible, and level events (Goomba spawns and lightning strikes, the rolling obstacles, the dragon, the vertical shaft floor, the Bowser statue enemies) trigger at the same moment as stock. The shaft climb and the singing Piranha Plant section are framed so everything you need is on screen, and the intro cutscene camera no longer jumps when gameplay starts.
+- Pole Block Allure (`Course853_Main`, [#10](https://github.com/PyroDonkey/switch-4x3-mods/pull/10)): the autoscroll camera stays down near the poles so the Wonder Flower is on screen, and at the end of the Wonder the cannon now fires its balloon, so the Wonder Seed can be reached.
+- World 1 map (`World001`, [#11](https://github.com/PyroDonkey/switch-4x3-mods/pull/11)): the hidden warp pipe in the underground area (to the lost Toad) and Mario beside it are now on screen.
+- W2 Outmaway Valley (`Course022_Main`, [#12](https://github.com/PyroDonkey/switch-4x3-mods/pull/12)): the Wonder Seed lands on the knocked-over goal pole again instead of falling out of the course.
+
+### Changed
+
+- The mod now also ships a cutscene file (`romfs/Event/`) for the Bowser's Rage Stage intro, and the camera patch has a zoom helper for that level's opening.
+
 ## v1.1.2
 
 For game v1.2.1.

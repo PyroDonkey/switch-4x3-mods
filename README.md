@@ -26,4 +26,4 @@ This repo contains only modified files and the tools that produce them. It conta
 
 ## License
 
-The tools, documentation and code patches written for this repo are under the [MIT License](LICENSE). Game assets are not: the modified layout files are derived from Nintendo's game data and remain Nintendo's property. Nintendo Switch and Super Mario Bros. Wonder are trademarks of Nintendo; this project is not affiliated with or endorsed by Nintendo.
+The tools, documentation and code patches written for this repo are under the [MIT License](LICENSE). Game assets are not: the modified layout, level and cutscene files are derived from Nintendo's game data and remain Nintendo's property. Nintendo Switch and Super Mario Bros. Wonder are trademarks of Nintendo; this project is not affiliated with or endorsed by Nintendo.

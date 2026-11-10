@@ -10,6 +10,8 @@ https://github.com/PyroDonkey/switch-4x3-mods/blob/main/super-mario-bros-wonder/
 Contents of this folder:
 - exefs/1.2.1.pchtxt  aspect ratio 16:9 -> 4:3 and camera fixes
 - romfs/Layout/*      the UI screens the mod changes; the rest come from the game
+- romfs/BancMapUnit/*, romfs/Event/*
+                      level and cutscene data for the levels the mod fixes
 
 By PyroDonkey. Aspect-ratio address from the 32:9 Super Ultrawide mod (Stevens,
 KeatonTheBot, Fl4sh_#9174; v1.2.1 port by KillswitchR6).

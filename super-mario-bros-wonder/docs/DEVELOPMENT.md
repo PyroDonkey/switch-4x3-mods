@@ -642,3 +642,15 @@ To give players more reaction time during the opening obstacle run, extend the $
 - Raising Event26 `TargetYpos` 27.5 -> 28.75 lifts the letterbox bar by ~73 px (view bottom $18.25 \to 19.50$), placing Bowser Jr.'s peak at $y = 1079$ (44 px inside the letterbox bar) and fully concealing him throughout the knuckle slams with zero actor or timing edits.
 - **Camera path flattening:** Preceding Event233 uses $Y = 29.0$. With Event26 and Event50 both at $Y = 28.75$, the camera trajectory across the entire latter half of the cutscene is nearly flat ($29.0 \to 28.75 \to 28.75$), completely eliminating the sharp dip down to 27.5 and the subsequent rise back to 28.75.
 - **Top void clearance:** At $Y = 28.75$, view top is $38.00$, leaving $0.25$ blocks ($15$ px) clearance below the background smoke planes at $38.25$ and $38.35$ with zero top void exposure.
+
+## 55. 2026-11-10: PRs #9-#12 merged; v1.2.0
+
+PRs #11 and #12 (World001, Course022_Main) were merged first, then #10 (Course853_Main) and #9 (Course290_Main) were squash-merged after main was merged into each branch. Conflicts and their resolutions:
+
+- **`build_stage.py`:** #9 and #10 each added their own `RAIL_EDITS = [...]` list. Git merged the two definitions without a conflict, so #9's list would have silently replaced #10's Course853 entries. They are now one list. #9's `BELT_EDITS` plumbing was kept alongside main's `rails` handling.
+- **`layout_count`:** git merged it to 126, but the shipped romfs holds 115 layouts + 13 stage files + 1 event file = 129.
+- **This log:** both PRs started numbering at 44. Course853 keeps 44-45, World001 and Course022 keep 46-47, and Course290's sections were renumbered from 44-50 to 48-54.
+
+After the merge, `build_stage.py --verify` reported 0 problems across 13 stage files and the event flow. A rebuild from the 1.2.1 originals is byte-identical to the shipped `BancMapUnit/` and `Event/` files. The checks also passed: 18 stage unit tests, `verify_pchtxt.py` (363 lines, 11 hooks) and `check_repo.py`. The maintainer confirmed that Course290 (the level and the intro cutscene) and Course853 (framing and the finale cannon) were played and checked in Eden. Course853 section 45's "not yet play-tested" was out of date.
+
+Released as v1.2.0, a minor bump: like v1.1.0 (the first `BancMapUnit` files), this release adds a new kind of shipped data, `romfs/Event`.
