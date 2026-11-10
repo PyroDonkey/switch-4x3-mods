@@ -245,6 +245,27 @@ EDITS = [
      (78.09263610839844, 20.79288673400879, -60.0), (78.09263610839844, 19.29288673400879, -60.0)),
     ('Course290_Main', 10206074945194904884, 'DVCommonTorideKemuriA', 'Translate',
      (99.5, 32.5, -60.0), (99.5, 34.0, -60.0)),
+    # World001 (Pipe-Rock Plateau map), subregion 22 (underground area: sign, ? block, courses 9 and 10, KO arena):
+    # the camera is fixed on WorldMapCameraLookAtTag obj479 at x 87.25 and never follows Mario. At that depth the
+    # view is ~48 px per unit at ~1060 rows: 16:9 shows x ~67.6-106.9, 4:3 only ~72.5-102.0, so the hidden warp
+    # pipe obj513 (x 103, to the lost-Toad room) and Mario's silhouette beside it (~104.5) were off the right edge.
+    # Look-at x +4.0 -> 91.25 shows ~76.5-106.0: pipe and Mario on screen, entry pipe obj29 (opening ~78.5) kept.
+    # Confirmed in Eden 2026-11-09.
+    ('World001', 2929358336, 'WorldMapCameraLookAtTag', 'Translate',
+     (87.25, -11.0, 24.5), (91.25, -11.0, 24.5)),
+    # Course022_Main (W2 Outmaway Valley), Wonder autoscroll (rail x 445.25 -> 693.0, the rail point is the view's
+    # left edge): the rolling snow hill knocks the goal pole down and carries it round, and the finish Wonder Seed
+    # (obj8927, GravityOn at x 693.5) drops when CourseDisplayBoxSwitch obj8878 enters the view, timed to land on
+    # the pole's tip. The 4:3 view is 21.0 wide (G 15.75) against 27.5556, so the box entered 6.5556 blocks of
+    # scroll late and the seed missed the pole and fell out of the course. Moving each display-box switch of the
+    # section left by 6.5556 makes it fire at the stock scroll position; the other two create the Mini Lucky
+    # Coins bound to the rolling hill.
+    ('Course022_Main', 3802668973, 'CourseDisplayBoxSwitch', 'Translate',
+     (715.5, 9.0, 0.0), (708.9444, 9.0, 0.0)),
+    ('Course022_Main', 14721847139351791685, 'CourseDisplayBoxSwitch', 'Translate',
+     (574.5, 14.5, 0.0), (567.9444, 14.5, 0.0)),
+    ('Course022_Main', 16130168003287809964, 'CourseDisplayBoxSwitch', 'Translate',
+     (596.5, 13.5, 0.0), (589.9444, 13.5, 0.0)),
 ]
 
 # (course, actor hashes, original Gyaml, replacement Gyaml). Both variants have matching static-map/physics
@@ -275,6 +296,55 @@ BG_EDITS = [
     ('Course290_Main', 0, 5, 0, (183.0, 42.0, 0.0), (185.0, 42.0, 0.0)),
     ('Course290_Main', 0, 5, 1, (183.0, 47.0, 0.0), (185.0, 47.0, 0.0)),
 ]
+# (course, rail_hash, point_idx, orig_xyz, new_xyz)
+# Course853_Main (Sunbaked Desert Special: Pole Block Allure - Autoscroll rail intermediate vertical centering):
+# In 4:3 (height 15.75, width 21.0), the authored autoscroll rail 1776580222928036096 climb (Y = 17 -> 25.5 -> 41)
+# lifts the camera far above Mario and the poles (which sit at Y = 4.5..15.5). At pt 3 (X = 63, Y = 41), the camera
+# bottom reaches Y = 33.12, causing the Wonder Flower (ItemWonderHole at Y = 25.5) and lower poles to be cut off
+# below the screen by 7.62 blocks.
+# Lower points 0-3 vertically to an intermediate 50% position between stock and the low-profile tuning:
+# - Pt 0: (0.0, 17.0, 0.0) -> (0.0, 14.5, 0.0)   (-2.5)
+# - Pt 1: (13.0, 17.0, 0.0) -> (13.0, 14.5, 0.0) (-2.5)
+# - Pt 2: (38.0, 25.5, 0.0) -> (38.0, 22.75, 0.0)(-2.75)
+# - Pt 3: (63.0, 41.0, 0.0) -> (63.0, 36.0, 0.0)  (-5.0)
+# This keeps the Wonder Flower (Y = 25.5) +4.00 blocks above the bottom edge while preserving plenty of upper
+# headroom for climbing Snake Pole 1 (Y = 29.5) and Snake Pole 2 (Y = 21.5).
+# Pt 12 (final stop): rail X is the view's LEFT edge (docs/DEVELOPMENT.md section 22, SetAutoScrollPos adds the current
+# half-width), so the stock stop (226.75) frames [226.75, 247.75] in 4:3 versus [226.75, 254.31] in 16:9. The finale
+# cannon ObjectBalloonKillerHodaiLeft (X = 251.5, body 251..252, IsFirstInCamera) was therefore 3.75 blocks past the
+# 4:3 right edge and never started firing. The camera-margin value it tests is not stored in its AI graph, so the stop
+# is taken from an Eden capture of a build with the cannon at X = 248.5 (body 248..249): there the cannon sat 0.335
+# blocks inside the right edge (view [228.34, 249.34], measured from screenshots calibrated on the pole end block at
+# 240.5) and had fired. The stock cannon body ends at 252.0, so stop X = 252.0 + 0.335 - 21.0 = 231.335 frames
+# [231.335, 252.335]: whole cannon and Wall 5 (247..252) in view, pole end (X = 240.5) and Wonder Seed
+# (240.5, 144.24) in view. The pole's first 0.8 blocks (ball at X 230.5) fall off the left edge: pole start to
+# cannon centre is exactly 21.0, the 4:3 width, so both cannot be fully framed with the stock cannon.
+# Y = 147.0 is untouched (rail Y is the view's top edge, so the pole at 133.5 and the cannon at 134.0 stay in frame).
+RAIL_EDITS = [
+    ('Course853_Main', 1776580222928036096, 0, (0.0, 17.0, 0.0), (0.0, 14.5, 0.0)),
+    ('Course853_Main', 1776580222928036096, 1, (13.0, 17.0, 0.0), (13.0, 14.5, 0.0)),
+    ('Course853_Main', 1776580222928036096, 2, (38.0, 25.5, 0.0), (38.0, 22.75, 0.0)),
+    ('Course853_Main', 1776580222928036096, 3, (63.0, 41.0, 0.0), (63.0, 36.0, 0.0)),
+    ('Course853_Main', 1776580222928036096, 12, (226.75, 147.0, 0.0), (231.335, 147.0, 0.0)),
+    # In Course290_Main, AutoScrollControlSignalFrame (4286093022) on Rail 185828596 passes rail_X + current_half_width
+    # to SetAutoScrollPos, left-aligning the 21.0-wide 4:3 view to rail_X and cutting 6.56 blocks off the right edge vs
+    # stock 16:9 (27.56):
+    # - Dragon & vertical shaft section (pts 8-11): pt 6 is kept at stock 92.0 to maintain the fossil relay timing.
+    #   Shift pt 8 right to frame Wall 1 [113, 122] without pushing the player off Wall 0 (ends at X = 104), and shift
+    #   pts 9-11 right by +3.28 so the 840-frame vertical shaft climb (CameraArea 3010860670, X = [124.75, 152.25])
+    #   is centered at X = 138.78.
+    # - Post-statue rhythm pause (pts 16-17): shift the rhythm pause plateau from 174.0 to 179.0 to frame
+    #   X = [179.0, 200.0] in 4:3, fitting all 3 shifted singing plants/pipes ([179.0, 185.0]) and the Spike thrower
+    #   (15920962010745316511 at X = 199.0) + right pipe (9780181108041827457 at X = 199.0) simultaneously with
+    #   1.0 block of margin from both actor centers (180.0 and 199.0) to the screen edges.
+    ('Course290_Main', 185828596, 8, (101.0, 35.0, 0.0), (102.0, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 9, (112.0, 35.0, 0.0), (115.28, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 10, (125.0, 35.0, 0.0), (128.28, 35.0, 0.0)),
+    ('Course290_Main', 185828596, 11, (125.0, 60.0, 0.0), (128.28, 60.0, 0.0)),
+    ('Course290_Main', 185828596, 16, (174.0, 60.0, 0.0), (179.0, 60.0, 0.0)),
+    ('Course290_Main', 185828596, 17, (174.0, 60.0, 0.0), (179.0, 60.0, 0.0)),
+]
+
 
 
 # (course, unit_idx, belt_idx, point_idx, orig_xyz, new_xyz)
@@ -288,26 +358,6 @@ BELT_EDITS = [
 ]
 
 
-# (course, rail_hash, point_idx, orig_xyz, new_xyz)
-# In Course290_Main, AutoScrollControlSignalFrame (4286093022) on Rail 185828596 passes rail_X + current_half_width
-# to SetAutoScrollPos, left-aligning the 21.0-wide 4:3 view to rail_X and cutting 6.56 blocks off the right edge vs
-# stock 16:9 (27.56):
-# - Dragon & vertical shaft section (pts 8-11): pt 6 is kept at stock 92.0 to maintain the fossil relay timing.
-#   Shift pt 8 right to frame Wall 1 [113, 122] without pushing the player off Wall 0 (ends at X = 104), and shift
-#   pts 9-11 right by +3.28 so the 840-frame vertical shaft climb (CameraArea 3010860670, X = [124.75, 152.25])
-#   is centered at X = 138.78.
-# - Post-statue rhythm pause (pts 16-17): shift the rhythm pause plateau from 174.0 to 179.0 to frame
-#   X = [179.0, 200.0] in 4:3, fitting all 3 shifted singing plants/pipes ([179.0, 185.0]) and the Spike thrower
-#   (15920962010745316511 at X = 199.0) + right pipe (9780181108041827457 at X = 199.0) simultaneously with
-#   1.0 block of margin from both actor centers (180.0 and 199.0) to the screen edges.
-RAIL_EDITS = [
-    ('Course290_Main', 185828596, 8, (101.0, 35.0, 0.0), (102.0, 35.0, 0.0)),
-    ('Course290_Main', 185828596, 9, (112.0, 35.0, 0.0), (115.28, 35.0, 0.0)),
-    ('Course290_Main', 185828596, 10, (125.0, 35.0, 0.0), (128.28, 35.0, 0.0)),
-    ('Course290_Main', 185828596, 11, (125.0, 60.0, 0.0), (128.28, 60.0, 0.0)),
-    ('Course290_Main', 185828596, 16, (174.0, 60.0, 0.0), (179.0, 60.0, 0.0)),
-    ('Course290_Main', 185828596, 17, (174.0, 60.0, 0.0), (179.0, 60.0, 0.0)),
-]
 
 
 # (flow, event_name, param_name, byte_offset, orig_val, new_val)

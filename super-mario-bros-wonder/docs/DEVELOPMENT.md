@@ -457,7 +457,8 @@ In Course408 (Break Time! Floating Wonder Tokens), the maintainer requested zoom
 **Build and verification:**
 - Stage build wrote mod/Native 4x3 Aspect Ratio/romfs/BancMapUnit/Course408_Course.bcett.byml.zs.
 - uild_stage.py --verify reports 0 problems (7 bytes differ, all inside 3 edits).
-- Verified with erify_pchtxt.py (291 lines, 11 hooks, 0 errors).
+- Verified with 
+erify_pchtxt.py (291 lines, 11 hooks, 0 errors).
 
 ## 39. 2026-11-06: Course407 top-right background void coverage
 
@@ -520,7 +521,77 @@ The maintainer play-tested the current build in Windows/Eden and approved Course
 
 The mod now ships 124 romfs files (115 layouts + 9 stage archives). Patch SHA-256: `636492eb2b6a2bac8098d70f409aaf4b38ca1109d4ff3e842791e83e5962aadf`. Stage verification covers all nine stage files with 0 problems; `scripts/check_repo.py` passes.
 
-## 44. 2026-11-07: Course290_Main (Bowser's Rage Stage) autoscroll triggers and rail framing
+## 44. 2026-11-09: Course853_Main (Pole Block Allure) autoscroll rail repositioning
+
+**Context & Findings:**
+In *Sunbaked Desert Special: Pole Block Allure* (`Course853_Main`, RootAreaHash `2118979906`), the camera autoscroll is driven by `AutoScrollControlSignalFrame` (`6045299945089365584`) bound to Rail `1776580222928036096` with `setYfree = False`. The stock rail points were authored to climb rapidly: Pt 0 `(0.0, 17.0)` -> Pt 1 `(13.0, 17.0)` -> Pt 2 `(38.0, 25.5)` -> Pt 3 `(63.0, 41.0)` -> Pt 4 `(96.0, 55.0)`.
+In 4:3 (height 15.75, width 21.0), this climb lifts the camera far above Mario and the gameplay poles (which sit at $Y \in [4.5, 15.5]$):
+- At Pt 3 ($X = 63.0, Y = 41.0$), the camera bottom edge reaches $Y = 33.12$. The Wonder Flower (`ItemWonderHole` 4542071052577928248) sits at $X = 71.50, Y = 25.50$ inside `EnemyBalloonKiller` at $Y = 28.50$, placing it **7.62 blocks below the bottom edge of the screen**, completely off-screen and nearly impossible to hit.
+- Lower poles (Pole 1 at $Y = 8.5$, Pole 2 at $Y = 14.5$, Pole 3 at $Y = 15.5$, Snake Pole 2 at $Y = 21.5$) suffer severe bottom clipping and poor tracking.
+- An initial experiment with global zoom override ($G = 20.67$) was evaluated and rejected: zooming out only expands the view around the high rail center, failing to bring the camera down to Mario's eye level.
+
+**Solution (`RAIL_EDITS` in `tools/build_stage.py`):**
+Lowered Rail `1776580222928036096` points 0–3 in Y to an intermediate vertical profile:
+- Pt 0: `(0.0, 17.0, 0.0)` -> `(0.0, 14.5, 0.0)` ($-2.5$)
+- Pt 1: `(13.0, 17.0, 0.0)` -> `(13.0, 14.5, 0.0)` ($-2.5$)
+- Pt 2: `(38.0, 25.5, 0.0)` -> `(38.0, 22.75, 0.0)` ($-2.75$)
+- Pt 3: `(63.0, 41.0, 0.0)` -> `(63.0, 36.0, 0.0)` ($-5.0$)
+- Pt 4+: Kept at stock `(96.0, 55.0, 0.0)` for the upper post-wonder platform.
+
+**Verified Framing Results in Native 4:3 ($G = 15.75$):**
+- Start Platform ($Y = 4.5$): ground clearance $-2.12\text{ blk}$ from camera bottom (centered view).
+- Pole 1 ($Y = 8.5$): $+1.88\text{ blk}$ above bottom.
+- Pole 2 ($Y = 14.5$): $+5.40\text{ blk}$ above bottom, $+10.35\text{ blk}$ below top.
+- Pole 3 ($Y = 15.5$): $+1.78\text{ blk}$ above bottom.
+- Snake Pole 2 ($Y = 21.5$): $+2.65\text{ blk}$ above bottom.
+- Wonder Flower ($Y = 25.5$): $+4.00\text{ blk}$ above bottom, $+11.75\text{ blk}$ below top (solid margin with ample upper headroom).
+- Balloon Killer carrier ($Y = 28.5$): $+5.94\text{ blk}$ above bottom ($+9.81\text{ blk}$ below top).
+- **Wonder Finish Balloon Killer Cannon Framing (`ObjectBalloonKillerHodaiLeft`):**
+  At the Wonder sequence finale, Mario arrives on the lower snake pole ($X \in [230.5, 240.5], Y = 133.5$) beneath the Wonder Seed (`ItemWonderFinishWonderSead` at $X = 240.5, Y = 144.24$). The green cannon (`ObjectBalloonKillerHodaiLeft` 15389084515446315917) sits atop the sand platform Wall 5 ($X \in [247.0, 252.0]$) at $X = 251.5, Y = 134.0$, firing a purple balloon creature to the left for Mario to bounce up to the Wonder Seed and upper pole.
+  In stock 16:9 ($W = 27.56$), the cannon sat $+2.75\text{ blk}$ inside the right screen edge ($X = 254.25$). In 4:3 ($W = 21.0$), when Mario stands at the end of the pole ($X = 240.5$), the right screen edge only reaches $X = 251.0$. Because `ObjectBalloonKillerHodaiLeft` has `'IsFirstInCamera': True`, sitting off-screen at $X = 251.5$ prevented it from ever triggering its firing cycle, softlocking the player with no balloon creature spawned.
+  Shifted the cannon left by $3.0$ blocks in X via `EDITS` ($X = 251.5 \to 248.5$). The cannon remains securely planted on Wall 5 ($[247.0, 252.0]$) and enters the 4:3 viewport with $+2.50\text{ blk}$ of margin when Mario is at $X = 240.5$, triggering its shot immediately upon approach.
+Stage verification passes with 0 problems (5 bytes modified, passes all BYML invariants).
+
+## 45. 2026-11-09: Course853_Main finale camera stop moved right (corrects section 44's cannon cause)
+
+**Correction to section 44:** the camera model there (rail point = view centre) is wrong for SMBW autoscrolls. As in section 22, rail X is the view's left edge (the game adds the current half-width) and rail Y is the view's top edge (section 22: fixed Y = rail Y - half-height). The finale confirms it: the last rail point (226.75, 147.0) is the left edge of the authored room (`CameraArea` 12037923009706981632 spans X 226.75..254.25), and with Y as the top edge the pole (133.5), cannon (134.0) and Wonder Seed (144.24) all fit between 147.0 and 131.25; Y as the centre would put the pole off-screen in stock 16:9. The Y numbers quoted in section 44 ("camera bottom 33.12", "+4.00 blk above bottom") therefore do not hold; the Y retune itself was play-tested and stays.
+
+**Cause of the dead cannon:** the stock stop leaves the 4:3 view left-aligned at [226.75, 247.75]. After 2 s still, cave G pans towards Mario inside [0, 2 delta], but Mario at the pole end (X 240.5) only pulls the view to [230.0, 251.0], so `ObjectBalloonKillerHodaiLeft` (X 251.5, `IsFirstInCamera: True`) is never inside the camera and never starts firing. A cannon-only shift (section 44, 251.5 -> 248.5) would still leave it 0.75 blocks outside the left-aligned view, so it was dropped.
+
+**Fix (`RAIL_EDITS`):** final point 12 of rail `1776580222928036096`, `(226.75, 147.0, 0.0)` -> `(231.335, 147.0, 0.0)`. Earlier candidates 232.0 and 233.3056 were derived from the stock 16:9 offsets and were never loaded in Eden (it still held the section 44 build, SHA-256 prefix 121bbf30...). The final value comes from two Eden captures of that build (1440x1080, 21.0 blocks wide = 68.571 px per block): capture 1 shows the stock stop, with the pole end block at pixel 942 = X 240.49, so the view is [226.75, 247.75] and the shifted cannon (248.5) is off-screen; capture 2 shows the view 1.59 blocks further right, [228.34, 249.34], with the cannon body 0.335 blocks inside the right edge, already fired. `InsideCameraMarginX` is not stored in the cannon's AI graph, so that observed margin is the reference. With the stock cannon (body right edge 252.0) the same margin gives 252.0 + 0.335 - 21.0 = 231.335, view [231.335, 252.335]. Y is unchanged (bottom 131.25, pole 133.5, cannon 134..136, seed 144.24). Trade-off: pole start to cannon centre is exactly 21.0 blocks, the 4:3 width, so the pole's first 0.8 blocks (ball at X 230.5) fall off the left edge; the capture-2 framing (pole ball visible) is only possible with the cannon shifted left 3.0. Other effects to watch: the last segment (pt 11 -> 12, 180 frames) now covers 11.3 blocks in X instead of 6.75, and cave G's stopped-scroll pan can reach a right edge up to about 258.9.
+
+**Status:** built; `build_stage.py --verify` 0 problems (Course853_Main 5 rail edits, no actor edits), 16 unit tests, `verify_pchtxt.py` and `check_repo.py` OK. **Confirmed in Eden on 2026-11-09:** at the new stop the cannon fires and the Wonder Seed is reachable; the maintainer also play-tested the section 44 Y retune. The section 44 cannon shift (`EDITS`) was removed at the maintainer's request, so the cannon is back at its stock position (251.5, 134.0); the camera stop is the only finale change.
+
+## 46. 2026-11-09: World 1 map, hidden warp pipe off-screen (World001 subregion 22 look-at moved)
+
+**Report:** on the Pipe-Rock Plateau map, an area with a sign, a ? block, two course nodes and the KO arena hides a warp pipe behind the right-hand rock wall (it leads to the room with the lost Toad, "Lost? Me?"). At 4:3 the pipe and Mario's silhouette next to it are off-screen.
+
+**First attempt (wrong area, reverted):** I matched the reference screenshot to subregion 17 (sign, ? block bonus, Badge Challenge, warp pipe obj548) and widened its `WorldMapCameraLimitArea` (Hash 1601100441) from Scale X 0.0 to 6.5. The tester saw no change. Eden's log confirmed the mod was loaded (IPSwitch patch and LayeredFS applied at a boot after the sync), and an Eden capture showed the camera exactly where it is in stock. Two things gave the mistake away. The on-screen layout didn't fit subregion 17's positions. And the screen scale was about 48 px per unit, not the ~72 my "±13 units" estimate implied. The level loader (`0x13785C`) does build that box as Translate ± Scale/2 and registers it per subregion (`0x5C7018`), so the edit itself was valid; it was just in the wrong area.
+
+**Cause:** the area is subregion 22 (the underground part of the map; `WorldMapInfo` SubregionId22: Distance 80, Tilt 20, `IsFreeMove`). Its sign (84, z 20), ? block (88.5, z 24.5), courses 9 (83.5, z 41) and 10 (96.5, z 27.25) and KO arena (93, z 40.5) match the screen. Its camera is fixed on `WorldMapCameraLookAtTag` obj479 (Hash 2929358336) at (87.25, -11.0, 24.5) and never follows Mario. Measured from the stock screenshot and the Eden capture (both about 1060 rows): at the look-at depth the view is about 48 px per unit, so 16:9 shows x 67.6 to 106.9 and 4:3 about 72.5 to 102.0. The hidden pipe obj513 (`WObjSavannaHeigenDokanIdoTateA`) is at (103, -11, 22), with Mario's silhouette at about 104.5, both off the 4:3 right edge.
+
+**Fix (`EDITS`):** look-at X 87.25 -> 91.25 (+4.0). The 4:3 view becomes about 76.5 to 106.0: Mario at the hidden pipe has about 1.5 units of margin, and the entry pipe obj29 (horizontal, opening at about x 78.5 on screen) keeps about 2. This crops more of the poison swamp on the left than stock, and nothing that can be interacted with is there. A larger subregion `Distance` in `Stage/WorldMapInfo` (about 107+) would restore the whole 16:9 width instead, but that file isn't covered by `build_stage.py` and would also show more above and below.
+
+**Status:** built; `build_stage.py --verify` 0 problems (World001: 1 byte inside 1 edit; the other stage files are byte-identical to the shipped ones), `check_repo.py` OK. **Confirmed in Eden on 2026-11-09:** the tester saw Mario at the hidden pipe and reached the lost Toad.
+
+**Survey of the other world maps (2026-11-09):** a throwaway script went through every `World0*.bcett` with its `WorldMapInfo` camera settings. For each subregion with a `WorldMapCameraLookAtTag` (fixed camera) or `WorldMapCameraLimitArea` (camera clamped to a box), it projected every map object with the scale calibrated above (half-height = 0.138 x Distance at the look-at depth, corrected for depth and pan) and listed objects inside the 16:9 half-width but outside the 4:3 one. Subregions where the camera follows Mario freely were skipped, as was the tilt when it isn't set (20 assumed). On the original data it flags World001 subregion 22's pipe at 1.6 units short, which matches what the tester saw. The other results:
+- World006 (Fungi Mines) subregion 13: the warp pipe obj1027 to Sunbaked Desert, beside Captain Toad (fixed look-at, Distance 100, pan +22). It was 2.3 units short under one pan sign and visible under the other; the course nodes in panned subregions fit either way, so they can't tell the signs apart. **Checked in game by the tester: fine**, so no edit.
+- World005 (Sunbaked Desert) subregion 10: an open gate (obj9) at most half cut off at the left edge, under one pan sign only. It's on a fixed path and gets walked through, so it was left alone.
+- Hidden coin triggers (`WorldMapCoinAppearArea`): World001 subregion 17 obj621 sits at the left edge in both aspect ratios; World001 subregion 22 obj624 was 2.1 units short with the stock look-at and is in view with the moved one.
+
+## 47. 2026-11-09: Outmaway Valley Wonder seed misses the goal pole (Course022_Main display-box switches)
+
+**Report:** in W2 Outmaway Valley (`Course022_Main`, label `022_氷つるつる ズンドコの谷`), at the end of the Wonder Flower section the Wonder Seed should land on the tip of the knocked-over goal pole; at 4:3 it misses the pole and falls out of the course.
+
+**Cause (static analysis of the stage data):** the Wonder is an autoscroll (rail 3413102006, x 445.25 -> 693.0 at y 16; the rail point is the view's left edge, see section 22) while a rolling snow hill knocks the goal pole (`ObjectGoalPoleDeadByBodyAttack`, x 554.5) down and carries it round. The finish seed `ItemWonderFinishWonderSead` obj8927 sits at (693.5, 16.74) with `MapUnitPutMoveType` 1 (GravityOn: it falls straight down when created). Its only creator is `CourseDisplayBoxSwitch` obj8878 at (715.5, 9.0), Scale (6.76, 13.65), linked from the `ObjectWonderTag`, so it fires when the box enters the view. The level uses it as a timer, so the seed drops just as the pole's tip passes under x 693.5. The 4:3 scroll view is 21.0 wide (G 15.75) against stock 27.5556 and stays left-aligned while scrolling, so its right edge reaches the box 6.5556 blocks of scroll later and the seed drops after the pole has moved on. The tester's stock reference screenshot was taken mid-scroll (rail about 686), with the seed resting on the pole tip at x about 693.5.
+
+**Fix (`EDITS`):** move each `CourseDisplayBoxSwitch` of the section left by 27.5556 - 21.0 = 6.5556, so its left edge meets the 4:3 view's right edge at the same rail position as stock: obj8878 (Hash 3802668973) 715.5 -> 708.9444, and the two Mini Lucky Coin switches obj8931 (14721847139351791685) 574.5 -> 567.9444 and obj8932 (16130168003287809964) 596.5 -> 589.9444. Those create coins bound to the rolling hill and had the same delay. The 4:3 view is a subset of the stock view while scrolling (same left and top edges), so firing at the stock moment cannot show a spawn that stock hid.
+
+**Assumptions:** G is 15.75 here (the area is wider than 60; with 15.5 the shift would be 6.89, 0.33 blocks more), and the switch tests the current view box (as noted for Course857 in section 22).
+
+**Status:** built; `build_stage.py --verify` 0 problems (Course022_Main: 9 bytes inside 3 edits; the other stage files are byte-identical to the shipped ones), 16 stage tests pass, `check_repo.py` OK. **Confirmed in Eden on 2026-11-09:** the tester reported the seed now lands on the pole ("That fix worked"). The Mini Lucky Coin switches were not separately reported.
+
+## 48. 2026-11-07: Course290_Main (Bowser's Rage Stage) autoscroll triggers and rail framing
 
 **Context & Findings:**
 In `Course290_Main` (Bowser's Rage Stage, RootAreaHash `2931365200`), autoscroll signals pass `rail_X + current_half_width` to `SetAutoScrollPos`, left-aligning the 21.0-wide 4:3 view to `rail_X` (cropping 6.56 blocks off the right edge compared to stock 16:9 width 27.56). Because `Course290_Main` is listed in `AUTOSCROLL_ENDS`, Cave G locks camera offset to 0.0 at intermediate pauses and during vertical climbs, leaving right-edge `CourseDisplayBoxSwitch` triggers unactivated and actors cropped:
@@ -534,7 +605,7 @@ In `Course290_Main` (Bowser's Rage Stage, RootAreaHash `2931365200`), autoscroll
    - Spiked ball tilt/roll (`1060316225`, `206918284`), fossil zap relay (`663300194`, `17459050152995009628`, `742103869`, `2303338937`), dragon transform (`1787195044`), and vertical shaft switches shifted left by 6.56 blocks in X. Switch `4029477259` was kept at stock X = 206.00 to activate safely after the post-statue rhythm pause rather than prematurely during it.
 5. **Opening fists zoom-out & smoke coverage (`A_HELPER`, commit `62e4816`, retuned to G = 18.5):** While shifting rail `pts 0-4` right was rejected because it pushed the left edge into the player on initial descent, a dynamic zoom-out in code cleanly resolves the fist framing. Added `A_HELPER` (`0x02138988..0x021389FC`, 29 instructions in the cave A free space) hooked from Cave A's large-area branch: for `Course290_Main` (hash `2931365200`), when fixed X $\le 40.0$, camera zoom is set to $G = 18.5$ ($W = 24.67$, reducing fist-to-view width ratio to 73% and vertical clearance $[18.00, 36.50]$ centered on Area 2220801104's $Y \in [19.5, 35.0]$); over fixed X $= 40.0 \to 55.0$, $G$ linearly lerps from $18.5 \to 15.75$ ($W = 24.67 \to 21.0$), smoothly transitioning back to the standard large-room zoom before the player reaches Wall 0 at $X = 56$. Smoke shifts scale linearly with zoom: $\text{shift} = (G - 15.5) / 2$, yielding $\pm 1.5$ at $G = 18.5$. Four background smoke actors were extended by $\pm 1.5$ in Y via `build_stage.py`: bottom smoke `DVCommonTorideKemuriB` (`15192233820085708065` and `1591783371223145825`) shifted down $-1.5$ ($Y = 19.17 \to 17.67$ and $18.50 \to 17.00$), and top smoke `DVCommonTorideKemuriA` (`5984094973414626142` and `10892834247364923251`) shifted up $+1.5$ ($Y = 36.75 \to 38.25$ and $36.85 \to 38.35$). Both smoke boundaries remain off-screen throughout the sequence.
 
-## 45. 2026-11-07: Course290_Main Task B (experiment): intro zoom G = 18.5 hold extension through Ring 2 roll
+## 49. 2026-11-07: Course290_Main Task B (experiment): intro zoom G = 18.5 hold extension through Ring 2 roll
 
 **Goal & Timeline derivation:**
 To give players more reaction time during the opening obstacle run, extend the $G = 18.5$ zoom hold past the looping dragon skeleton (fossil Ring 2) until it finishes rolling and lands at its end position, then return smoothly to $G = 15.75$ before dragon boarding and the vertical shaft.
@@ -544,28 +615,28 @@ To give players more reaction time during the opening obstacle run, extend the $
 4. **Void & smoke coverage:** At $G = 18.5$, Wall 0 covers down to $Y = 8.00$ for $X \in [56, 104]$. Over the gap ($X \in [104, 113]$), bottom smoke `DVCommonTorideKemuriB` `7396728262115999967` shifted down $-1.5$ in Y. Top smoke `DVCommonTorideKemuriA` `13067625065345285749` and `10206074945194904884` shifted up $+1.5$ in Y, keeping edges off-screen across the entire fossil run.
 5. **Relay audit:** Extended `audit_autoscroll_relays.py` to take `--g-profile` CLI option and auto-detect from stage triggers. Simulation verifies 0 drift across all audited chains (-1f on dragon transform vs stock -251f interval, well within 5f tolerance). Built stage differs by 100 bytes across 50 declared edits; all verifiers pass.
 
-## 46. 2026-11-07: Course290_Main Task C: intro zoom entry ramp sizing analysis
+## 50. 2026-11-07: Course290_Main Task C: intro zoom entry ramp sizing analysis
 
 - **Lesson learned (cave budgeting for dual piecewise ramps):** Ramping $G$ and $\Delta$ from cutscene values ($15.75, 3.28$) to intro zoom ($18.5, 1.44$) over $fixed\_X \in [6.5, 12.0]$ requires $\ge 32$ words for dual-ramp logic. With `A_HELPER` capped at 30 words (`0x02138988..0x021389FC`, 29 used) and Cave G end padding offering only 3 free words (`0x02138AF4..0x02138AFC`), an entry ramp does not fit without restructuring existing caves; the 1.83-block snap at cutscene end remains as acceptable behavior.
 
-## 47. 2026-11-07: Course290_Main Task D: Kuribo strike and growth re-timing
+## 51. 2026-11-07: Course290_Main Task D: Kuribo strike and growth re-timing
 
 - **Lesson learned (autoscroll timing limits and platform bounds):** When re-timing autoscroll relays to restore stock pacing, the earliest feasible trigger frame is bounded by the trailing actor's right-edge margin ($V_{\text{right}} \ge X_2 + 1.0$), while leading actors' left positions are bounded by platform geometry ($X_1 \ge 37.0$ through the post-strike growth window). Retuning spawn switch `578319643` to $X = 36.48$ (frame 657) and zap switches `1536962149` / `14869113733391977869` to $X = 43.77$ (frame 1040) cuts the mod's growth delay vs stock from +143f (+2.38 s) down to +56f (+0.93 s) while preserving the exact 383f relay interval, 0 pop-in at spawn (off-screen by >9 blk), and full on-platform alignment.
 - **Task D3 (Goomba spawn alignment to bolt strikes):** In Eden measurement, lightning bolt sparkles landed at the tags while Goomba 1 lagged to the right by ~3.5 blocks ($X \sim 42$ vs tag $38.28125$) and Goomba 2 was off-screen right ($X \sim 45.8$). Goomba spawn X, not tag X or switch timing, is the alignment knob. Shifted both `KuriboWillGrowIntoGiant` spawns left by 3.5 blocks in X (`2542738868`: $46.0 \to 42.5$, `1405933960`: $50.0 \to 46.5$). Sign rule for tuning: bolt left of Goomba = move that Goomba's spawn X left by the measured blocks; bolt right of Goomba = move it right. Both Goombas remain fully on-platform ($[37, 53]$ and $[40, 50]$) and spawn off-screen ($X \ge 37.7$ vs view right $36.71$ at f857).
 
 
-## 48. 2026-11-08: Course290_Main intro cutscene: Bowser Jr. jump-frame patch reverted
+## 52. 2026-11-08: Course290_Main intro cutscene: Bowser Jr. jump-frame patch reverted
 
 - `FinalCourseDemoKoopaJr.pack.zs` `KoopaJrJumpFrame` 45 -> 70 (f432b93) did not hide Bowser Jr. A probe build with 150 looked identical in Eden: he lands at about (25.6, 19.5), just below the floor, and stays until the cutscene ends. The parameter does not control what is seen, so the pack edit (and `build_actor.py`) is reverted.
 - **Lesson:** the predicted fall to y 5.22 was free-fall arithmetic, never measured. Run an exaggerated probe before shipping an actor parameter edit.
 
 
-## 49. 2026-11-09: Course290_Main intro cutscene: final camera pose Y raised to match gameplay
+## 53. 2026-11-09: Course290_Main intro cutscene: final camera pose Y raised to match gameplay
 
 - **Cutscene camera Y vs gameplay camera Y:** `CourseDemo_PreFinalBattle.bfevfl` Event50 (the final cutscene camera pose before gameplay handoff) had `TargetYpos` 27.5 (stock 16:9 bottom rest was 27.25). In 4:3 with $G = 18.5$, gameplay rests at $y = 28.75$ (bottom 19.5 + half-height 9.25), causing a 1.25-block vertical snap at cutscene end.
 - Raising Event50 `TargetYpos` 27.5 -> 28.75 lifts the cutscene bottom edge from 18.25 to 19.50. With the letterbox bar covering ~0.7 block (up to $y = 20.20$), Bowser Jr. parked at $y \sim 19.5..20.1$ is fully concealed, eliminating Bug B and removing the handoff snap (Bug A) with zero gameplay impact.
 
-## 50. 2026-11-09: Course290_Main intro cutscene: Event26 knuckle-slam camera pose Y raised to match Event50
+## 54. 2026-11-09: Course290_Main intro cutscene: Event26 knuckle-slam camera pose Y raised to match Event50
 
 - **Knuckle slam cutscene camera Y:** `CourseDemo_PreFinalBattle.bfevfl` Event26 holds the camera pose across all 4 knuckle slams while Bowser Jr. sits in the pit. It still had stock `TargetYpos` 27.5 (view $Y \in [18.25, 36.75]$). In Eden screenshots, Bowser Jr. parked at $(X \approx 25.6, Y \approx 19.5)$ protruded 29 px ($y \in [1006, 1034]$) above the lower letterbox bar ($y \ge 1035$).
 - Raising Event26 `TargetYpos` 27.5 -> 28.75 lifts the letterbox bar by ~73 px (view bottom $18.25 \to 19.50$), placing Bowser Jr.'s peak at $y = 1079$ (44 px inside the letterbox bar) and fully concealing him throughout the knuckle slams with zero actor or timing edits.
