@@ -25,7 +25,7 @@ scripts/check_repo.py          Blocks game data, keys and decompiler dumps (pre-
   docs/DEVELOPMENT.md          Dated log of how the mod got here
 ```
 
-Games: [`super-mario-bros-wonder/`](super-mario-bros-wonder/) (1.2.1).
+Games: [`super-mario-bros-wonder/`](super-mario-bros-wonder/) (1.2.1), [`the-legend-of-zelda-breath-of-the-wild/`](the-legend-of-zelda-breath-of-the-wild/) (1.6.0).
 
 ## Rules
 
@@ -48,7 +48,7 @@ Run before committing a mod change and before every release:
 ```
 python scripts/check_repo.py                       # game data / keys / dumps (also the pre-commit hook)
 python scripts/release.py check <prefix> <version> # release rules: changelog, build ID, allowlist, archive count
-# plus the game's own verifiers, listed in its AGENTS.md (SMBW: tools/verify.py and tools/verify_pchtxt.py)
+# plus the game's own verifiers, listed in its AGENTS.md (SMBW: tools/verify.py and tools/verify_pchtxt.py; BotW: tools/verify.py)
 ```
 
 No package manager, build system, linter or type checker: Python scripts run directly. `scripts/` needs only Python 3.8+ (CI uses the runner's 3.12). Game tools may need more (SMBW: Python 3.14 plus `capstone` and `lz4`).

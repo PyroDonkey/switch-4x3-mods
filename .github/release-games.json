@@ -10,6 +10,16 @@
       "game_version": "1.2.1",
       "build_id": "FF773E90972D544EB79406EAA65396D53C43EFB9",
       "layout_count": 129
+    },
+    "botw": {
+      "folder": "the-legend-of-zelda-breath-of-the-wild",
+      "name": "The Legend of Zelda: Breath of the Wild",
+      "mod_folder": "Native 4x3 Aspect Ratio",
+      "zip_stem": "BOTW-4x3-Native",
+      "title_id": "01007EF00011E000",
+      "game_version": "1.6.0",
+      "build_id": "8E9978D50BDD20B4C8395A106C27FFDE",
+      "layout_count": 4
     }
   }
 }
