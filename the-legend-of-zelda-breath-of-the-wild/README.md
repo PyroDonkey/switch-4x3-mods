@@ -4,7 +4,7 @@
 
 Plays Breath of the Wild natively at 4:3 instead of stretching or letterboxing it. The 3D view renders at 4:3, and the HUD, menus and Sheikah Slate map are re-laid out for the taller screen so nothing is squashed.
 
-<!-- download:botw --><!-- /download:botw -->
+<!-- download:botw -->**[Download v1.0.0 (for game v1.6.0)](https://github.com/PyroDonkey/switch-4x3-mods/releases/download/botw-v1.0.0/BOTW-4x3-Native-v1.0.0-for-game-1.6.0.zip)** · [All releases](https://github.com/PyroDonkey/switch-4x3-mods/releases)<!-- /download:botw -->
 
 Requires **game version 1.6.0**. Tested on Switch emulators on Windows, with both DLC packs installed. Other versions of the game are not supported.
 
