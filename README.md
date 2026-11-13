@@ -11,7 +11,7 @@ Native 4:3 aspect-ratio mods for Nintendo Switch games. "Native" means the game 
 | Super Mario Bros. Wonder | 1.2.1 | <!-- download:smbw -->[Download v1.2.0](https://github.com/PyroDonkey/switch-4x3-mods/releases/download/smbw-v1.2.0/SMBW-4x3-Native-v1.2.0-for-game-1.2.1.zip)<!-- /download:smbw --> | [Install](super-mario-bros-wonder/README.md#install) |
 | The Legend of Zelda: Breath of the Wild | 1.6.0 | <!-- download:botw -->Coming soon<!-- /download:botw --> | [Install](the-legend-of-zelda-breath-of-the-wild/README.md#install) |
 
-Tested on Switch emulators on Windows and Android (Retroid Pocket Nova). Each mod only works with the game version listed, so update your game first. To install, follow the install guide linked for your game in the table above; it also covers updating and troubleshooting.
+Tested on Switch emulators: Super Mario Bros. Wonder on Windows and Android (Retroid Pocket Nova), Breath of the Wild on Windows. Each mod only works with the game version listed, so update your game first. To install, follow the install guide linked for your game in the table above; it also covers updating and troubleshooting.
 
 ## How the mods are made
 

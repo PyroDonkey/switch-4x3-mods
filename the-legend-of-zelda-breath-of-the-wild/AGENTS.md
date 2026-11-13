@@ -35,7 +35,7 @@ python scripts/release.py check botw <version>
 
 Environment switches (defaults are the shipped build): `BOTW_ROOT_MODE=children|root`, `BOTW_HUD_SCALE` (1.3333333; 1.0 = off), `BOTW_CURSOR_KEEP` (`Cursor_00`), `BOTW_GANBARI_FIX` (1; 0 = stamina wheel fix off). verify.py reads `build_report.json` from `<out_dir>`, so verify the build folder, not the mod folder.
 
-## Current state (2026-11-10, v1.0.0 prepared, not released)
+## Current state (2026-11-13, v1.0.0)
 
 Code patch: `exefs/1.6.0.pchtxt` replaces the three aspect instructions used by the community 1.6.0 patch (`0x00E0AD68`, `0x015C2148`, `0x01271870`) with `LDR S0` of a literal `3FAAAAAB` (4/3) planted in zero padding after a nearby `ret`. Played and checked.
 

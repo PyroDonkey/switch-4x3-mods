@@ -1,6 +1,6 @@
 # Switch Aspect Ratio Modding — Technical Reference
 
-Last updated 2026-10-30. Worked examples: [Super Mario Bros. Wonder](../super-mario-bros-wonder/) (in this repo) and The Legend of Zelda: Breath of the Wild.
+Last updated 2026-11-10. Worked examples: [Super Mario Bros. Wonder](../super-mario-bros-wonder/) and [The Legend of Zelda: Breath of the Wild](../the-legend-of-zelda-breath-of-the-wild/) (both in this repo).
 
 ## Overview
 
