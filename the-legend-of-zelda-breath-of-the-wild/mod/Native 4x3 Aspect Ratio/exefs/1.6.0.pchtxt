@@ -1,0 +1,21 @@
+@nsobid-8E9978D50BDD20B4C8395A106C27FFDE
+
+@flag print_values
+@flag offset_shift 0x100
+
+// Native 4x3 Aspect Ratio: 3D aspect ratio 16:9 -> exactly 4:3 (BOTW 1.6.0 only).
+// Replaces the three aspect instructions used by the community 1.6.0 aspect patch (which writes fmov s0,#1.3125, 1.56%
+// under 4/3) with LDR S0 of the exact float 4/3 = 3FAAAAAB, planted in zero padding after nearby RET instructions.
+// Do NOT enable together with another BOTW aspect patch: they patch the same three addresses.
+
+@enabled
+// 0x00E0AD68 was fdiv s0,s0,s1 -> ldr s0,#+0x104C (literal at 0xE0BDB4)
+00E0AD68 6082001C
+00E0BDB4 ABAAAA3F
+// 0x015C2148 was fdiv s0,s0,s1 -> ldr s0,#+0xF0 (literal at 0x15C2238)
+015C2148 8007001C
+015C2238 ABAAAA3F
+// 0x01271870 was ldr s0,[x0,#0xb0] -> ldr s0,#+8 (literal at 0x1271878, right after the ret)
+01271870 4000001C
+01271878 ABAAAA3F
+@stop
